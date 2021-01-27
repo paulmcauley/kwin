@@ -574,25 +574,7 @@ bool XdgToplevelClient::userCanSetNoBorder() const
 
 bool XdgToplevelClient::noBorder() const
 {
-    if (m_serverDecoration) {
-        switch (m_serverDecoration->mode()) {
-        case ServerSideDecorationManagerInterface::Mode::Server:
-            return m_userNoBorder || isFullScreen();
-        case ServerSideDecorationManagerInterface::Mode::Client:
-        case ServerSideDecorationManagerInterface::Mode::None:
-            return true;
-        }
-    }
-    if (m_xdgDecoration) {
-        switch (m_xdgDecoration->preferredMode()) {
-        case XdgToplevelDecorationV1Interface::Mode::Server:
-        case XdgToplevelDecorationV1Interface::Mode::Undefined:
-            return m_userNoBorder || isFullScreen();
-        case XdgToplevelDecorationV1Interface::Mode::Client:
-            return true;
-        }
-    }
-    return true;
+    return m_userNoBorder;
 }
 
 void XdgToplevelClient::setNoBorder(bool set)
@@ -605,13 +587,14 @@ void XdgToplevelClient::setNoBorder(bool set)
         return;
     }
     m_userNoBorder = set;
-    updateDecoration(true, false);
+    configureDecoration();
     updateWindowRules(Rules::NoBorder);
 }
 
 void XdgToplevelClient::updateDecoration(bool check_workspace_pos, bool force)
 {
-    if (!force && ((!isDecorated() && noBorder()) || (isDecorated() && !noBorder()))) {
+    const bool wantsDecoration = decorationMode() == DecorationMode::Server;
+    if (!force && (isDecorated() == wantsDecoration)) {
         return;
     }
     const QRect oldFrameGeometry = frameGeometry();
@@ -620,21 +603,10 @@ void XdgToplevelClient::updateDecoration(bool check_workspace_pos, bool force)
     if (force) {
         destroyDecoration();
     }
-    if (!noBorder()) {
+    if (wantsDecoration) {
         createDecoration(oldFrameGeometry);
     } else {
         destroyDecoration();
-    }
-    if (m_serverDecoration && isDecorated()) {
-        m_serverDecoration->setMode(ServerSideDecorationManagerInterface::Mode::Server);
-    }
-    if (m_xdgDecoration) {
-        if (isDecorated() || m_userNoBorder) {
-            m_xdgDecoration->sendConfigure(XdgToplevelDecorationV1Interface::Mode::Server);
-        } else {
-            m_xdgDecoration->sendConfigure(XdgToplevelDecorationV1Interface::Mode::Client);
-        }
-        scheduleConfigure();
     }
     updateShadow();
     if (check_workspace_pos) {
@@ -1185,8 +1157,6 @@ void XdgToplevelClient::initialize()
 
     bool needsPlacement = isPlaceable();
 
-    updateDecoration(false, false);
-
     if (supportsWindowRules()) {
         setupWindowRules(false);
 
@@ -1230,6 +1200,7 @@ void XdgToplevelClient::initialize()
         const QRect area = workspace()->clientArea(PlacementArea, Screens::self()->current(), desktop());
         placeIn(area);
     }
+    configureDecoration();
 
     blockGeometryUpdates(false);
     scheduleConfigure(ConfigureRequired);
@@ -1282,21 +1253,112 @@ void XdgToplevelClient::installServerDecoration(ServerSideDecorationInterface *d
 {
     m_serverDecoration = decoration;
 
-    connect(m_serverDecoration, &ServerSideDecorationInterface::destroyed, this, [this] {
-        if (!isZombie() && readyForPainting()) {
-            updateDecoration(/* check_workspace_pos */ true);
-        }
-    });
     connect(m_serverDecoration, &ServerSideDecorationInterface::modeRequested, this,
         [this] (ServerSideDecorationManagerInterface::Mode mode) {
             const bool changed = mode != m_serverDecoration->mode();
             if (changed && readyForPainting()) {
-                updateDecoration(/* check_workspace_pos */ false);
+                configureDecoration();
             }
         }
     );
     if (readyForPainting()) {
-        updateDecoration(/* check_workspace_pos */ true);
+        configureDecoration();
+    }
+}
+
+XdgToplevelClient::DecorationMode XdgToplevelClient::decorationMode() const
+{
+    if (m_xdgDecoration) {
+        switch (m_xdgDecoration->mode()) {
+        case XdgToplevelDecorationV1Interface::Mode::Undefined:
+            return DecorationMode::None;
+        case XdgToplevelDecorationV1Interface::Mode::Client:
+            return DecorationMode::Client;
+        case XdgToplevelDecorationV1Interface::Mode::Server:
+            return DecorationMode::Server;
+        }
+    }
+
+    if (m_serverDecoration) {
+        switch (m_serverDecoration->mode()) {
+        case ServerSideDecorationManagerInterface::Mode::None:
+            return DecorationMode::None;
+        case ServerSideDecorationManagerInterface::Mode::Client:
+            return DecorationMode::Client;
+        case ServerSideDecorationManagerInterface::Mode::Server:
+            return DecorationMode::Server;
+        }
+    }
+
+    return DecorationMode::Client;
+}
+
+XdgToplevelClient::DecorationMode XdgToplevelClient::preferredDecorationMode() const
+{
+    if (m_userNoBorder || isFullScreen()) {
+        return DecorationMode::None;
+    }
+
+    if (m_xdgDecoration) {
+        switch (m_xdgDecoration->preferredMode()) {
+        case XdgToplevelDecorationV1Interface::Mode::Undefined:
+            return DecorationMode::Server;
+        case XdgToplevelDecorationV1Interface::Mode::Client:
+            return DecorationMode::Client;
+        case XdgToplevelDecorationV1Interface::Mode::Server:
+            return DecorationMode::Server;
+        }
+    }
+
+    if (m_serverDecoration) {
+        switch (m_serverDecoration->mode()) {
+        case ServerSideDecorationManagerInterface::Mode::None:
+            return DecorationMode::None;
+        case ServerSideDecorationManagerInterface::Mode::Client:
+            return DecorationMode::Client;
+        case ServerSideDecorationManagerInterface::Mode::Server:
+            return DecorationMode::Server;
+        }
+    }
+
+    return DecorationMode::Client;
+}
+
+void XdgToplevelClient::configureDecoration()
+{
+    if (m_serverDecoration) {
+        configureServerDecoration();
+    } else if (m_xdgDecoration) {
+        configureXdgDecoration();
+    }
+}
+
+void XdgToplevelClient::configureXdgDecoration()
+{
+    switch (preferredDecorationMode()) {
+    case DecorationMode::None: // unsupported in xdg-decoration
+    case DecorationMode::Client:
+        m_xdgDecoration->scheduleConfigure(XdgToplevelDecorationV1Interface::Mode::Client);
+        break;
+    case DecorationMode::Server:
+        m_xdgDecoration->scheduleConfigure(XdgToplevelDecorationV1Interface::Mode::Server);
+        break;
+    }
+    scheduleConfigure(ConfigureRequired);
+}
+
+void XdgToplevelClient::configureServerDecoration()
+{
+    switch (preferredDecorationMode()) {
+    case DecorationMode::None:
+        m_serverDecoration->setMode(ServerSideDecorationManagerInterface::Mode::None);
+        break;
+    case DecorationMode::Client:
+        m_serverDecoration->setMode(ServerSideDecorationManagerInterface::Mode::Client);
+        break;
+    case DecorationMode::Server:
+        m_serverDecoration->setMode(ServerSideDecorationManagerInterface::Mode::Server);
+        break;
     }
 }
 
@@ -1306,8 +1368,7 @@ void XdgToplevelClient::installXdgDecoration(XdgToplevelDecorationV1Interface *d
 
     connect(m_xdgDecoration, &XdgToplevelDecorationV1Interface::preferredModeChanged, this, [this] {
         if (m_isInitialized) {
-            // force is true as we must send a new configure response.
-            updateDecoration(/* check_workspace_pos */ false, /* force */ true);
+            configureDecoration();
         }
     });
 }
@@ -1555,7 +1616,7 @@ void XdgToplevelClient::setFullScreen(bool set, bool user)
     }
 
     workspace()->updateClientLayer(this);   // active fullscreens get different layer
-    updateDecoration(false, false);
+    configureDecoration();
 
     if (set) {
         const int screen = m_fullScreenRequestedOutput ? kwinApp()->platform()->enabledOutputs().indexOf(m_fullScreenRequestedOutput) : screens()->number(frameGeometry().center());
