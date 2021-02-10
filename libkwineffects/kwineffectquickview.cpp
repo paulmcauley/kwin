@@ -155,7 +155,7 @@ void EffectQuickView::update()
 
         if (d->m_fbo.isNull() || d->m_fbo->size() != d->m_view->size()) {
             d->m_textureExport.reset(nullptr);
-            d->m_fbo.reset(new QOpenGLFramebufferObject(d->m_view->size(), QOpenGLFramebufferObject::CombinedDepthStencil));
+            d->m_fbo.reset(new QOpenGLFramebufferObject(d->m_view->size() * d->m_view->devicePixelRatio(), QOpenGLFramebufferObject::CombinedDepthStencil));
             if (!d->m_fbo->isValid()) {
                 d->m_fbo.reset();
                 d->m_glcontext->doneCurrent();
