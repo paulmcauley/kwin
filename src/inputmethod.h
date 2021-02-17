@@ -11,17 +11,16 @@
 
 #include <QObject>
 
-#include <kwinglobals.h>
 #include <kwin_export.h>
+#include <kwinglobals.h>
 
-#include <abstract_client.h>
 #include <KWaylandServer/textinput_v2_interface.h>
+#include <abstract_client.h>
 
 class KStatusNotifierItem;
 
 namespace KWin
 {
-
 /**
  * This class implements the zwp_input_method_unstable_v1, which is currently used to provide
  * the Virtual Keyboard using supported input method client (maliit-keyboard e.g.)
@@ -40,7 +39,7 @@ Q_SIGNALS:
     void enabledChanged(bool enabled);
 
 private Q_SLOTS:
-    void clientAdded(AbstractClient* client);
+    void clientAdded(AbstractClient *client);
 
     // textinput interface slots
     void handleFocusedSurfaceChanged();

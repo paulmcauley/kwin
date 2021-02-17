@@ -12,13 +12,13 @@
 #include <KDecoration2/Decoration>
 
 #include <KCModule>
-#include <KPluginLoader>
 #include <KPluginFactory>
+#include <KPluginLoader>
 #include <KPluginTrader>
 
-#include <QDebug>
 #include <QDBusConnection>
 #include <QDBusMessage>
+#include <QDebug>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QPushButton>
@@ -32,7 +32,6 @@ namespace KDecoration2
 {
 namespace Preview
 {
-
 static const QString s_pluginName = QStringLiteral("org.kde.kdecoration2");
 
 PreviewBridge::PreviewBridge(QObject *parent)
@@ -120,7 +119,9 @@ void PreviewBridge::createFactory()
     }
 
     const auto offers = KPluginTrader::self()->query(s_pluginName, s_pluginName);
-    auto item = std::find_if(offers.constBegin(), offers.constEnd(), [this](const auto &plugin) { return plugin.pluginName() == m_plugin; });
+    auto item = std::find_if(offers.constBegin(), offers.constEnd(), [this](const auto &plugin) {
+        return plugin.pluginName() == m_plugin;
+    });
     if (item != offers.constEnd()) {
         KPluginLoader loader(item->libraryPath());
         m_factory = loader.factory();
@@ -148,7 +149,7 @@ Decoration *PreviewBridge::createDecoration(QObject *parent)
     if (!m_valid) {
         return nullptr;
     }
-    QVariantMap args({ {QStringLiteral("bridge"), QVariant::fromValue(this)} });
+    QVariantMap args({{QStringLiteral("bridge"), QVariant::fromValue(this)}});
     if (!m_theme.isNull()) {
         args.insert(QStringLiteral("theme"), m_theme);
     }
@@ -160,7 +161,9 @@ DecorationButton *PreviewBridge::createButton(KDecoration2::Decoration *decorati
     if (!m_valid) {
         return nullptr;
     }
-    return m_factory->create<KDecoration2::DecorationButton>(QStringLiteral("button"), parent, QVariantList({QVariant::fromValue(type), QVariant::fromValue(decoration)}));
+    return m_factory->create<KDecoration2::DecorationButton>(QStringLiteral("button"),
+                                                             parent,
+                                                             QVariantList({QVariant::fromValue(type), QVariant::fromValue(decoration)}));
 }
 
 void PreviewBridge::configure(QQuickItem *ctx)
@@ -168,7 +171,7 @@ void PreviewBridge::configure(QQuickItem *ctx)
     if (!m_valid) {
         return;
     }
-    //setup the UI
+    // setup the UI
     QDialog *dialog = new QDialog();
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     if (m_lastCreatedClient) {
@@ -185,24 +188,19 @@ void PreviewBridge::configure(QQuickItem *ctx)
         return;
     }
 
-    auto save = [this,kcm] {
+    auto save = [this, kcm] {
         kcm->save();
         if (m_lastCreatedSettings) {
             emit m_lastCreatedSettings->decorationSettings()->reconfigured();
         }
         // Send signal to all kwin instances
-        QDBusMessage message = QDBusMessage::createSignal(QStringLiteral("/KWin"),
-                                                          QStringLiteral("org.kde.KWin"),
-                                                          QStringLiteral("reloadConfig"));
+        QDBusMessage message = QDBusMessage::createSignal(QStringLiteral("/KWin"), QStringLiteral("org.kde.KWin"), QStringLiteral("reloadConfig"));
         QDBusConnection::sessionBus().send(message);
     };
     connect(dialog, &QDialog::accepted, this, save);
 
-    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok |
-                                                     QDialogButtonBox::Cancel |
-                                                     QDialogButtonBox::RestoreDefaults |
-                                                     QDialogButtonBox::Reset,
-                                                     dialog);
+    QDialogButtonBox *buttons =
+        new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::RestoreDefaults | QDialogButtonBox::Reset, dialog);
 
     QPushButton *reset = buttons->button(QDialogButtonBox::Reset);
     reset->setEnabled(false);
@@ -210,7 +208,7 @@ void PreviewBridge::configure(QQuickItem *ctx)
     connect(buttons, &QDialogButtonBox::accepted, dialog, &QDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
     connect(reset, &QPushButton::clicked, kcm, &KCModule::load);
-    auto changedSignal = static_cast<void(KCModule::*)(bool)>(&KCModule::changed);
+    auto changedSignal = static_cast<void (KCModule::*)(bool)>(&KCModule::changed);
     connect(kcm, changedSignal, reset, &QPushButton::setEnabled);
     connect(buttons->button(QDialogButtonBox::RestoreDefaults), &QPushButton::clicked, kcm, &KCModule::defaults);
 

@@ -12,8 +12,8 @@
 
 class KConfig;
 
-#include <kcmodule.h>
 #include <KLocalizedString>
+#include <kcmodule.h>
 
 #include "ui_actions.h"
 #include "ui_mouse.h"
@@ -25,7 +25,7 @@ class KWinMouseConfigForm : public QWidget, public Ui::KWinMouseConfigForm
     Q_OBJECT
 
 public:
-    explicit KWinMouseConfigForm(QWidget* parent);
+    explicit KWinMouseConfigForm(QWidget *parent);
 };
 
 class KWinActionsConfigForm : public QWidget, public Ui::KWinActionsConfigForm
@@ -33,7 +33,7 @@ class KWinActionsConfigForm : public QWidget, public Ui::KWinActionsConfigForm
     Q_OBJECT
 
 public:
-    explicit KWinActionsConfigForm(QWidget* parent);
+    explicit KWinActionsConfigForm(QWidget *parent);
 };
 
 class KTitleBarActionsConfig : public KCModule
@@ -41,7 +41,6 @@ class KTitleBarActionsConfig : public KCModule
     Q_OBJECT
 
 public:
-
     KTitleBarActionsConfig(bool _standAlone, KWinOptionsSettings *settings, QWidget *parent);
 
     void save() override;
@@ -63,7 +62,6 @@ class KWindowActionsConfig : public KCModule
     Q_OBJECT
 
 public:
-
     KWindowActionsConfig(bool _standAlone, KWinOptionsSettings *settings, QWidget *parent);
 
     void save() override;
@@ -80,4 +78,3 @@ private:
 };
 
 #endif
-

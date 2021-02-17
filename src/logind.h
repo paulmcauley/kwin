@@ -18,23 +18,26 @@ class QDBusServiceWatcher;
 
 namespace KWin
 {
-
 class KWIN_EXPORT LogindIntegration : public QObject
 {
     Q_OBJECT
 public:
     ~LogindIntegration() override;
 
-    bool isConnected() const {
+    bool isConnected() const
+    {
         return m_connected;
     }
-    bool hasSessionControl() const {
+    bool hasSessionControl() const
+    {
         return m_sessionControl;
     }
-    bool isActiveSession() const {
+    bool isActiveSession() const
+    {
         return m_sessionActive;
     }
-    int vt() const {
+    int vt() const
+    {
         return m_vt;
     }
     void switchVirtualTerminal(quint32 vtNr);
@@ -45,7 +48,8 @@ public:
     int takeDevice(const char *path);
     void releaseDevice(int fd);
 
-    const QString seat() const {
+    const QString seat() const
+    {
         return m_seatName;
     }
 

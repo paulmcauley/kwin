@@ -23,7 +23,6 @@ class OutputChangeSet;
 
 namespace KWin
 {
-
 class RenderLoop;
 
 class KWIN_EXPORT GammaRamp

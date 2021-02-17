@@ -29,7 +29,6 @@ namespace KWin
 {
 namespace QPA
 {
-
 EGLPlatformContext::EGLPlatformContext(QOpenGLContext *context, EGLDisplay display)
     : m_eglDisplay(display)
 {
@@ -272,11 +271,7 @@ static EGLSurface createDummyPbufferSurface(EGLDisplay display, const QSurfaceFo
         return EGL_NO_SURFACE;
     }
 
-    const EGLint attribs[] = {
-        EGL_WIDTH, 16,
-        EGL_HEIGHT, 16,
-        EGL_NONE
-    };
+    const EGLint attribs[] = {EGL_WIDTH, 16, EGL_HEIGHT, 16, EGL_NONE};
 
     return eglCreatePbufferSurface(display, config, attribs);
 }

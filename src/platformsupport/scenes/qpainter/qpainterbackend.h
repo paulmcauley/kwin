@@ -16,7 +16,6 @@ class QString;
 
 namespace KWin
 {
-
 class QPainterBackend
 {
 public:
@@ -39,7 +38,8 @@ public:
      *
      * @return bool @c true if the creation of the Backend failed, @c false otherwise.
      */
-    bool isFailed() const {
+    bool isFailed() const
+    {
         return m_failed;
     }
     /**

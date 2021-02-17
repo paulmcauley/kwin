@@ -14,28 +14,27 @@
 #include "deleted.h"
 #include "effects.h"
 #include "main.h"
+#include "platform.h"
 #include "renderloop.h"
 #include "screens.h"
 #include "toplevel.h"
-#include "platform.h"
 #include "wayland_server.h"
 
 #include <kwineffectquickview.h>
 
+#include "decorations/decoratedclient.h"
 #include <KWaylandServer/buffer_interface.h>
 #include <KWaylandServer/subcompositor_interface.h>
 #include <KWaylandServer/surface_interface.h>
-#include "decorations/decoratedclient.h"
 // Qt
+#include <KDecoration2/Decoration>
 #include <QDebug>
 #include <QPainter>
-#include <KDecoration2/Decoration>
 
 #include <cmath>
 
 namespace KWin
 {
-
 //****************************************
 // SceneQPainter
 //****************************************
@@ -81,8 +80,7 @@ void SceneQPainter::paintGenericScreen(int mask, const ScreenPaintData &data)
     m_painter->restore();
 }
 
-void SceneQPainter::paint(int screenId, const QRegion &_damage, const QList<Toplevel *> &toplevels,
-                          RenderLoop *renderLoop)
+void SceneQPainter::paint(int screenId, const QRegion &_damage, const QList<Toplevel *> &toplevels, RenderLoop *renderLoop)
 {
     Q_ASSERT(kwinApp()->platform()->isPerScreenRenderingEnabled());
     painted_screen = screenId;
@@ -106,8 +104,7 @@ void SceneQPainter::paint(int screenId, const QRegion &_damage, const QList<Topl
         m_painter->setWindow(geometry);
 
         QRegion updateRegion, validRegion;
-        paintScreen(&mask, damage.intersected(geometry), QRegion(), &updateRegion, &validRegion,
-                    renderLoop);
+        paintScreen(&mask, damage.intersected(geometry), QRegion(), &updateRegion, &validRegion, renderLoop);
         paintCursor(updateRegion);
 
         m_painter->end();
@@ -133,7 +130,7 @@ void SceneQPainter::paintCursor(const QRegion &rendered)
         return;
     }
 
-    Cursor* cursor = Cursors::self()->currentCursor();
+    Cursor *cursor = Cursors::self()->currentCursor();
     const QImage img = cursor->image();
     if (img.isNull()) {
         return;
@@ -260,9 +257,7 @@ void SceneQPainter::Window::renderWindowPixmap(QPainter *painter, QPainterWindow
         const QPointF bufferTopLeft = windowPixmap->mapToBuffer(rect.topLeft());
         const QPointF bufferBottomRight = windowPixmap->mapToBuffer(rect.bottomRight());
 
-        painter->drawImage(QRectF(windowTopLeft, windowBottomRight),
-                           windowPixmap->image(),
-                           QRectF(bufferTopLeft, bufferBottomRight));
+        painter->drawImage(QRectF(windowTopLeft, windowBottomRight), windowPixmap->image(), QRectF(bufferTopLeft, bufferBottomRight));
     }
 
     const QVector<WindowPixmap *> children = windowPixmap->children();
@@ -274,7 +269,7 @@ void SceneQPainter::Window::renderWindowPixmap(QPainter *painter, QPainterWindow
     }
 }
 
-void SceneQPainter::Window::renderShadow(QPainter* painter)
+void SceneQPainter::Window::renderShadow(QPainter *painter)
 {
     if (!toplevel->shadow()) {
         return;
@@ -287,12 +282,8 @@ void SceneQPainter::Window::renderShadow(QPainter* painter)
     for (const auto &q : shadowQuads) {
         auto topLeft = q[0];
         auto bottomRight = q[2];
-        QRectF target(topLeft.x(), topLeft.y(),
-                      bottomRight.x() - topLeft.x(),
-                      bottomRight.y() - topLeft.y());
-        QRectF source(topLeft.textureX(), topLeft.textureY(),
-                      bottomRight.textureX() - topLeft.textureX(),
-                      bottomRight.textureY() - topLeft.textureY());
+        QRectF target(topLeft.x(), topLeft.y(), bottomRight.x() - topLeft.x(), bottomRight.y() - topLeft.y());
+        QRectF source(topLeft.textureX(), topLeft.textureY(), bottomRight.textureX() - topLeft.textureX(), bottomRight.textureY() - topLeft.textureY());
         painter->drawImage(target, shadowTexture, source);
     }
 }
@@ -300,8 +291,8 @@ void SceneQPainter::Window::renderShadow(QPainter* painter)
 void SceneQPainter::Window::renderWindowDecorations(QPainter *painter)
 {
     // TODO: custom decoration opacity
-    AbstractClient *client = dynamic_cast<AbstractClient*>(toplevel);
-    Deleted *deleted = dynamic_cast<Deleted*>(toplevel);
+    AbstractClient *client = dynamic_cast<AbstractClient *>(toplevel);
+    Deleted *deleted = dynamic_cast<Deleted *>(toplevel);
     if (!client && !deleted) {
         return;
     }
@@ -433,7 +424,6 @@ void QPainterEffectFrame::render(const QRegion &region, double opacity, double f
     }
     QPainter *painter = m_scene->scenePainter();
 
-
     // Render the actual frame
     if (m_effectFrame->style() == EffectFrameUnstyled) {
         painter->save();
@@ -446,7 +436,7 @@ void QPainterEffectFrame::render(const QRegion &region, double opacity, double f
         painter->restore();
     } else if (m_effectFrame->style() == EffectFrameStyled) {
         qreal left, top, right, bottom;
-        m_effectFrame->frame().getMargins(left, top, right, bottom);   // m_geometry is the inner geometry
+        m_effectFrame->frame().getMargins(left, top, right, bottom); // m_geometry is the inner geometry
         QRect geom = m_effectFrame->geometry().adjusted(-left, -top, right, bottom);
         painter->drawPixmap(geom, m_effectFrame->frame().framePixmap());
     }
@@ -456,8 +446,7 @@ void QPainterEffectFrame::render(const QRegion &region, double opacity, double f
 
     // Render icon
     if (!m_effectFrame->icon().isNull() && !m_effectFrame->iconSize().isEmpty()) {
-        const QPoint topLeft(m_effectFrame->geometry().x(),
-                             m_effectFrame->geometry().center().y() - m_effectFrame->iconSize().height() / 2);
+        const QPoint topLeft(m_effectFrame->geometry().x(), m_effectFrame->geometry().center().y() - m_effectFrame->iconSize().height() / 2);
 
         const QRect geom = QRect(topLeft, m_effectFrame->iconSize());
         painter->drawPixmap(geom, m_effectFrame->icon().pixmap(m_effectFrame->iconSize()));
@@ -494,7 +483,7 @@ void QPainterEffectFrame::render(const QRegion &region, double opacity, double f
 //****************************************
 // QPainterShadow
 //****************************************
-SceneQPainterShadow::SceneQPainterShadow(Toplevel* toplevel)
+SceneQPainterShadow::SceneQPainterShadow(Toplevel *toplevel)
     : Shadow(toplevel)
 {
 }
@@ -522,22 +511,16 @@ void SceneQPainterShadow::buildQuads()
     const QSizeF left(elementSize(ShadowElementLeft));
     const QSizeF topLeft(elementSize(ShadowElementTopLeft));
 
-    const QRectF outerRect(QPointF(-leftOffset(), -topOffset()),
-                           QPointF(topLevel()->width() + rightOffset(),
-                                   topLevel()->height() + bottomOffset()));
+    const QRectF outerRect(QPointF(-leftOffset(), -topOffset()), QPointF(topLevel()->width() + rightOffset(), topLevel()->height() + bottomOffset()));
 
-    const int width = std::max({topLeft.width(), left.width(), bottomLeft.width()})
-                    + std::max(top.width(), bottom.width())
-                    + std::max({topRight.width(), right.width(), bottomRight.width()});
-    const int height = std::max({topLeft.height(), top.height(), topRight.height()})
-                     + std::max(left.height(), right.height())
-                     + std::max({bottomLeft.height(), bottom.height(), bottomRight.height()});
+    const int width = std::max({topLeft.width(), left.width(), bottomLeft.width()}) + std::max(top.width(), bottom.width())
+        + std::max({topRight.width(), right.width(), bottomRight.width()});
+    const int height = std::max({topLeft.height(), top.height(), topRight.height()}) + std::max(left.height(), right.height())
+        + std::max({bottomLeft.height(), bottom.height(), bottomRight.height()});
 
     QRectF topLeftRect(outerRect.topLeft(), topLeft);
     QRectF topRightRect(outerRect.topRight() - QPointF(topRight.width(), 0), topRight);
-    QRectF bottomRightRect(
-        outerRect.bottomRight() - QPointF(bottomRight.width(), bottomRight.height()),
-        bottomRight);
+    QRectF bottomRightRect(outerRect.bottomRight() - QPointF(bottomRight.width(), bottomRight.height()), bottomRight);
     QRectF bottomLeftRect(outerRect.bottomLeft() - QPointF(0, bottomLeft.height()), bottomLeft);
 
     // Re-distribute the corner tiles so no one of them is overlapping with others.
@@ -579,10 +562,7 @@ void SceneQPainterShadow::buildQuads()
         drawLeft = false;
     }
 
-    qreal tx1 = 0.0,
-          tx2 = 0.0,
-          ty1 = 0.0,
-          ty2 = 0.0;
+    qreal tx1 = 0.0, tx2 = 0.0, ty1 = 0.0, ty2 = 0.0;
 
     m_shadowQuads.clear();
 
@@ -591,10 +571,10 @@ void SceneQPainterShadow::buildQuads()
     tx2 = topLeftRect.width();
     ty2 = topLeftRect.height();
     WindowQuad topLeftQuad(WindowQuadShadow);
-    topLeftQuad[0] = WindowVertex(topLeftRect.left(),  topLeftRect.top(),    tx1, ty1);
-    topLeftQuad[1] = WindowVertex(topLeftRect.right(), topLeftRect.top(),    tx2, ty1);
+    topLeftQuad[0] = WindowVertex(topLeftRect.left(), topLeftRect.top(), tx1, ty1);
+    topLeftQuad[1] = WindowVertex(topLeftRect.right(), topLeftRect.top(), tx2, ty1);
     topLeftQuad[2] = WindowVertex(topLeftRect.right(), topLeftRect.bottom(), tx2, ty2);
-    topLeftQuad[3] = WindowVertex(topLeftRect.left(),  topLeftRect.bottom(), tx1, ty2);
+    topLeftQuad[3] = WindowVertex(topLeftRect.left(), topLeftRect.bottom(), tx1, ty2);
     m_shadowQuads.append(topLeftQuad);
 
     tx1 = width - topRightRect.width();
@@ -602,10 +582,10 @@ void SceneQPainterShadow::buildQuads()
     tx2 = width;
     ty2 = topRightRect.height();
     WindowQuad topRightQuad(WindowQuadShadow);
-    topRightQuad[0] = WindowVertex(topRightRect.left(),  topRightRect.top(),    tx1, ty1);
-    topRightQuad[1] = WindowVertex(topRightRect.right(), topRightRect.top(),    tx2, ty1);
+    topRightQuad[0] = WindowVertex(topRightRect.left(), topRightRect.top(), tx1, ty1);
+    topRightQuad[1] = WindowVertex(topRightRect.right(), topRightRect.top(), tx2, ty1);
     topRightQuad[2] = WindowVertex(topRightRect.right(), topRightRect.bottom(), tx2, ty2);
-    topRightQuad[3] = WindowVertex(topRightRect.left(),  topRightRect.bottom(), tx1, ty2);
+    topRightQuad[3] = WindowVertex(topRightRect.left(), topRightRect.bottom(), tx1, ty2);
     m_shadowQuads.append(topRightQuad);
 
     tx1 = width - bottomRightRect.width();
@@ -613,10 +593,10 @@ void SceneQPainterShadow::buildQuads()
     ty1 = height - bottomRightRect.height();
     ty2 = height;
     WindowQuad bottomRightQuad(WindowQuadShadow);
-    bottomRightQuad[0] = WindowVertex(bottomRightRect.left(),  bottomRightRect.top(),    tx1, ty1);
-    bottomRightQuad[1] = WindowVertex(bottomRightRect.right(), bottomRightRect.top(),    tx2, ty1);
+    bottomRightQuad[0] = WindowVertex(bottomRightRect.left(), bottomRightRect.top(), tx1, ty1);
+    bottomRightQuad[1] = WindowVertex(bottomRightRect.right(), bottomRightRect.top(), tx2, ty1);
     bottomRightQuad[2] = WindowVertex(bottomRightRect.right(), bottomRightRect.bottom(), tx2, ty2);
-    bottomRightQuad[3] = WindowVertex(bottomRightRect.left(),  bottomRightRect.bottom(), tx1, ty2);
+    bottomRightQuad[3] = WindowVertex(bottomRightRect.left(), bottomRightRect.bottom(), tx1, ty2);
     m_shadowQuads.append(bottomRightQuad);
 
     tx1 = 0.0;
@@ -624,73 +604,65 @@ void SceneQPainterShadow::buildQuads()
     ty1 = height - bottomLeftRect.height();
     ty2 = height;
     WindowQuad bottomLeftQuad(WindowQuadShadow);
-    bottomLeftQuad[0] = WindowVertex(bottomLeftRect.left(),  bottomLeftRect.top(),    tx1, ty1);
-    bottomLeftQuad[1] = WindowVertex(bottomLeftRect.right(), bottomLeftRect.top(),    tx2, ty1);
+    bottomLeftQuad[0] = WindowVertex(bottomLeftRect.left(), bottomLeftRect.top(), tx1, ty1);
+    bottomLeftQuad[1] = WindowVertex(bottomLeftRect.right(), bottomLeftRect.top(), tx2, ty1);
     bottomLeftQuad[2] = WindowVertex(bottomLeftRect.right(), bottomLeftRect.bottom(), tx2, ty2);
-    bottomLeftQuad[3] = WindowVertex(bottomLeftRect.left(),  bottomLeftRect.bottom(), tx1, ty2);
+    bottomLeftQuad[3] = WindowVertex(bottomLeftRect.left(), bottomLeftRect.bottom(), tx1, ty2);
     m_shadowQuads.append(bottomLeftQuad);
 
     if (drawTop) {
-        QRectF topRect(
-            topLeftRect.topRight(),
-            topRightRect.bottomLeft());
+        QRectF topRect(topLeftRect.topRight(), topRightRect.bottomLeft());
         tx1 = topLeft.width();
         ty1 = 0.0;
         tx2 = width - topRight.width();
         ty2 = topRect.height();
         WindowQuad topQuad(WindowQuadShadow);
-        topQuad[0] = WindowVertex(topRect.left(),  topRect.top(),    tx1, ty1);
-        topQuad[1] = WindowVertex(topRect.right(), topRect.top(),    tx2, ty1);
+        topQuad[0] = WindowVertex(topRect.left(), topRect.top(), tx1, ty1);
+        topQuad[1] = WindowVertex(topRect.right(), topRect.top(), tx2, ty1);
         topQuad[2] = WindowVertex(topRect.right(), topRect.bottom(), tx2, ty2);
-        topQuad[3] = WindowVertex(topRect.left(),  topRect.bottom(), tx1, ty2);
+        topQuad[3] = WindowVertex(topRect.left(), topRect.bottom(), tx1, ty2);
         m_shadowQuads.append(topQuad);
     }
 
     if (drawRight) {
-        QRectF rightRect(
-            topRightRect.bottomLeft(),
-            bottomRightRect.topRight());
+        QRectF rightRect(topRightRect.bottomLeft(), bottomRightRect.topRight());
         tx1 = width - rightRect.width();
         ty1 = topRight.height();
         tx2 = width;
         ty2 = height - bottomRight.height();
         WindowQuad rightQuad(WindowQuadShadow);
-        rightQuad[0] = WindowVertex(rightRect.left(),  rightRect.top(),    tx1, ty1);
-        rightQuad[1] = WindowVertex(rightRect.right(), rightRect.top(),    tx2, ty1);
+        rightQuad[0] = WindowVertex(rightRect.left(), rightRect.top(), tx1, ty1);
+        rightQuad[1] = WindowVertex(rightRect.right(), rightRect.top(), tx2, ty1);
         rightQuad[2] = WindowVertex(rightRect.right(), rightRect.bottom(), tx2, ty2);
-        rightQuad[3] = WindowVertex(rightRect.left(),  rightRect.bottom(), tx1, ty2);
+        rightQuad[3] = WindowVertex(rightRect.left(), rightRect.bottom(), tx1, ty2);
         m_shadowQuads.append(rightQuad);
     }
 
     if (drawBottom) {
-        QRectF bottomRect(
-            bottomLeftRect.topRight(),
-            bottomRightRect.bottomLeft());
+        QRectF bottomRect(bottomLeftRect.topRight(), bottomRightRect.bottomLeft());
         tx1 = bottomLeft.width();
         ty1 = height - bottomRect.height();
         tx2 = width - bottomRight.width();
         ty2 = height;
         WindowQuad bottomQuad(WindowQuadShadow);
-        bottomQuad[0] = WindowVertex(bottomRect.left(),  bottomRect.top(),    tx1, ty1);
-        bottomQuad[1] = WindowVertex(bottomRect.right(), bottomRect.top(),    tx2, ty1);
+        bottomQuad[0] = WindowVertex(bottomRect.left(), bottomRect.top(), tx1, ty1);
+        bottomQuad[1] = WindowVertex(bottomRect.right(), bottomRect.top(), tx2, ty1);
         bottomQuad[2] = WindowVertex(bottomRect.right(), bottomRect.bottom(), tx2, ty2);
-        bottomQuad[3] = WindowVertex(bottomRect.left(),  bottomRect.bottom(), tx1, ty2);
+        bottomQuad[3] = WindowVertex(bottomRect.left(), bottomRect.bottom(), tx1, ty2);
         m_shadowQuads.append(bottomQuad);
     }
 
     if (drawLeft) {
-        QRectF leftRect(
-            topLeftRect.bottomLeft(),
-            bottomLeftRect.topRight());
+        QRectF leftRect(topLeftRect.bottomLeft(), bottomLeftRect.topRight());
         tx1 = 0.0;
         ty1 = topLeft.height();
         tx2 = leftRect.width();
         ty2 = height - bottomRight.height();
         WindowQuad leftQuad(WindowQuadShadow);
-        leftQuad[0] = WindowVertex(leftRect.left(),  leftRect.top(),    tx1, ty1);
-        leftQuad[1] = WindowVertex(leftRect.right(), leftRect.top(),    tx2, ty1);
+        leftQuad[0] = WindowVertex(leftRect.left(), leftRect.top(), tx1, ty1);
+        leftQuad[1] = WindowVertex(leftRect.right(), leftRect.top(), tx2, ty1);
         leftQuad[2] = WindowVertex(leftRect.right(), leftRect.bottom(), tx2, ty2);
-        leftQuad[3] = WindowVertex(leftRect.left(),  leftRect.bottom(), tx1, ty2);
+        leftQuad[3] = WindowVertex(leftRect.left(), leftRect.bottom(), tx1, ty2);
         m_shadowQuads.append(leftQuad);
     }
 }
@@ -702,21 +674,19 @@ bool SceneQPainterShadow::prepareBackend()
         return true;
     }
 
-    const QPixmap &topLeft     = shadowPixmap(ShadowElementTopLeft);
-    const QPixmap &top         = shadowPixmap(ShadowElementTop);
-    const QPixmap &topRight    = shadowPixmap(ShadowElementTopRight);
-    const QPixmap &bottomLeft  = shadowPixmap(ShadowElementBottomLeft);
-    const QPixmap &bottom      = shadowPixmap(ShadowElementBottom);
+    const QPixmap &topLeft = shadowPixmap(ShadowElementTopLeft);
+    const QPixmap &top = shadowPixmap(ShadowElementTop);
+    const QPixmap &topRight = shadowPixmap(ShadowElementTopRight);
+    const QPixmap &bottomLeft = shadowPixmap(ShadowElementBottomLeft);
+    const QPixmap &bottom = shadowPixmap(ShadowElementBottom);
     const QPixmap &bottomRight = shadowPixmap(ShadowElementBottomRight);
-    const QPixmap &left        = shadowPixmap(ShadowElementLeft);
-    const QPixmap &right       = shadowPixmap(ShadowElementRight);
+    const QPixmap &left = shadowPixmap(ShadowElementLeft);
+    const QPixmap &right = shadowPixmap(ShadowElementRight);
 
-    const int width = std::max({topLeft.width(), left.width(), bottomLeft.width()})
-                    + std::max(top.width(), bottom.width())
-                    + std::max({topRight.width(), right.width(), bottomRight.width()});
-    const int height = std::max({topLeft.height(), top.height(), topRight.height()})
-                     + std::max(left.height(), right.height())
-                     + std::max({bottomLeft.height(), bottom.height(), bottomRight.height()});
+    const int width = std::max({topLeft.width(), left.width(), bottomLeft.width()}) + std::max(top.width(), bottom.width())
+        + std::max({topRight.width(), right.width(), bottomRight.width()});
+    const int height = std::max({topLeft.height(), top.height(), topRight.height()}) + std::max(left.height(), right.height())
+        + std::max({bottomLeft.height(), bottom.height(), bottomRight.height()});
 
     if (width == 0 || height == 0) {
         return false;
@@ -748,7 +718,7 @@ bool SceneQPainterShadow::prepareBackend()
 SceneQPainterDecorationRenderer::SceneQPainterDecorationRenderer(Decoration::DecoratedClientImpl *client)
     : Renderer(client)
 {
-    connect(this, &Renderer::renderScheduled, client->client(), static_cast<void (AbstractClient::*)(const QRect&)>(&AbstractClient::addRepaint));
+    connect(this, &Renderer::renderScheduled, client->client(), static_cast<void (AbstractClient::*)(const QRect &)>(&AbstractClient::addRepaint));
 }
 
 SceneQPainterDecorationRenderer::~SceneQPainterDecorationRenderer() = default;
@@ -809,9 +779,7 @@ void SceneQPainterDecorationRenderer::resizeImages()
 
     auto checkAndCreate = [this](int index, const QSize &size) {
         auto dpr = client()->client()->screenScale();
-        if (m_images[index].size() != size * dpr ||
-            m_images[index].devicePixelRatio() != dpr)
-        {
+        if (m_images[index].size() != size * dpr || m_images[index].devicePixelRatio() != dpr) {
             m_images[index] = QImage(size * dpr, QImage::Format_ARGB32_Premultiplied);
             m_images[index].setDevicePixelRatio(dpr);
             m_images[index].fill(Qt::transparent);
@@ -828,7 +796,6 @@ void SceneQPainterDecorationRenderer::reparent(Deleted *deleted)
     render();
     Renderer::reparent(deleted);
 }
-
 
 QPainterFactory::QPainterFactory(QObject *parent)
     : SceneFactory(parent)

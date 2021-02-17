@@ -11,30 +11,28 @@
 #include "coverswitchconfig.h"
 #include <config-kwin.h>
 
-#include <kwineffects_interface.h>
 #include <KAboutData>
 #include <KPluginFactory>
+#include <kwineffects_interface.h>
 
 #include <QVBoxLayout>
 
-K_PLUGIN_FACTORY_WITH_JSON(CoverSwitchEffectConfigFactory,
-                           "coverswitch_config.json",
-                           registerPlugin<KWin::CoverSwitchEffectConfig>();)
+K_PLUGIN_FACTORY_WITH_JSON(CoverSwitchEffectConfigFactory, "coverswitch_config.json", registerPlugin<KWin::CoverSwitchEffectConfig>();)
 
 namespace KWin
 {
-
-CoverSwitchEffectConfigForm::CoverSwitchEffectConfigForm(QWidget* parent) : QWidget(parent)
+CoverSwitchEffectConfigForm::CoverSwitchEffectConfigForm(QWidget *parent)
+    : QWidget(parent)
 {
     setupUi(this);
 }
 
-CoverSwitchEffectConfig::CoverSwitchEffectConfig(QWidget* parent, const QVariantList& args) :
-    KCModule(parent, args)
+CoverSwitchEffectConfig::CoverSwitchEffectConfig(QWidget *parent, const QVariantList &args)
+    : KCModule(parent, args)
 {
     m_ui = new CoverSwitchEffectConfigForm(this);
 
-    QVBoxLayout* layout = new QVBoxLayout(this);
+    QVBoxLayout *layout = new QVBoxLayout(this);
 
     layout->addWidget(m_ui);
 
@@ -45,9 +43,7 @@ CoverSwitchEffectConfig::CoverSwitchEffectConfig(QWidget* parent, const QVariant
 void CoverSwitchEffectConfig::save()
 {
     KCModule::save();
-    OrgKdeKwinEffectsInterface interface(QStringLiteral("org.kde.KWin"),
-                                         QStringLiteral("/Effects"),
-                                         QDBusConnection::sessionBus());
+    OrgKdeKwinEffectsInterface interface(QStringLiteral("org.kde.KWin"), QStringLiteral("/Effects"), QDBusConnection::sessionBus());
     interface.reconfigureEffect(QStringLiteral("coverswitch"));
 }
 

@@ -7,21 +7,21 @@
 #include "main.h"
 
 #include <QLayout>
-//Added by qt3to4:
+// Added by qt3to4:
 #include <QVBoxLayout>
 
 #include <QtDBus>
 
 #include <KLocalizedString>
-#include <kconfig.h>
-#include <kaboutdata.h>
 #include <KPluginFactory>
 #include <KPluginLoader>
+#include <kaboutdata.h>
+#include <kconfig.h>
 
+#include "kwinoptions_kdeglobals_settings.h"
+#include "kwinoptions_settings.h"
 #include "mouse.h"
 #include "windows.h"
-#include "kwinoptions_settings.h"
-#include "kwinoptions_kdeglobals_settings.h"
 
 K_PLUGIN_FACTORY_DECLARATION(KWinOptionsFactory)
 
@@ -29,7 +29,7 @@ class KFocusConfigStandalone : public KFocusConfig
 {
     Q_OBJECT
 public:
-    KFocusConfigStandalone(QWidget* parent, const QVariantList &)
+    KFocusConfigStandalone(QWidget *parent, const QVariantList &)
         : KFocusConfig(true, nullptr, parent)
     {
         initialize(new KWinOptionsSettings(this));
@@ -40,7 +40,7 @@ class KMovingConfigStandalone : public KMovingConfig
 {
     Q_OBJECT
 public:
-    KMovingConfigStandalone(QWidget* parent, const QVariantList &)
+    KMovingConfigStandalone(QWidget *parent, const QVariantList &)
         : KMovingConfig(true, nullptr, parent)
     {
         initialize(new KWinOptionsSettings(this));
@@ -51,7 +51,7 @@ class KAdvancedConfigStandalone : public KAdvancedConfig
 {
     Q_OBJECT
 public:
-    KAdvancedConfigStandalone(QWidget* parent, const QVariantList &)
+    KAdvancedConfigStandalone(QWidget *parent, const QVariantList &)
         : KAdvancedConfig(true, nullptr, nullptr, parent)
     {
         initialize(new KWinOptionsSettings(this), new KWinOptionsKDEGlobalsSettings(this));
@@ -106,10 +106,12 @@ KWinOptions::KWinOptions(QWidget *parent, const QVariantList &)
     connect(mAdvanced, qOverload<bool>(&KCModule::changed), this, qOverload<bool>(&KCModule::changed));
     connect(mAdvanced, qOverload<bool>(&KCModule::defaulted), this, qOverload<bool>(&KCModule::defaulted));
     connect(this, &KCModule::defaultsIndicatorsVisibleChanged, mAdvanced, &KCModule::setDefaultsIndicatorsVisible);
-    KAboutData *about =
-        new KAboutData(QStringLiteral("kcmkwinoptions"), i18n("Window Behavior Configuration Module"),
-                       QString(), QString(), KAboutLicense::GPL,
-                       i18n("(c) 1997 - 2002 KWin and KControl Authors"));
+    KAboutData *about = new KAboutData(QStringLiteral("kcmkwinoptions"),
+                                       i18n("Window Behavior Configuration Module"),
+                                       QString(),
+                                       QString(),
+                                       KAboutLicense::GPL,
+                                       i18n("(c) 1997 - 2002 KWin and KControl Authors"));
 
     about->addAuthor(i18n("Matthias Ettrich"), QString(), "ettrich@kde.org");
     about->addAuthor(i18n("Waldo Bastian"), QString(), "bastian@kde.org");
@@ -145,11 +147,9 @@ void KWinOptions::save()
     emit KCModule::changed(false);
 
     // Send signal to all kwin instances
-    QDBusMessage message =
-        QDBusMessage::createSignal("/KWin", "org.kde.KWin", "reloadConfig");
+    QDBusMessage message = QDBusMessage::createSignal("/KWin", "org.kde.KWin", "reloadConfig");
     QDBusConnection::sessionBus().send(message);
 }
-
 
 void KWinOptions::defaults()
 {
@@ -164,12 +164,13 @@ void KWinOptions::defaults()
 
 QString KWinOptions::quickHelp() const
 {
-    return i18n("<p><h1>Window Behavior</h1> Here you can customize the way windows behave when being"
-                " moved, resized or clicked on. You can also specify a focus policy as well as a placement"
-                " policy for new windows.</p>"
-                " <p>Please note that this configuration will not take effect if you do not use"
-                " KWin as your window manager. If you do use a different window manager, please refer to its documentation"
-                " for how to customize window behavior.</p>");
+    return i18n(
+        "<p><h1>Window Behavior</h1> Here you can customize the way windows behave when being"
+        " moved, resized or clicked on. You can also specify a focus policy as well as a placement"
+        " policy for new windows.</p>"
+        " <p>Please note that this configuration will not take effect if you do not use"
+        " KWin as your window manager. If you do use a different window manager, please refer to its documentation"
+        " for how to customize window behavior.</p>");
 }
 
 KActionsOptions::KActionsOptions(QWidget *parent, const QVariantList &)
@@ -208,8 +209,7 @@ void KActionsOptions::save()
 
     emit KCModule::changed(false);
     // Send signal to all kwin instances
-    QDBusMessage message =
-        QDBusMessage::createSignal("/KWin", "org.kde.KWin", "reloadConfig");
+    QDBusMessage message = QDBusMessage::createSignal("/KWin", "org.kde.KWin", "reloadConfig");
     QDBusConnection::sessionBus().send(message);
 }
 
@@ -224,12 +224,9 @@ void KActionsOptions::moduleChanged(bool state)
     emit KCModule::changed(state);
 }
 
-K_PLUGIN_FACTORY_DEFINITION(KWinOptionsFactory,
-                            registerPlugin<KActionsOptions>("kwinactions");
-                            registerPlugin<KFocusConfigStandalone>("kwinfocus");
+K_PLUGIN_FACTORY_DEFINITION(KWinOptionsFactory, registerPlugin<KActionsOptions>("kwinactions"); registerPlugin<KFocusConfigStandalone>("kwinfocus");
                             registerPlugin<KMovingConfigStandalone>("kwinmoving");
                             registerPlugin<KAdvancedConfigStandalone>("kwinadvanced");
-                            registerPlugin<KWinOptions>("kwinoptions");
-                           )
+                            registerPlugin<KWinOptions>("kwinoptions");)
 
 #include "main.moc"

@@ -25,8 +25,8 @@ namespace KWaylandServer
 class ShadowInterface;
 }
 
-namespace KWin {
-
+namespace KWin
+{
 class Toplevel;
 
 /**
@@ -53,16 +53,19 @@ public:
     /**
      * @return Region of the shadow.
      */
-    const QRegion &shadowRegion() const {
+    const QRegion &shadowRegion() const
+    {
         return m_shadowRegion;
     };
     /**
      * @return Cached Shadow Quads
      */
-    const WindowQuadList &shadowQuads() const {
+    const WindowQuadList &shadowQuads() const
+    {
         return m_shadowQuads;
     };
-    WindowQuadList &shadowQuads() {
+    WindowQuadList &shadowQuads()
+    {
         return m_shadowQuads;
     };
 
@@ -96,12 +99,14 @@ public:
      */
     void setToplevel(Toplevel *toplevel);
 
-    bool hasDecorationShadow() const {
+    bool hasDecorationShadow() const
+    {
         return !m_decorationShadow.isNull();
     }
     QImage decorationShadowImage() const;
 
-    QWeakPointer<KDecoration2::DecorationShadow> decorationShadow() const {
+    QWeakPointer<KDecoration2::DecorationShadow> decorationShadow() const
+    {
         return m_decorationShadow.toWeakRef();
     }
 
@@ -122,29 +127,36 @@ protected:
         ShadowElementsCount
     };
 
-    inline const QPixmap &shadowPixmap(ShadowElements element) const {
+    inline const QPixmap &shadowPixmap(ShadowElements element) const
+    {
         return m_shadowElements[element];
     };
     QSize elementSize(ShadowElements element) const;
 
-    int topOffset() const {
+    int topOffset() const
+    {
         return m_topOffset;
     };
-    int rightOffset() const {
+    int rightOffset() const
+    {
         return m_rightOffset;
     };
-    int bottomOffset() const {
+    int bottomOffset() const
+    {
         return m_bottomOffset;
     };
-    int leftOffset() const {
+    int leftOffset() const
+    {
         return m_leftOffset;
     };
     virtual void buildQuads();
     void updateShadowRegion();
-    Toplevel *topLevel() {
+    Toplevel *topLevel()
+    {
         return m_topLevel;
     };
-    void setShadowRegion(const QRegion &region) {
+    void setShadowRegion(const QRegion &region)
+    {
         m_shadowRegion = region;
     };
     virtual bool prepareBackend() = 0;

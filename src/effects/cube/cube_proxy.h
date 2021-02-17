@@ -12,21 +12,20 @@
 
 namespace KWin
 {
-
 class CubeEffect;
 class CubeInsideEffect;
 
 class CubeEffectProxy
 {
 public:
-    explicit CubeEffectProxy(CubeEffect* effect);
+    explicit CubeEffectProxy(CubeEffect *effect);
     ~CubeEffectProxy();
 
-    void registerCubeInsideEffect(CubeInsideEffect* effect);
-    void unregisterCubeInsideEffect(CubeInsideEffect* effect);
+    void registerCubeInsideEffect(CubeInsideEffect *effect);
+    void unregisterCubeInsideEffect(CubeInsideEffect *effect);
 
 private:
-    CubeEffect* m_effect;
+    CubeEffect *m_effect;
 };
 
 } // namespace

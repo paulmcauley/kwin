@@ -13,7 +13,6 @@
 
 namespace KWin
 {
-
 class DrmConnector : public DrmObject
 {
 public:
@@ -23,26 +22,25 @@ public:
 
     bool init() override;
 
-    enum class PropertyIndex {
-        CrtcId = 0,
-        NonDesktop = 1,
-        Count
-    };
+    enum class PropertyIndex { CrtcId = 0, NonDesktop = 1, Count };
 
-    QVector<uint32_t> encoders() {
+    QVector<uint32_t> encoders()
+    {
         return m_encoders;
     }
 
     bool initProps() override;
     bool isConnected();
 
-    bool isNonDesktop() const {
+    bool isNonDesktop() const
+    {
         auto prop = m_props.at(static_cast<int>(PropertyIndex::NonDesktop));
         if (!prop) {
             return false;
         }
         return prop->value();
     }
+
 private:
     QVector<uint32_t> m_encoders;
 };
@@ -50,4 +48,3 @@ private:
 }
 
 #endif
-

@@ -13,7 +13,6 @@
 
 namespace KWin
 {
-
 class KscreenEffect : public Effect
 {
     Q_OBJECT
@@ -30,7 +29,8 @@ public:
     void reconfigure(ReconfigureFlags flags) override;
     bool isActive() const override;
 
-    int requestedEffectChainPosition() const override {
+    int requestedEffectChainPosition() const override
+    {
         return 99;
     }
 
@@ -39,18 +39,12 @@ private Q_SLOTS:
 
 private:
     void switchState();
-    enum FadeOutState {
-        StateNormal,
-        StateFadingOut,
-        StateFadedOut,
-        StateFadingIn
-    };
+    enum FadeOutState { StateNormal, StateFadingOut, StateFadedOut, StateFadingIn };
     TimeLine m_timeLine;
     std::chrono::milliseconds m_lastPresentTime;
     FadeOutState m_state;
     xcb_atom_t m_atom;
 };
-
 
 } // namespace KWin
 #endif // KWIN_KSCREEN_H

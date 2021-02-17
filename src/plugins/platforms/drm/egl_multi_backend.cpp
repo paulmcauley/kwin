@@ -12,8 +12,8 @@
 
 namespace KWin
 {
-
-EglMultiBackend::EglMultiBackend(AbstractEglDrmBackend *backend0) : OpenGLBackend()
+EglMultiBackend::EglMultiBackend(AbstractEglDrmBackend *backend0)
+    : OpenGLBackend()
 {
     m_backends.append(backend0);
     setIsDirectRendering(true);
@@ -112,7 +112,7 @@ void EglMultiBackend::screenGeometryChanged(const QSize &size)
     Q_UNUSED(size)
 }
 
-AbstractEglDrmBackend *EglMultiBackend::findBackend(int screenId, int& internalScreenId) const
+AbstractEglDrmBackend *EglMultiBackend::findBackend(int screenId, int &internalScreenId) const
 {
     int screens = 0;
     for (int i = 0; i < m_backends.count(); i++) {

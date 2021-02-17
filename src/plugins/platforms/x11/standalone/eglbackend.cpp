@@ -17,7 +17,6 @@
 
 namespace KWin
 {
-
 EglBackend::EglBackend(Display *display, X11StandalonePlatform *backend)
     : EglOnXBackend(display)
     , m_backend(backend)
@@ -81,7 +80,7 @@ void EglBackend::endFrame(int screenId, const QRegion &renderedRegion, const QRe
     presentSurface(surface(), renderedRegion, screens()->geometry());
 
     if (overlayWindow() && overlayWindow()->window()) { // show the window only after the first pass,
-        overlayWindow()->show();   // since that pass may take long
+        overlayWindow()->show(); // since that pass may take long
     }
 
     // Save the damaged region to history
@@ -140,12 +139,8 @@ bool EglTexture::loadTexture(WindowPixmap *pixmap)
     q->setWrapMode(GL_CLAMP_TO_EDGE);
     q->setFilter(GL_LINEAR);
     q->bind();
-    const EGLint attribs[] = {
-        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-        EGL_NONE
-    };
-    setImage(eglCreateImageKHR(m_backend->eglDisplay(), EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR,
-                               (EGLClientBuffer)nativePixmap, attribs));
+    const EGLint attribs[] = {EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE};
+    setImage(eglCreateImageKHR(m_backend->eglDisplay(), EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, (EGLClientBuffer)nativePixmap, attribs));
 
     if (EGL_NO_IMAGE_KHR == image()) {
         qCDebug(KWIN_CORE) << "failed to create egl image";
@@ -167,7 +162,7 @@ void EglTexture::onDamage()
         // This is just implemented to be consistent with
         // the example in mesa/demos/src/egl/opengles1/texture_from_pixmap.c
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
-        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES) image());
+        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)image());
     }
     GLTexturePrivate::onDamage();
 }

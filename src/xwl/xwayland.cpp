@@ -40,15 +40,14 @@
 #include <unistd.h>
 #endif
 
-#include <sys/socket.h>
 #include <cerrno>
 #include <cstring>
+#include <sys/socket.h>
 
 namespace KWin
 {
 namespace Xwl
 {
-
 Xwayland::Xwayland(ApplicationWaylandAbstract *app, QObject *parent)
     : XwaylandInterface(parent)
     , m_app(app)
@@ -68,9 +67,12 @@ QProcess *Xwayland::process() const
     return m_xwaylandProcess;
 }
 
-static void writeXauthorityEntry(QDataStream &stream, quint16 family,
-                                 const QByteArray &address, const QByteArray &display,
-                                 const QByteArray &name, const QByteArray &cookie)
+static void writeXauthorityEntry(QDataStream &stream,
+                                 quint16 family,
+                                 const QByteArray &address,
+                                 const QByteArray &display,
+                                 const QByteArray &name,
+                                 const QByteArray &cookie)
 {
     stream << quint16(family);
 
@@ -226,15 +228,19 @@ bool Xwayland::startInternal()
     }
     m_xwaylandProcess->setProcessEnvironment(env);
     m_xwaylandProcess->setArguments({m_socket->name(),
-                           QStringLiteral("-displayfd"), QString::number(pipeFds[1]),
-                           QStringLiteral("-rootless"),
-                           QStringLiteral("-wm"), QString::number(fd),
-                           QStringLiteral("-auth"), m_authorityFile.fileName(),
-                           QStringLiteral("-listen"), QString::number(abstractSocket),
-                           QStringLiteral("-listen"), QString::number(unixSocket)});
+                                     QStringLiteral("-displayfd"),
+                                     QString::number(pipeFds[1]),
+                                     QStringLiteral("-rootless"),
+                                     QStringLiteral("-wm"),
+                                     QString::number(fd),
+                                     QStringLiteral("-auth"),
+                                     m_authorityFile.fileName(),
+                                     QStringLiteral("-listen"),
+                                     QString::number(abstractSocket),
+                                     QStringLiteral("-listen"),
+                                     QString::number(unixSocket)});
     connect(m_xwaylandProcess, &QProcess::errorOccurred, this, &Xwayland::handleXwaylandError);
-    connect(m_xwaylandProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, &Xwayland::handleXwaylandFinished);
+    connect(m_xwaylandProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &Xwayland::handleXwaylandFinished);
 
     // When Xwayland starts writing the display name to displayfd, it is ready. Alternatively,
     // the Xwayland can send us the SIGUSR1 signal, but it's already reserved for VT hand-off.
@@ -370,8 +376,10 @@ void Xwayland::handleXwaylandCrashed()
             restartInternal();
             m_resetCrashCountTimer->start(std::chrono::minutes(10));
         } else {
-            qCWarning(KWIN_XWL, "Stopping Xwayland server because it has crashed %d times "
-                      "over the past 10 minutes", m_crashCount);
+            qCWarning(KWIN_XWL,
+                      "Stopping Xwayland server because it has crashed %d times "
+                      "over the past 10 minutes",
+                      m_crashCount);
             stop();
         }
         break;
@@ -428,12 +436,9 @@ void Xwayland::handleXwaylandReady()
 
     // create selection owner for WM_S0 - magic X display number expected by XWayland
     m_selectionOwner.reset(new KSelectionOwner("WM_S0", kwinApp()->x11Connection(), kwinApp()->x11RootWindow()));
-    connect(m_selectionOwner.data(), &KSelectionOwner::lostOwnership,
-            this, &Xwayland::handleSelectionLostOwnership);
-    connect(m_selectionOwner.data(), &KSelectionOwner::claimedOwnership,
-            this, &Xwayland::handleSelectionClaimedOwnership);
-    connect(m_selectionOwner.data(), &KSelectionOwner::failedToClaimOwnership,
-            this, &Xwayland::handleSelectionFailedToClaimOwnership);
+    connect(m_selectionOwner.data(), &KSelectionOwner::lostOwnership, this, &Xwayland::handleSelectionLostOwnership);
+    connect(m_selectionOwner.data(), &KSelectionOwner::claimedOwnership, this, &Xwayland::handleSelectionClaimedOwnership);
+    connect(m_selectionOwner.data(), &KSelectionOwner::failedToClaimOwnership, this, &Xwayland::handleSelectionFailedToClaimOwnership);
     m_selectionOwner->claim(true);
 
     DataBridge::create(this);

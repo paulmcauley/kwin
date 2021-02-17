@@ -6,10 +6,8 @@
 
 #include "rulebookmodel.h"
 
-
 namespace KWin
 {
-
 RuleBookModel::RuleBookModel(QObject *parent)
     : QAbstractListModel(parent)
     , m_ruleBook(new RuleBookSettings(this))
@@ -93,46 +91,42 @@ bool RuleBookModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
-bool RuleBookModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count,
-                             const QModelIndex &destinationParent, int destinationChild)
+bool RuleBookModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationChild)
 {
-    if (sourceParent != destinationParent || sourceParent != QModelIndex()){
+    if (sourceParent != destinationParent || sourceParent != QModelIndex()) {
         return false;
     }
 
     const bool isMoveDown = destinationChild > sourceRow;
     // QAbstractItemModel::beginMoveRows(): when moving rows down in the same parent,
     // the rows will be placed before the destinationChild index.
-    if (!beginMoveRows(sourceParent, sourceRow, sourceRow + count - 1,
-                       destinationParent, isMoveDown ? destinationChild + 1 : destinationChild)) {
+    if (!beginMoveRows(sourceParent, sourceRow, sourceRow + count - 1, destinationParent, isMoveDown ? destinationChild + 1 : destinationChild)) {
         return false;
     }
 
     for (int i = 0; i < count; i++) {
-        m_rules.insert(destinationChild + i,
-                       m_rules.takeAt(isMoveDown ? sourceRow : sourceRow + i));
+        m_rules.insert(destinationChild + i, m_rules.takeAt(isMoveDown ? sourceRow : sourceRow + i));
     }
 
     endMoveRows();
     return true;
 }
 
-
 QString RuleBookModel::descriptionAt(int row) const
 {
-    Q_ASSERT (row >= 0 && row < m_rules.count());
+    Q_ASSERT(row >= 0 && row < m_rules.count());
     return m_rules.at(row)->description;
 }
 
 Rules *RuleBookModel::ruleAt(int row) const
 {
-    Q_ASSERT (row >= 0 && row < m_rules.count());
+    Q_ASSERT(row >= 0 && row < m_rules.count());
     return m_rules.at(row);
 }
 
 void RuleBookModel::setDescriptionAt(int row, const QString &description)
 {
-    Q_ASSERT (row >= 0 && row < m_rules.count());
+    Q_ASSERT(row >= 0 && row < m_rules.count());
     if (description == m_rules.at(row)->description) {
         return;
     }
@@ -144,14 +138,13 @@ void RuleBookModel::setDescriptionAt(int row, const QString &description)
 
 void RuleBookModel::setRuleAt(int row, Rules *rule)
 {
-    Q_ASSERT (row >= 0 && row < m_rules.count());
+    Q_ASSERT(row >= 0 && row < m_rules.count());
 
     delete m_rules.at(row);
     m_rules[row] = rule;
 
     emit dataChanged(index(row), index(row), QVector<int>{Qt::DisplayRole});
 }
-
 
 void RuleBookModel::load()
 {

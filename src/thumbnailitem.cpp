@@ -9,11 +9,11 @@
 
 #include "thumbnailitem.h"
 // KWin
-#include "x11client.h"
 #include "composite.h"
 #include "effects.h"
-#include "workspace.h"
 #include "wayland_server.h"
+#include "workspace.h"
+#include "x11client.h"
 // Qt
 #include <QDebug>
 #include <QPainter>
@@ -21,7 +21,6 @@
 
 namespace KWin
 {
-
 AbstractThumbnailItem::AbstractThumbnailItem(QQuickItem *parent)
     : QQuickPaintedItem(parent)
     , m_brightness(1.0)
@@ -63,7 +62,7 @@ void AbstractThumbnailItem::findParentEffectWindow()
             qCDebug(KWIN_CORE) << "No QQuickWindow assigned yet";
             return;
         }
-        if (auto *w = static_cast<EffectWindowImpl*>(effects->findWindow(qw))) {
+        if (auto *w = static_cast<EffectWindowImpl *>(effects->findWindow(qw))) {
             m_parent = QPointer<EffectWindowImpl>(w);
         }
     }
@@ -107,7 +106,7 @@ void AbstractThumbnailItem::setClipTo(QQuickItem *clip)
     emit clipToChanged();
 }
 
-WindowThumbnailItem::WindowThumbnailItem(QQuickItem* parent)
+WindowThumbnailItem::WindowThumbnailItem(QQuickItem *parent)
     : AbstractThumbnailItem(parent)
     , m_wId(nullptr)
     , m_client(nullptr)
@@ -125,7 +124,9 @@ void WindowThumbnailItem::setWId(const QUuid &wId)
     }
     m_wId = wId;
     if (m_wId != nullptr) {
-        setClient(workspace()->findAbstractClient([this] (const AbstractClient *c) { return c->internalId() == m_wId; }));
+        setClient(workspace()->findAbstractClient([this](const AbstractClient *c) {
+            return c->internalId() == m_wId;
+        }));
     } else if (m_client) {
         m_client = nullptr;
         emit clientChanged();
@@ -152,19 +153,20 @@ void WindowThumbnailItem::paint(QPainter *painter)
     if (effects) {
         return;
     }
-    auto client = workspace()->findAbstractClient([this] (const AbstractClient *c) { return c->internalId() == m_wId; });
+    auto client = workspace()->findAbstractClient([this](const AbstractClient *c) {
+        return c->internalId() == m_wId;
+    });
     if (!client) {
         return;
     }
     QPixmap pixmap = client->icon().pixmap(boundingRect().size().toSize());
     const QSize size(boundingRect().size().toSize() - pixmap.size());
-    painter->drawPixmap(boundingRect().adjusted(size.width()/2.0, size.height()/2.0, -size.width()/2.0, -size.height()/2.0).toRect(),
-                        pixmap);
+    painter->drawPixmap(boundingRect().adjusted(size.width() / 2.0, size.height() / 2.0, -size.width() / 2.0, -size.height() / 2.0).toRect(), pixmap);
 }
 
 void WindowThumbnailItem::repaint(KWin::EffectWindow *w)
 {
-    if (static_cast<KWin::EffectWindowImpl*>(w)->window()->internalId() == m_wId) {
+    if (static_cast<KWin::EffectWindowImpl *>(w)->window()->internalId() == m_wId) {
         update();
     }
 }

@@ -18,27 +18,26 @@ class KActionCollection;
 
 namespace KWin
 {
-
 class FlipSwitchEffectConfigForm : public QWidget, public Ui::FlipSwitchEffectConfigForm
 {
     Q_OBJECT
 public:
-    explicit FlipSwitchEffectConfigForm(QWidget* parent);
+    explicit FlipSwitchEffectConfigForm(QWidget *parent);
 };
 
 class FlipSwitchEffectConfig : public KCModule
 {
     Q_OBJECT
 public:
-    explicit FlipSwitchEffectConfig(QWidget* parent = nullptr, const QVariantList& args = QVariantList());
+    explicit FlipSwitchEffectConfig(QWidget *parent = nullptr, const QVariantList &args = QVariantList());
     ~FlipSwitchEffectConfig() override;
 
 public Q_SLOTS:
     void save() override;
 
 private:
-    FlipSwitchEffectConfigForm* m_ui;
-    KActionCollection* m_actionCollection;
+    FlipSwitchEffectConfigForm *m_ui;
+    KActionCollection *m_actionCollection;
 };
 
 } // namespace

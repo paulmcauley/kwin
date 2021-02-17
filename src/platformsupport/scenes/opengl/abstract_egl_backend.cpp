@@ -7,22 +7,22 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "abstract_egl_backend.h"
-#include "egl_dmabuf.h"
-#include "kwineglext.h"
+#include "abstract_wayland_output.h"
 #include "composite.h"
 #include "egl_context_attribute_builder.h"
+#include "egl_dmabuf.h"
+#include "kwineglext.h"
 #include "options.h"
 #include "platform.h"
 #include "scene.h"
 #include "wayland_server.h"
-#include "abstract_wayland_output.h"
 #include <KWaylandServer/buffer_interface.h>
 #include <KWaylandServer/display.h>
 #include <KWaylandServer/surface_interface.h>
 // kwin libs
-#include <logging.h>
 #include <kwinglplatform.h>
 #include <kwinglutils.h>
+#include <logging.h>
 // Qt
 #include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
@@ -31,10 +31,9 @@
 
 namespace KWin
 {
-
-typedef GLboolean(*eglBindWaylandDisplayWL_func)(EGLDisplay dpy, wl_display *display);
-typedef GLboolean(*eglUnbindWaylandDisplayWL_func)(EGLDisplay dpy, wl_display *display);
-typedef GLboolean(*eglQueryWaylandBufferWL_func)(EGLDisplay dpy, struct wl_resource *buffer, EGLint attribute, EGLint *value);
+typedef GLboolean (*eglBindWaylandDisplayWL_func)(EGLDisplay dpy, wl_display *display);
+typedef GLboolean (*eglUnbindWaylandDisplayWL_func)(EGLDisplay dpy, wl_display *display);
+typedef GLboolean (*eglQueryWaylandBufferWL_func)(EGLDisplay dpy, struct wl_resource *buffer, EGLint attribute, EGLint *value);
 eglBindWaylandDisplayWL_func eglBindWaylandDisplayWL = nullptr;
 eglUnbindWaylandDisplayWL_func eglUnbindWaylandDisplayWL = nullptr;
 eglQueryWaylandBufferWL_func eglQueryWaylandBufferWL = nullptr;
@@ -163,7 +162,7 @@ bool AbstractEglBackend::initEglAPI()
 }
 
 typedef void (*eglFuncPtr)();
-static eglFuncPtr getProcAddress(const char* name)
+static eglFuncPtr getProcAddress(const char *name)
 {
     return eglGetProcAddress(name);
 }
@@ -227,12 +226,12 @@ void AbstractEglBackend::initWayland()
 void AbstractEglBackend::initClientExtensions()
 {
     // Get the list of client extensions
-    const char* clientExtensionsCString = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+    const char *clientExtensionsCString = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
     const QByteArray clientExtensionsString = QByteArray::fromRawData(clientExtensionsCString, qstrlen(clientExtensionsCString));
     if (clientExtensionsString.isEmpty()) {
         // If eglQueryString() returned NULL, the implementation doesn't support
         // EGL_EXT_client_extensions. Expect an EGL_BAD_DISPLAY error.
-        (void) eglGetError();
+        (void)eglGetError();
     }
 
     m_clientExtensions = clientExtensionsString.split(' ');
@@ -357,7 +356,8 @@ bool AbstractEglBackend::createContext()
     return true;
 }
 
-void AbstractEglBackend::setEglDisplay(const EGLDisplay &display) {
+void AbstractEglBackend::setEglDisplay(const EGLDisplay &display)
+{
     m_display = display;
     if (isPrimary()) {
         kwinApp()->platform()->setSceneEglDisplay(display);
@@ -452,7 +452,7 @@ void AbstractEglTexture::updateTexture(WindowPixmap *pixmap)
     auto s = pixmap->surface();
     if (EglDmabufBuffer *dmabuf = static_cast<EglDmabufBuffer *>(buffer->linuxDmabufBuffer())) {
         q->bind();
-        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES) dmabuf->images()[0]);   //TODO
+        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)dmabuf->images()[0]); // TODO
         q->unbind();
         if (m_image != EGL_NO_IMAGE_KHR) {
             eglDestroyImageKHR(m_backend->eglDisplay(), m_image);
@@ -521,16 +521,13 @@ bool AbstractEglTexture::createTextureImage(const QImage &image)
     if (GLPlatform::instance()->isGLES()) {
         if (s_supportsARGB32 && format == GL_RGBA8) {
             const QImage im = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-            glTexImage2D(m_target, 0, GL_BGRA_EXT, im.width(), im.height(),
-                         0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, im.bits());
+            glTexImage2D(m_target, 0, GL_BGRA_EXT, im.width(), im.height(), 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, im.bits());
         } else {
             const QImage im = image.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
-            glTexImage2D(m_target, 0, GL_RGBA, im.width(), im.height(),
-                         0, GL_RGBA, GL_UNSIGNED_BYTE, im.bits());
+            glTexImage2D(m_target, 0, GL_RGBA, im.width(), im.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, im.bits());
         }
     } else {
-        glTexImage2D(m_target, 0, format, size.width(), size.height(), 0,
-                    GL_BGRA, GL_UNSIGNED_BYTE, image.bits());
+        glTexImage2D(m_target, 0, format, size.width(), size.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, image.bits());
     }
     q->unbind();
     q->setYInverted(true);
@@ -546,32 +543,29 @@ void AbstractEglTexture::createTextureSubImage(const QImage &image, const QRegio
         if (s_supportsARGB32 && (image.format() == QImage::Format_ARGB32 || image.format() == QImage::Format_ARGB32_Premultiplied)) {
             const QImage im = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
             for (const QRect &rect : damage) {
-                glTexSubImage2D(m_target, 0, rect.x(), rect.y(), rect.width(), rect.height(),
-                                GL_BGRA_EXT, GL_UNSIGNED_BYTE, im.copy(rect).bits());
+                glTexSubImage2D(m_target, 0, rect.x(), rect.y(), rect.width(), rect.height(), GL_BGRA_EXT, GL_UNSIGNED_BYTE, im.copy(rect).bits());
             }
         } else {
             const QImage im = image.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
             for (const QRect &rect : damage) {
-                glTexSubImage2D(m_target, 0, rect.x(), rect.y(), rect.width(), rect.height(),
-                                GL_RGBA, GL_UNSIGNED_BYTE, im.copy(rect).bits());
+                glTexSubImage2D(m_target, 0, rect.x(), rect.y(), rect.width(), rect.height(), GL_RGBA, GL_UNSIGNED_BYTE, im.copy(rect).bits());
             }
         }
     } else {
         const QImage im = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
         for (const QRect &rect : damage) {
-            glTexSubImage2D(m_target, 0, rect.x(), rect.y(), rect.width(), rect.height(),
-                            GL_BGRA, GL_UNSIGNED_BYTE, im.copy(rect).bits());
+            glTexSubImage2D(m_target, 0, rect.x(), rect.y(), rect.width(), rect.height(), GL_BGRA, GL_UNSIGNED_BYTE, im.copy(rect).bits());
         }
     }
     q->unbind();
 }
 
-bool AbstractEglTexture::loadShmTexture(const QPointer< KWaylandServer::BufferInterface > &buffer)
+bool AbstractEglTexture::loadShmTexture(const QPointer<KWaylandServer::BufferInterface> &buffer)
 {
     return createTextureImage(buffer->data());
 }
 
-bool AbstractEglTexture::loadEglTexture(const QPointer< KWaylandServer::BufferInterface > &buffer)
+bool AbstractEglTexture::loadEglTexture(const QPointer<KWaylandServer::BufferInterface> &buffer)
 {
     if (!eglQueryWaylandBufferWL) {
         return false;
@@ -596,7 +590,7 @@ bool AbstractEglTexture::loadEglTexture(const QPointer< KWaylandServer::BufferIn
     return true;
 }
 
-bool AbstractEglTexture::loadDmabufTexture(const QPointer< KWaylandServer::BufferInterface > &buffer)
+bool AbstractEglTexture::loadDmabufTexture(const QPointer<KWaylandServer::BufferInterface> &buffer)
 {
     auto *dmabuf = static_cast<EglDmabufBuffer *>(buffer->linuxDmabufBuffer());
     if (!dmabuf || dmabuf->images()[0] == EGL_NO_IMAGE_KHR) {
@@ -611,7 +605,7 @@ bool AbstractEglTexture::loadDmabufTexture(const QPointer< KWaylandServer::Buffe
     q->setWrapMode(GL_CLAMP_TO_EDGE);
     q->setFilter(GL_NEAREST);
     q->bind();
-    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES) dmabuf->images()[0]);
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)dmabuf->images()[0]);
     q->unbind();
 
     m_size = dmabuf->size();
@@ -626,7 +620,7 @@ bool AbstractEglTexture::loadInternalImageObject(WindowPixmap *pixmap)
     return createTextureImage(pixmap->internalImage());
 }
 
-EGLImageKHR AbstractEglTexture::attach(const QPointer< KWaylandServer::BufferInterface > &buffer)
+EGLImageKHR AbstractEglTexture::attach(const QPointer<KWaylandServer::BufferInterface> &buffer)
 {
     EGLint format, yInverted;
     eglQueryWaylandBufferWL(m_backend->eglDisplay(), buffer->resource(), EGL_TEXTURE_FORMAT, &format);
@@ -639,12 +633,8 @@ EGLImageKHR AbstractEglTexture::attach(const QPointer< KWaylandServer::BufferInt
         yInverted = EGL_TRUE;
     }
 
-    const EGLint attribs[] = {
-        EGL_WAYLAND_PLANE_WL, 0,
-        EGL_NONE
-    };
-    EGLImageKHR image = eglCreateImageKHR(m_backend->eglDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL,
-                                      (EGLClientBuffer)buffer->resource(), attribs);
+    const EGLint attribs[] = {EGL_WAYLAND_PLANE_WL, 0, EGL_NONE};
+    EGLImageKHR image = eglCreateImageKHR(m_backend->eglDisplay(), EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, (EGLClientBuffer)buffer->resource(), attribs);
     if (image != EGL_NO_IMAGE_KHR) {
         glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)image);
         m_size = buffer->size();

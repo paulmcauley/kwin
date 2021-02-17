@@ -13,7 +13,6 @@
 
 namespace KWin
 {
-
 SceneOpenGLTexture::SceneOpenGLTexture(OpenGLBackend *backend)
     : GLTexture(*backend->createBackendTexture(this))
 {
@@ -23,7 +22,7 @@ SceneOpenGLTexture::~SceneOpenGLTexture()
 {
 }
 
-SceneOpenGLTexture& SceneOpenGLTexture::operator = (const SceneOpenGLTexture& tex)
+SceneOpenGLTexture &SceneOpenGLTexture::operator=(const SceneOpenGLTexture &tex)
 {
     d_ptr = tex.d_ptr;
     return *this;
@@ -41,7 +40,7 @@ bool SceneOpenGLTexture::load(WindowPixmap *pixmap)
     }
 
     // decrease the reference counter for the old texture
-    d_ptr = d_func()->backend()->createBackendTexture(this); //new TexturePrivate();
+    d_ptr = d_func()->backend()->createBackendTexture(this); // new TexturePrivate();
 
     Q_D(SceneOpenGLTexture);
     return d->loadTexture(pixmap);

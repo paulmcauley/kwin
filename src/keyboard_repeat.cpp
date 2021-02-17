@@ -7,8 +7,8 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "keyboard_repeat.h"
-#include "keyboard_input.h"
 #include "input_event.h"
+#include "keyboard_input.h"
 #include "wayland_server.h"
 
 #include <KWaylandServer/seat_interface.h>
@@ -17,7 +17,6 @@
 
 namespace KWin
 {
-
 KeyboardRepeat::KeyboardRepeat(Xkb *xkb)
     : QObject()
     , m_timer(new QTimer(this))

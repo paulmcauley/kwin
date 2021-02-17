@@ -16,8 +16,8 @@
 #include <QSocketNotifier>
 // linux
 #ifdef Q_OS_LINUX
-#include <linux/major.h>
 #include <linux/kd.h>
+#include <linux/major.h>
 #include <linux/vt.h>
 #include <sys/sysmacros.h>
 #endif
@@ -26,10 +26,10 @@
 #endif
 // system
 #include <fcntl.h>
-#include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/signalfd.h>
 #include <sys/stat.h>
+#include <unistd.h>
 // c++
 #include <csignal>
 
@@ -38,7 +38,6 @@
 
 namespace KWin
 {
-
 KWIN_SINGLETON_FACTORY(VirtualTerminal)
 
 VirtualTerminal::VirtualTerminal(QObject *parent)
@@ -77,7 +76,7 @@ static bool isTty(int fd)
     }
 #ifdef Q_OS_LINUX
     // Not a TTY device or weird vt number, skip it
-    if (major(st.st_rdev) != TTY_MAJOR || minor (st.st_rdev) <= 0 || minor(st.st_rdev) >= 64) {
+    if (major(st.st_rdev) != TTY_MAJOR || minor(st.st_rdev) <= 0 || minor(st.st_rdev) >= 64) {
         return false;
     }
 #endif
@@ -97,7 +96,7 @@ void VirtualTerminal::setup(int vtNr)
     }
     QString ttyName = QStringLiteral(KWIN_TTY_PREFIX "%1").arg(vtNr);
 
-    m_vt = open(ttyName.toUtf8().constData(), O_RDWR|O_CLOEXEC|O_NONBLOCK);
+    m_vt = open(ttyName.toUtf8().constData(), O_RDWR | O_CLOEXEC | O_NONBLOCK);
     if (m_vt < 0) {
         qCWarning(KWIN_CORE) << "Failed to open tty" << vtNr;
         return;
@@ -117,13 +116,7 @@ void VirtualTerminal::setup(int vtNr)
         closeFd();
         return;
     }
-    vt_mode mode = {
-        VT_PROCESS,
-        0,
-        RELEASE_SIGNAL,
-        ACQUISITION_SIGNAL,
-        0
-    };
+    vt_mode mode = {VT_PROCESS, 0, RELEASE_SIGNAL, ACQUISITION_SIGNAL, 0};
     if (ioctl(m_vt, VT_SETMODE, &mode) < 0) {
         qCWarning(KWIN_CORE) << "Failed to take over virtual terminal";
         closeFd();
@@ -165,29 +158,27 @@ bool VirtualTerminal::createSignalHandler()
         return false;
     }
     m_notifier = new QSocketNotifier(fd, QSocketNotifier::Read, this);
-    connect(m_notifier, &QSocketNotifier::activated, this,
-        [this] {
-            if (m_vt < 0) {
-                return;
+    connect(m_notifier, &QSocketNotifier::activated, this, [this] {
+        if (m_vt < 0) {
+            return;
+        }
+        while (true) {
+            signalfd_siginfo sigInfo;
+            if (read(m_notifier->socket(), &sigInfo, sizeof(sigInfo)) != sizeof(sigInfo)) {
+                break;
             }
-            while (true) {
-                signalfd_siginfo sigInfo;
-                if (read(m_notifier->socket(), &sigInfo, sizeof(sigInfo)) != sizeof(sigInfo)) {
-                    break;
-                }
-                switch (sigInfo.ssi_signo) {
-                case RELEASE_SIGNAL:
-                    setActive(false);
-                    ioctl(m_vt, VT_RELDISP, 1);
-                    break;
-                case ACQUISITION_SIGNAL:
-                    ioctl(m_vt, VT_RELDISP, VT_ACKACQ);
-                    setActive(true);
-                    break;
-                }
+            switch (sigInfo.ssi_signo) {
+            case RELEASE_SIGNAL:
+                setActive(false);
+                ioctl(m_vt, VT_RELDISP, 1);
+                break;
+            case ACQUISITION_SIGNAL:
+                ioctl(m_vt, VT_RELDISP, VT_ACKACQ);
+                setActive(true);
+                break;
             }
         }
-    );
+    });
     return true;
 }
 

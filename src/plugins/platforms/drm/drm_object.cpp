@@ -13,7 +13,6 @@
 
 namespace KWin
 {
-
 /*
  * Definitions for class DrmObject
  */
@@ -40,15 +39,14 @@ void DrmObject::setPropertyNames(QVector<QByteArray> &&vector)
 void DrmObject::initProp(int n, drmModeObjectProperties *properties, QVector<QByteArray> enumNames)
 {
     for (unsigned int i = 0; i < properties->count_props; ++i) {
-        DrmScopedPointer<drmModePropertyRes> prop( drmModeGetProperty(fd(), properties->props[i]) );
+        DrmScopedPointer<drmModePropertyRes> prop(drmModeGetProperty(fd(), properties->props[i]));
         if (!prop) {
             qCWarning(KWIN_DRM) << "Getting property" << i << "failed";
             continue;
         }
 
         if (prop->name == m_propsNames[n]) {
-            qCDebug(KWIN_DRM).nospace() << m_id << ": '" << prop->name << "' (id " << prop->prop_id
-                              << "): " << properties->prop_values[i];
+            qCDebug(KWIN_DRM).nospace() << m_id << ": '" << prop->name << "' (id " << prop->prop_id << "): " << properties->prop_values[i];
             m_props[n] = new Property(prop.data(), properties->prop_values[i], enumNames);
             return;
         }
@@ -98,8 +96,7 @@ bool DrmObject::propHasEnum(int prop, uint64_t value) const
 bool DrmObject::atomicAddProperty(drmModeAtomicReq *req, Property *property) const
 {
     if (drmModeAtomicAddProperty(req, m_id, property->propId(), property->value()) <= 0) {
-        qCWarning(KWIN_DRM) << "Adding property" << property->name()
-                            << "to atomic commit failed for object" << this;
+        qCWarning(KWIN_DRM) << "Adding property" << property->name() << "to atomic commit failed for object" << this;
         return false;
     }
     return true;
@@ -126,18 +123,15 @@ DrmObject::Property::~Property() = default;
 
 void DrmObject::Property::initEnumMap(drmModePropertyRes *prop)
 {
-    if ( ( !(prop->flags & DRM_MODE_PROP_ENUM) && !(prop->flags & DRM_MODE_PROP_BITMASK) )
-            || prop->count_enums < 1 ) {
-        qCWarning(KWIN_DRM) << "Property '" << prop->name << "' ( id ="
-                          << m_propId << ") should be enum valued, but it is not.";
+    if ((!(prop->flags & DRM_MODE_PROP_ENUM) && !(prop->flags & DRM_MODE_PROP_BITMASK)) || prop->count_enums < 1) {
+        qCWarning(KWIN_DRM) << "Property '" << prop->name << "' ( id =" << m_propId << ") should be enum valued, but it is not.";
         return;
     }
 
     const int nameCount = m_enumNames.size();
     m_enumMap.resize(nameCount);
 
-    qCDebug(KWIN_DRM).nospace() << "Available are " << prop->count_enums <<
-                         " enums. Query their runtime values:";
+    qCDebug(KWIN_DRM).nospace() << "Available are " << prop->count_enums << " enums. Query their runtime values:";
 
     for (int i = 0; i < prop->count_enums; i++) {
         struct drm_mode_property_enum *en = &prop->enums[i];
@@ -146,15 +140,13 @@ void DrmObject::Property::initEnumMap(drmModePropertyRes *prop)
         while (QByteArray(en->name) != m_enumNames[j]) {
             j++;
             if (j == nameCount) {
-                qCWarning(KWIN_DRM).nospace() << m_propName << " has unrecognized enum '"
-                                              << en->name << "'";
+                qCWarning(KWIN_DRM).nospace() << m_propName << " has unrecognized enum '" << en->name << "'";
                 break;
             }
         }
 
         if (j < nameCount) {
-            qCDebug(KWIN_DRM).nospace() << "Enum '" << en->name
-                                        << "': runtime-value = " << en->value;
+            qCDebug(KWIN_DRM).nospace() << "Enum '" << en->name << "': runtime-value = " << en->value;
             m_enumMap[j] = en->value;
         }
     }
@@ -166,8 +158,7 @@ void DrmObject::Property::initEnumMap(drmModePropertyRes *prop)
                 //       values for some reason as the shift distance instead of the full value.
                 //       See: https://github.com/torvalds/linux/blob/6794862a/drivers/
                 //            gpu/drm/drm_blend.c#L267
-                qCDebug(KWIN_DRM) << "=>" << m_propName
-                                  << "with mapped enum value" << m_enumNames[i];
+                qCDebug(KWIN_DRM) << "=>" << m_propName << "with mapped enum value" << m_enumNames[i];
             }
         }
     }
@@ -175,7 +166,7 @@ void DrmObject::Property::initEnumMap(drmModePropertyRes *prop)
 
 }
 
-QDebug& operator<<(QDebug& s, const KWin::DrmObject* obj)
+QDebug &operator<<(QDebug &s, const KWin::DrmObject *obj)
 {
-    return s.nospace() << "DrmObject(" << obj->id() << ", fd: "<< obj->fd() << ')';
+    return s.nospace() << "DrmObject(" << obj->id() << ", fd: " << obj->fd() << ')';
 }

@@ -12,7 +12,6 @@
 
 namespace KWin
 {
-
 KWIN_SINGLETON_FACTORY_VARIABLE(FocusChain, s_manager)
 
 FocusChain::FocusChain(QObject *parent)
@@ -30,9 +29,7 @@ FocusChain::~FocusChain()
 
 void FocusChain::remove(AbstractClient *client)
 {
-    for (auto it = m_desktopFocusChains.begin();
-            it != m_desktopFocusChains.end();
-            ++it) {
+    for (auto it = m_desktopFocusChains.begin(); it != m_desktopFocusChains.end(); ++it) {
         it.value().removeAll(client);
     }
     m_mostRecentlyUsed.removeAll(client);
@@ -63,8 +60,7 @@ AbstractClient *FocusChain::getForActivation(uint desktop, int screen) const
     for (int i = chain.size() - 1; i >= 0; --i) {
         auto tmp = chain.at(i);
         // TODO: move the check into Client
-        if (tmp->isShown(false) && tmp->isOnCurrentActivity()
-            && ( !m_separateScreenFocus || tmp->screen() == screen)) {
+        if (tmp->isShown(false) && tmp->isOnCurrentActivity() && (!m_separateScreenFocus || tmp->screen() == screen)) {
             return tmp;
         }
     }
@@ -81,13 +77,10 @@ void FocusChain::update(AbstractClient *client, FocusChain::Change change)
 
     if (client->isOnAllDesktops()) {
         // Now on all desktops, add it to focus chains it is not already in
-        for (auto it = m_desktopFocusChains.begin();
-                it != m_desktopFocusChains.end();
-                ++it) {
+        for (auto it = m_desktopFocusChains.begin(); it != m_desktopFocusChains.end(); ++it) {
             auto &chain = it.value();
             // Making first/last works only on current desktop, don't affect all desktops
-            if (it.key() == m_currentDesktop
-                    && (change == MakeFirst || change == MakeLast)) {
+            if (it.key() == m_currentDesktop && (change == MakeFirst || change == MakeLast)) {
                 if (change == MakeFirst) {
                     makeFirstInChain(client, chain);
                 } else {
@@ -99,9 +92,7 @@ void FocusChain::update(AbstractClient *client, FocusChain::Change change)
         }
     } else {
         // Now only on desktop, remove it anywhere else
-        for (auto it = m_desktopFocusChains.begin();
-                it != m_desktopFocusChains.end();
-                ++it) {
+        for (auto it = m_desktopFocusChains.begin(); it != m_desktopFocusChains.end(); ++it) {
             auto &chain = it.value();
             if (client->isOnDesktop(it.key())) {
                 updateClientInChain(client, change, chain);
@@ -131,8 +122,7 @@ void FocusChain::insertClientIntoChain(AbstractClient *client, Chain &chain)
     if (chain.contains(client)) {
         return;
     }
-    if (m_activeClient && m_activeClient != client &&
-            !chain.empty() && chain.last() == m_activeClient) {
+    if (m_activeClient && m_activeClient != client && !chain.empty() && chain.last() == m_activeClient) {
         // Add it after the active client
         chain.insert(chain.size() - 1, client);
     } else {
@@ -147,9 +137,7 @@ void FocusChain::moveAfterClient(AbstractClient *client, AbstractClient *referen
         return;
     }
 
-    for (auto it = m_desktopFocusChains.begin();
-            it != m_desktopFocusChains.end();
-            ++it) {
+    for (auto it = m_desktopFocusChains.begin(); it != m_desktopFocusChains.end(); ++it) {
         if (!client->isOnDesktop(it.key())) {
             continue;
         }
@@ -203,9 +191,8 @@ AbstractClient *FocusChain::nextMostRecentlyUsed(AbstractClient *reference) cons
 // copied from activation.cpp
 bool FocusChain::isUsableFocusCandidate(AbstractClient *c, AbstractClient *prev) const
 {
-    return c != prev &&
-           c->isShown(false) && c->isOnCurrentDesktop() && c->isOnCurrentActivity() &&
-           (!m_separateScreenFocus || c->isOnScreen(prev ? prev->screen() : screens()->current()));
+    return c != prev && c->isShown(false) && c->isOnCurrentDesktop() && c->isOnCurrentActivity()
+        && (!m_separateScreenFocus || c->isOnScreen(prev ? prev->screen() : screens()->current()));
 }
 
 AbstractClient *FocusChain::nextForDesktop(AbstractClient *reference, uint desktop) const
@@ -229,9 +216,9 @@ void FocusChain::makeFirstInChain(AbstractClient *client, Chain &chain)
     chain.removeAll(client);
     if (options->moveMinimizedWindowsToEndOfTabBoxFocusChain()) {
         if (client->isMinimized()) { // add it before the first minimized ...
-            for (int i = chain.count()-1; i >= 0; --i) {
+            for (int i = chain.count() - 1; i >= 0; --i) {
                 if (chain.at(i)->isMinimized()) {
-                    chain.insert(i+1, client);
+                    chain.insert(i + 1, client);
                     return;
                 }
             }

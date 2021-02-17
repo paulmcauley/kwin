@@ -51,14 +51,14 @@ public:
         WindowBackgroundContrastRole, ///< For single windows to enable Background contrast
         LanczosCacheRole
     };
-    enum EasingCurve {
-        GaussianCurve = 128
-    };
-    const QString &scriptFile() const {
+    enum EasingCurve { GaussianCurve = 128 };
+    const QString &scriptFile() const
+    {
         return m_scriptFile;
     }
     void reconfigure(ReconfigureFlags flags) override;
-    int requestedEffectChainPosition() const override {
+    int requestedEffectChainPosition() const override
+    {
         return m_chainPosition;
     }
     QString activeConfig() const;
@@ -105,10 +105,12 @@ public:
      */
     Q_SCRIPTABLE QVariant readConfig(const QString &key, const QVariant defaultValue = QVariant());
     void registerShortcut(QAction *a, QScriptValue callback);
-    const QHash<QAction*, QScriptValue> &shortcutCallbacks() const {
+    const QHash<QAction *, QScriptValue> &shortcutCallbacks() const
+    {
         return m_shortcutCallbacks;
     }
-    QHash<int, QList<QScriptValue > > &screenEdgeCallbacks() {
+    QHash<int, QList<QScriptValue>> &screenEdgeCallbacks()
+    {
         return m_screenEdgeCallbacks;
     }
 
@@ -120,13 +122,34 @@ public:
     bool unregisterTouchScreenCallback(int edge);
 
 public Q_SLOTS:
-    //curve should be of type QEasingCurve::type or ScriptedEffect::EasingCurve
-    quint64 animate(KWin::EffectWindow *w, Attribute a, int ms, KWin::FPx2 to, KWin::FPx2 from = KWin::FPx2(), uint metaData = 0, int curve = QEasingCurve::Linear, int delay = 0, bool fullScreen = false, bool keepAlive = true);
-    quint64 set(KWin::EffectWindow *w, Attribute a, int ms, KWin::FPx2 to, KWin::FPx2 from = KWin::FPx2(), uint metaData = 0, int curve = QEasingCurve::Linear, int delay = 0, bool fullScreen = false, bool keepAlive = true);
+    // curve should be of type QEasingCurve::type or ScriptedEffect::EasingCurve
+    quint64 animate(KWin::EffectWindow *w,
+                    Attribute a,
+                    int ms,
+                    KWin::FPx2 to,
+                    KWin::FPx2 from = KWin::FPx2(),
+                    uint metaData = 0,
+                    int curve = QEasingCurve::Linear,
+                    int delay = 0,
+                    bool fullScreen = false,
+                    bool keepAlive = true);
+    quint64 set(KWin::EffectWindow *w,
+                Attribute a,
+                int ms,
+                KWin::FPx2 to,
+                KWin::FPx2 from = KWin::FPx2(),
+                uint metaData = 0,
+                int curve = QEasingCurve::Linear,
+                int delay = 0,
+                bool fullScreen = false,
+                bool keepAlive = true);
     bool retarget(quint64 animationId, KWin::FPx2 newTarget, int newRemainingTime = -1);
     bool redirect(quint64 animationId, Direction direction, TerminationFlags terminationFlags = TerminateAtSource);
     bool complete(quint64 animationId);
-    bool cancel(quint64 animationId) { return AnimationEffect::cancel(animationId); }
+    bool cancel(quint64 animationId)
+    {
+        return AnimationEffect::cancel(animationId);
+    }
     bool borderActivated(ElectricBorder border) override;
 
 Q_SIGNALS:
@@ -146,15 +169,16 @@ protected:
 private Q_SLOTS:
     void signalHandlerException(const QScriptValue &value);
     void globalShortcutTriggered();
+
 private:
     QScriptEngine *m_engine;
     QString m_effectName;
     QString m_scriptFile;
-    QHash<QAction*, QScriptValue> m_shortcutCallbacks;
-    QHash<int, QList<QScriptValue> > m_screenEdgeCallbacks;
+    QHash<QAction *, QScriptValue> m_shortcutCallbacks;
+    QHash<int, QList<QScriptValue>> m_screenEdgeCallbacks;
     KConfigLoader *m_config;
     int m_chainPosition;
-    QHash<int, QAction*> m_touchScreenEdgeCallbacks;
+    QHash<int, QAction *> m_touchScreenEdgeCallbacks;
     Effect *m_activeFullScreenEffect = nullptr;
 };
 

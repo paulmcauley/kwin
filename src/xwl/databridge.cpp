@@ -22,8 +22,8 @@
 #include <KWayland/Client/seat.h>
 
 #include <KWaylandServer/clientconnection.h>
-#include <KWaylandServer/datadevicemanager_interface.h>
 #include <KWaylandServer/datadevice_interface.h>
+#include <KWaylandServer/datadevicemanager_interface.h>
 #include <KWaylandServer/seat_interface.h>
 
 using namespace KWayland::Client;
@@ -33,7 +33,6 @@ namespace KWin
 {
 namespace Xwl
 {
-
 KWIN_SINGLETON_FACTORY(DataBridge)
 
 void DataBridge::destroy()
@@ -50,24 +49,21 @@ DataBridge::DataBridge(QObject *parent)
     Seat *seat = waylandServer()->internalSeat();
     m_dataDevice = dataDeviceManager->getDataDevice(seat, this);
 
-    const DataDeviceManagerInterface *dataDeviceManagerInterface =
-        waylandServer()->dataDeviceManager();
+    const DataDeviceManagerInterface *dataDeviceManagerInterface = waylandServer()->dataDeviceManager();
 
     auto *dc = new QMetaObject::Connection();
-    *dc = connect(dataDeviceManagerInterface, &DataDeviceManagerInterface::dataDeviceCreated, this,
-        [this, dc](DataDeviceInterface *dataDeviceInterface) {
-            if (m_dataDeviceInterface) {
-                return;
-            }
-            if (dataDeviceInterface->client() != *waylandServer()->internalConnection()) {
-                return;
-            }
-            QObject::disconnect(*dc);
-            delete dc;
-            m_dataDeviceInterface = dataDeviceInterface;
-            init();
+    *dc = connect(dataDeviceManagerInterface, &DataDeviceManagerInterface::dataDeviceCreated, this, [this, dc](DataDeviceInterface *dataDeviceInterface) {
+        if (m_dataDeviceInterface) {
+            return;
         }
-    );
+        if (dataDeviceInterface->client() != *waylandServer()->internalConnection()) {
+            return;
+        }
+        QObject::disconnect(*dc);
+        delete dc;
+        m_dataDeviceInterface = dataDeviceInterface;
+        init();
+    });
 
     waylandServer()->dispatch();
 }

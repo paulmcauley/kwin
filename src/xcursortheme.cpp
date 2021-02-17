@@ -12,7 +12,6 @@
 
 namespace KWin
 {
-
 class KXcursorSpritePrivate : public QSharedData
 {
 public:
@@ -48,8 +47,7 @@ KXcursorSprite &KXcursorSprite::operator=(const KXcursorSprite &other)
     return *this;
 }
 
-KXcursorSprite::KXcursorSprite(const QImage &data, const QPoint &hotspot,
-                               const std::chrono::milliseconds &delay)
+KXcursorSprite::KXcursorSprite(const QImage &data, const QPoint &hotspot, const std::chrono::milliseconds &delay)
     : d(new KXcursorSpritePrivate)
 {
     d->data = data;

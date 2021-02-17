@@ -81,9 +81,18 @@ void X11WindowedQPainterBackend::endFrame(int screenId, int mask, const QRegion 
 
     // TODO: only update changes?
     const QImage &buffer = rendererOutput->buffer;
-    xcb_put_image(c, XCB_IMAGE_FORMAT_Z_PIXMAP, rendererOutput->window,
-                  m_gc, buffer.width(), buffer.height(), 0, 0, 0, 24,
-                  buffer.sizeInBytes(), buffer.constBits());
+    xcb_put_image(c,
+                  XCB_IMAGE_FORMAT_Z_PIXMAP,
+                  rendererOutput->window,
+                  m_gc,
+                  buffer.width(),
+                  buffer.height(),
+                  0,
+                  0,
+                  0,
+                  24,
+                  buffer.sizeInBytes(),
+                  buffer.constBits());
 
     rendererOutput->needsFullRepaint = false;
 }

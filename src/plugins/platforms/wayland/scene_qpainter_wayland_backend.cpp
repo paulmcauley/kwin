@@ -24,7 +24,6 @@ namespace KWin
 {
 namespace Wayland
 {
-
 WaylandQPainterOutput::WaylandQPainterOutput(WaylandOutput *output, QObject *parent)
     : QObject(parent)
     , m_waylandOutput(output)
@@ -65,7 +64,7 @@ void WaylandQPainterOutput::remapBuffer()
         return;
     }
     auto b = m_buffer.toStrongRef();
-    if (!b->isUsed()){
+    if (!b->isUsed()) {
         return;
     }
     const QSize size = m_backBuffer.size();
@@ -121,7 +120,7 @@ void WaylandQPainterOutput::prepareRenderingFrame()
 
     m_backBuffer = QImage(b->address(), nativeSize.width(), nativeSize.height(), QImage::Format_RGB32);
     m_backBuffer.fill(Qt::transparent);
-//    qCDebug(KWIN_WAYLAND_BACKEND) << "Created a new back buffer for output surface" << m_waylandOutput->surface();
+    //    qCDebug(KWIN_WAYLAND_BACKEND) << "Created a new back buffer for output surface" << m_waylandOutput->surface();
 }
 
 QRegion WaylandQPainterOutput::mapToLocal(const QRegion &region) const
@@ -133,26 +132,21 @@ WaylandQPainterBackend::WaylandQPainterBackend(Wayland::WaylandBackend *b)
     : QPainterBackend()
     , m_backend(b)
 {
-
     const auto waylandOutputs = m_backend->waylandOutputs();
-    for (auto *output: waylandOutputs) {
+    for (auto *output : waylandOutputs) {
         createOutput(output);
     }
     connect(m_backend, &WaylandBackend::outputAdded, this, &WaylandQPainterBackend::createOutput);
-    connect(m_backend, &WaylandBackend::outputRemoved, this,
-        [this] (AbstractOutput *waylandOutput) {
-            auto it = std::find_if(m_outputs.begin(), m_outputs.end(),
-                [waylandOutput] (WaylandQPainterOutput *output) {
-                    return output->m_waylandOutput == waylandOutput;
-                }
-            );
-            if (it == m_outputs.end()) {
-                return;
-            }
-            delete *it;
-            m_outputs.erase(it);
+    connect(m_backend, &WaylandBackend::outputRemoved, this, [this](AbstractOutput *waylandOutput) {
+        auto it = std::find_if(m_outputs.begin(), m_outputs.end(), [waylandOutput](WaylandQPainterOutput *output) {
+            return output->m_waylandOutput == waylandOutput;
+        });
+        if (it == m_outputs.end()) {
+            return;
         }
-    );
+        delete *it;
+        m_outputs.erase(it);
+    });
 }
 
 WaylandQPainterBackend::~WaylandQPainterBackend()

@@ -18,7 +18,6 @@ namespace KWin
 {
 namespace TabBox
 {
-
 class SwitcherItem : public QObject
 {
     Q_OBJECT
@@ -47,7 +46,8 @@ public:
     void setCurrentIndex(int index);
     QObject *item() const;
     void setItem(QObject *item);
-    bool noModifierGrab() const {
+    bool noModifierGrab() const
+    {
         return m_noModifierGrab;
     }
 

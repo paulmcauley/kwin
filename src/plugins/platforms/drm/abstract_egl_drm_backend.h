@@ -14,7 +14,6 @@
 
 namespace KWin
 {
-
 class DrmBackend;
 class DrmGpu;
 class DrmOutput;
@@ -29,19 +28,22 @@ public:
     virtual int screenCount() const = 0;
     virtual void addOutput(DrmOutput *output) = 0;
     virtual void removeOutput(DrmOutput *output) = 0;
-    virtual int getDmabufForSecondaryGpuOutput(AbstractOutput *output, uint32_t *format, uint32_t *stride) {
+    virtual int getDmabufForSecondaryGpuOutput(AbstractOutput *output, uint32_t *format, uint32_t *stride)
+    {
         Q_UNUSED(output)
         Q_UNUSED(format)
         Q_UNUSED(stride)
         return 0;
     }
-    virtual QRegion beginFrameForSecondaryGpu(AbstractOutput *output) {
+    virtual QRegion beginFrameForSecondaryGpu(AbstractOutput *output)
+    {
         Q_UNUSED(output)
         return QRegion();
     }
 
-    static AbstractEglDrmBackend *renderingBackend() {
-        return static_cast<AbstractEglDrmBackend*>(primaryBackend());
+    static AbstractEglDrmBackend *renderingBackend()
+    {
+        return static_cast<AbstractEglDrmBackend *>(primaryBackend());
     }
 
 protected:
@@ -49,7 +51,6 @@ protected:
 
     DrmBackend *m_backend;
     DrmGpu *m_gpu;
-
 };
 
 }

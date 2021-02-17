@@ -20,18 +20,18 @@
 #include <QEasingCurve>
 #include <QIcon>
 #include <QPair>
-#include <QSet>
 #include <QRect>
 #include <QRegion>
+#include <QSet>
 #include <QVector2D>
 #include <QVector3D>
 
-#include <QVector>
-#include <QLoggingCategory>
-#include <QList>
 #include <QHash>
-#include <QStack>
+#include <QList>
+#include <QLoggingCategory>
 #include <QScopedPointer>
+#include <QStack>
+#include <QVector>
 
 #include <KPluginFactory>
 #include <KSharedConfig>
@@ -53,14 +53,14 @@ class QAction;
  */
 Q_DECLARE_LOGGING_CATEGORY(KWINEFFECTS)
 
-namespace KWaylandServer {
-    class SurfaceInterface;
-    class Display;
+namespace KWaylandServer
+{
+class SurfaceInterface;
+class Display;
 }
 
 namespace KWin
 {
-
 class PaintDataPrivate;
 class WindowPaintDataPrivate;
 
@@ -79,9 +79,8 @@ class WindowPaintData;
 class ScreenPrePaintData;
 class ScreenPaintData;
 
-typedef QPair< QString, Effect* > EffectPair;
-typedef QList< KWin::EffectWindow* > EffectWindowList;
-
+typedef QPair<QString, Effect *> EffectPair;
+typedef QList<KWin::EffectWindow *> EffectWindowList;
 
 /** @defgroup kwineffects KWin effects library
  * KWin effects library contains necessary classes for creating new KWin
@@ -138,7 +137,8 @@ typedef QList< KWin::EffectWindow* > EffectWindowList;
  *  @li X-KDE-PluginInfo-Name effect's internal name as passed to the KWIN_EFFECT macro plus "kwin4_effect_" prefix
  *  @li X-KDE-PluginInfo-Category effect's category. Should be one of Appearance, Accessibility, Window Management, Demos, Tests, Misc
  *  @li X-KDE-PluginInfo-EnabledByDefault whether the effect should be enabled by default (use sparingly). Default is false
- *  @li X-KDE-Library name of the library containing the effect. This is the first argument passed to the KWIN_ADD_EFFECT macro in cmake file plus "kwin4_effect_" prefix.
+ *  @li X-KDE-Library name of the library containing the effect. This is the first argument passed to the KWIN_ADD_EFFECT macro in cmake file plus
+"kwin4_effect_" prefix.
  *
  * Example cooleffect.desktop file follows:
  * @code
@@ -172,18 +172,17 @@ X-KDE-Library=kwin4_effect_cooleffect
  * @{
  */
 
-#define KWIN_EFFECT_API_MAKE_VERSION( major, minor ) (( major ) << 8 | ( minor ))
+#define KWIN_EFFECT_API_MAKE_VERSION(major, minor) ((major) << 8 | (minor))
 #define KWIN_EFFECT_API_VERSION_MAJOR 0
 #define KWIN_EFFECT_API_VERSION_MINOR 232
-#define KWIN_EFFECT_API_VERSION KWIN_EFFECT_API_MAKE_VERSION( \
-        KWIN_EFFECT_API_VERSION_MAJOR, KWIN_EFFECT_API_VERSION_MINOR )
+#define KWIN_EFFECT_API_VERSION KWIN_EFFECT_API_MAKE_VERSION(KWIN_EFFECT_API_VERSION_MAJOR, KWIN_EFFECT_API_VERSION_MINOR)
 
 enum WindowQuadType {
     WindowQuadError, // for the stupid default ctor
     WindowQuadContents,
     WindowQuadDecoration,
     // Shadow Quad types
-    WindowQuadShadow,             // OpenGL only. The other shadow types are only used by Xrender
+    WindowQuadShadow, // OpenGL only. The other shadow types are only used by Xrender
     WindowQuadShadowTop,
     WindowQuadShadowTopRight,
     WindowQuadShadowRight,
@@ -226,8 +225,7 @@ enum EffectFrameStyle {
 /**
  * Infinite region (i.e. a special region type saying that everything needs to be painted).
  */
-KWINEFFECTS_EXPORT inline
-QRect infiniteRegion()
+KWINEFFECTS_EXPORT inline QRect infiniteRegion()
 {
     // INT_MIN / 2 because width/height is used (INT_MIN+INT_MAX==-1)
     return QRect(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
@@ -308,25 +306,25 @@ public:
         /**
          * Window (or at least part of it) will be painted opaque.
          */
-        PAINT_WINDOW_OPAQUE         = 1 << 0,
+        PAINT_WINDOW_OPAQUE = 1 << 0,
         /**
          * Window (or at least part of it) will be painted translucent.
          */
-        PAINT_WINDOW_TRANSLUCENT    = 1 << 1,
+        PAINT_WINDOW_TRANSLUCENT = 1 << 1,
         /**
          * Window will be painted with transformed geometry.
          */
-        PAINT_WINDOW_TRANSFORMED    = 1 << 2,
+        PAINT_WINDOW_TRANSFORMED = 1 << 2,
         /**
          * Paint only a region of the screen (can be optimized, cannot
          * be used together with TRANSFORMED flags).
          */
-        PAINT_SCREEN_REGION         = 1 << 3,
+        PAINT_SCREEN_REGION = 1 << 3,
         /**
          * The whole screen will be painted with transformed geometry.
          * Forces the entire screen to be painted.
          */
-        PAINT_SCREEN_TRANSFORMED    = 1 << 4,
+        PAINT_SCREEN_TRANSFORMED = 1 << 4,
         /**
          * At least one window will be painted with transformed geometry.
          * Forces the entire screen to be painted.
@@ -390,7 +388,7 @@ public:
     /**
      * Called when another effect requests the proxy for this effect.
      */
-    virtual void* proxy();
+    virtual void *proxy();
 
     /**
      * Called before starting to paint the screen.
@@ -406,8 +404,7 @@ public:
      * @a presentTime specifies the expected monotonic time when the rendered frame
      * will be displayed on the screen.
     */
-    virtual void prePaintScreen(ScreenPrePaintData &data,
-                                std::chrono::milliseconds presentTime);
+    virtual void prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime);
     /**
      * In this method you can:
      * @li paint something on top of the windows (by painting after calling
@@ -418,7 +415,7 @@ public:
      * In OpenGL based compositing, the frameworks ensures that the context is current
      * when this method is invoked.
      */
-    virtual void paintScreen(int mask, const QRegion &region, ScreenPaintData& data);
+    virtual void paintScreen(int mask, const QRegion &region, ScreenPaintData &data);
     /**
      * Called after all the painting has been finished.
      * In this method you can:
@@ -444,8 +441,7 @@ public:
      * @a presentTime specifies the expected monotonic time when the rendered frame
      * will be displayed on the screen.
      */
-    virtual void prePaintWindow(EffectWindow *w, WindowPrePaintData &data,
-                                std::chrono::milliseconds presentTime);
+    virtual void prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::chrono::milliseconds presentTime);
     /**
      * This is the main method for painting windows.
      * In this method you can:
@@ -456,7 +452,7 @@ public:
      * In OpenGL based compositing, the frameworks ensures that the context is current
      * when this method is invoked.
      */
-    virtual void paintWindow(EffectWindow* w, int mask, QRegion region, WindowPaintData& data);
+    virtual void paintWindow(EffectWindow *w, int mask, QRegion region, WindowPaintData &data);
     /**
      * Called for every window after all painting has been finished.
      * In this method you can:
@@ -466,7 +462,7 @@ public:
      * In OpenGL based compositing, the frameworks ensures that the context is current
      * when this method is invoked.
      */
-    virtual void postPaintWindow(EffectWindow* w);
+    virtual void postPaintWindow(EffectWindow *w);
 
     /**
      * This method is called directly before painting an @ref EffectFrame.
@@ -481,7 +477,7 @@ public:
      * In OpenGL based compositing, the frameworks ensures that the context is current
      * when this method is invoked.
      */
-    virtual void paintEffectFrame(EffectFrame* frame, const QRegion &region, double opacity, double frameOpacity);
+    virtual void paintEffectFrame(EffectFrame *frame, const QRegion &region, double opacity, double frameOpacity);
 
     /**
      * Called on Transparent resizes.
@@ -510,16 +506,16 @@ public:
      * In OpenGL based compositing, the frameworks ensures that the context is current
      * when this method is invoked.
      */
-    virtual void drawWindow(EffectWindow* w, int mask, const QRegion &region, WindowPaintData& data);
+    virtual void drawWindow(EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data);
 
     /**
      * Define new window quads so that they can be transformed by other effects.
      * It's up to the effect to keep track of them.
      */
-    virtual void buildQuads(EffectWindow* w, WindowQuadList& quadList);
+    virtual void buildQuads(EffectWindow *w, WindowQuadList &quadList);
 
-    virtual void windowInputMouseEvent(QEvent* e);
-    virtual void grabbedKeyboardEvent(QKeyEvent* e);
+    virtual void windowInputMouseEvent(QEvent *e);
+    virtual void grabbedKeyboardEvent(QKeyEvent *e);
 
     /**
      * Overwrite this method to indicate whether your effect will be doing something in
@@ -564,7 +560,6 @@ public:
      * @since 5.0
      */
     virtual int requestedEffectChainPosition() const;
-
 
     /**
      * A touch point was pressed.
@@ -638,7 +633,7 @@ public:
      * @param defaultTime default animation time in milliseconds
      */
     // return type is intentionally double so that one can divide using it without losing data
-    static double animationTime(const KConfigGroup& cfg, const QString& key, int defaultTime);
+    static double animationTime(const KConfigGroup &cfg, const QString &key, int defaultTime);
     /**
      * @overload Use this variant if the animation time is hardcoded and not configurable
      * in the effect itself.
@@ -648,21 +643,20 @@ public:
      * @overload Use this variant if animation time is provided through a KConfigXT generated class
      * having a property called "duration".
      */
-    template <typename T>
-    int animationTime(int defaultDuration);
+    template<typename T> int animationTime(int defaultDuration);
     /**
      * Linearly interpolates between @p x and @p y.
      *
      * Returns @p x when @p a = 0; returns @p y when @p a = 1.
      */
-    static double interpolate(double x, double y, double a) {
+    static double interpolate(double x, double y, double a)
+    {
         return x * (1 - a) + y * a;
     }
     /** Helper to set WindowPaintData and QRegion to necessary transformations so that
      * a following drawWindow() would put the window at the requested geometry (useful for thumbnails)
      */
-    static void setPositionTransformations(WindowPaintData& data, QRect& region, EffectWindow* w,
-                                           const QRect& r, Qt::AspectRatioMode aspect);
+    static void setPositionTransformations(WindowPaintData &data, QRect &region, EffectWindow *w, const QRect &r, Qt::AspectRatioMode aspect);
 
     /**
      * overwrite this method to return false if your effect does not need to be drawn over opaque fullscreen windows
@@ -681,10 +675,8 @@ protected:
      * This method will perform the instance on the class.
      * @since 5.9
      */
-    template <typename T>
-    void initConfig();
+    template<typename T> void initConfig();
 };
-
 
 /**
  * Prefer the KWIN_EFFECT_FACTORY macros.
@@ -743,37 +735,38 @@ public:
  * @param supported Source code to go into the isSupported() method, must return a boolean
  * @param enabled Source code to go into the enabledByDefault() method, must return a boolean
  */
-#define KWIN_EFFECT_FACTORY_SUPPORTED_ENABLED( factoryName, className, jsonFile, supported, enabled ) \
-    class factoryName : public KWin::EffectPluginFactory \
-    { \
-        Q_OBJECT \
-        Q_PLUGIN_METADATA(IID KPluginFactory_iid FILE jsonFile) \
-        Q_INTERFACES(KPluginFactory) \
-    public: \
-        explicit factoryName() {} \
-        ~factoryName() {} \
-        bool isSupported() const override { \
-            supported \
-        } \
-        bool enabledByDefault() const override { \
-            enabled \
-        } \
-        KWin::Effect *createEffect() const override { \
-            return new className(); \
-        } \
-    }; \
+#define KWIN_EFFECT_FACTORY_SUPPORTED_ENABLED(factoryName, className, jsonFile, supported, enabled)                                                            \
+    class factoryName : public KWin::EffectPluginFactory                                                                                                       \
+    {                                                                                                                                                          \
+        Q_OBJECT                                                                                                                                               \
+        Q_PLUGIN_METADATA(IID KPluginFactory_iid FILE jsonFile)                                                                                                \
+        Q_INTERFACES(KPluginFactory)                                                                                                                           \
+    public:                                                                                                                                                    \
+        explicit factoryName()                                                                                                                                 \
+        {                                                                                                                                                      \
+        }                                                                                                                                                      \
+        ~factoryName()                                                                                                                                         \
+        {                                                                                                                                                      \
+        }                                                                                                                                                      \
+        bool isSupported() const override                                                                                                                      \
+        {                                                                                                                                                      \
+            supported                                                                                                                                          \
+        }                                                                                                                                                      \
+        bool enabledByDefault() const override{enabled} KWin::Effect *createEffect() const override                                                            \
+        {                                                                                                                                                      \
+            return new className();                                                                                                                            \
+        }                                                                                                                                                      \
+    };                                                                                                                                                         \
     K_EXPORT_PLUGIN_VERSION(quint32(KWIN_EFFECT_API_VERSION))
 
-#define KWIN_EFFECT_FACTORY_ENABLED( factoryName, className, jsonFile, enabled ) \
-    KWIN_EFFECT_FACTORY_SUPPORTED_ENABLED( factoryName, className, jsonFile, return true;, enabled )
+#define KWIN_EFFECT_FACTORY_ENABLED(factoryName, className, jsonFile, enabled)                                                                                 \
+    KWIN_EFFECT_FACTORY_SUPPORTED_ENABLED(factoryName, className, jsonFile, return true;, enabled)
 
-#define KWIN_EFFECT_FACTORY_SUPPORTED( factoryName, className, jsonFile, supported ) \
-    KWIN_EFFECT_FACTORY_SUPPORTED_ENABLED( factoryName, className, jsonFile, supported, return true; )
+#define KWIN_EFFECT_FACTORY_SUPPORTED(factoryName, className, jsonFile, supported)                                                                             \
+    KWIN_EFFECT_FACTORY_SUPPORTED_ENABLED(factoryName, className, jsonFile, supported, return true;)
 
-#define KWIN_EFFECT_FACTORY( factoryName, className, jsonFile ) \
-    KWIN_EFFECT_FACTORY_SUPPORTED_ENABLED( factoryName, className, jsonFile, return true;, return true; )
-
-
+#define KWIN_EFFECT_FACTORY(factoryName, className, jsonFile)                                                                                                  \
+    KWIN_EFFECT_FACTORY_SUPPORTED_ENABLED(factoryName, className, jsonFile, return true;, return true;)
 
 /**
  * @short Manager class that handles all the effects.
@@ -811,7 +804,7 @@ class KWINEFFECTS_EXPORT EffectsHandler : public QObject
      * if used manually.
      */
     Q_PROPERTY(qreal animationTimeFactor READ animationTimeFactor)
-    Q_PROPERTY(QList< KWin::EffectWindow* > stackingOrder READ stackingOrder)
+    Q_PROPERTY(QList<KWin::EffectWindow *> stackingOrder READ stackingOrder)
     /**
      * Whether window decorations use the alpha channel.
      */
@@ -833,19 +826,20 @@ class KWINEFFECTS_EXPORT EffectsHandler : public QObject
     Q_PROPERTY(KWin::SessionState sessionState READ sessionState NOTIFY sessionStateChanged)
 
     friend class Effect;
+
 public:
     explicit EffectsHandler(CompositingType type);
     ~EffectsHandler() override;
     // for use by effects
-    virtual void prePaintScreen(ScreenPrePaintData& data, std::chrono::milliseconds presentTime) = 0;
-    virtual void paintScreen(int mask, const QRegion &region, ScreenPaintData& data) = 0;
+    virtual void prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime) = 0;
+    virtual void paintScreen(int mask, const QRegion &region, ScreenPaintData &data) = 0;
     virtual void postPaintScreen() = 0;
-    virtual void prePaintWindow(EffectWindow* w, WindowPrePaintData& data, std::chrono::milliseconds presentTime) = 0;
-    virtual void paintWindow(EffectWindow* w, int mask, const QRegion &region, WindowPaintData& data) = 0;
-    virtual void postPaintWindow(EffectWindow* w) = 0;
-    virtual void paintEffectFrame(EffectFrame* frame, const QRegion &region, double opacity, double frameOpacity) = 0;
-    virtual void drawWindow(EffectWindow* w, int mask, const QRegion &region, WindowPaintData& data) = 0;
-    virtual void buildQuads(EffectWindow* w, WindowQuadList& quadList) = 0;
+    virtual void prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::chrono::milliseconds presentTime) = 0;
+    virtual void paintWindow(EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data) = 0;
+    virtual void postPaintWindow(EffectWindow *w) = 0;
+    virtual void paintEffectFrame(EffectFrame *frame, const QRegion &region, double opacity, double frameOpacity) = 0;
+    virtual void drawWindow(EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data) = 0;
+    virtual void buildQuads(EffectWindow *w, WindowQuadList &quadList) = 0;
     virtual QVariant kwinOption(KWinOption kwopt) = 0;
     /**
      * Sets the cursor while the mouse is intercepted.
@@ -854,7 +848,7 @@ public:
      */
     virtual void defineCursor(Qt::CursorShape shape) = 0;
     virtual QPoint cursorPos() const = 0;
-    virtual bool grabKeyboard(Effect* effect) = 0;
+    virtual bool grabKeyboard(Effect *effect) = 0;
     virtual void ungrabKeyboard() = 0;
     /**
      * Ensures that all mouse events are sent to the @p effect.
@@ -915,7 +909,7 @@ public:
      * Retrieve the proxy class for an effect if it has one. Will return NULL if
      * the effect isn't loaded or doesn't have a proxy class.
      */
-    virtual void* getProxy(QString name) = 0;
+    virtual void *getProxy(QString name) = 0;
 
     // Mouse polling
     virtual void startMousePolling() = 0;
@@ -947,15 +941,15 @@ public:
     virtual void unregisterTouchBorder(ElectricBorder border, QAction *action) = 0;
 
     // functions that allow controlling windows/desktop
-    virtual void activateWindow(KWin::EffectWindow* c) = 0;
-    virtual KWin::EffectWindow* activeWindow() const = 0 ;
-    Q_SCRIPTABLE virtual void moveWindow(KWin::EffectWindow* w, const QPoint& pos, bool snap = false, double snapAdjust = 1.0) = 0;
+    virtual void activateWindow(KWin::EffectWindow *c) = 0;
+    virtual KWin::EffectWindow *activeWindow() const = 0;
+    Q_SCRIPTABLE virtual void moveWindow(KWin::EffectWindow *w, const QPoint &pos, bool snap = false, double snapAdjust = 1.0) = 0;
 
     /**
      * Moves the window to the specific desktop
      * Setting desktop to NET::OnAllDesktops will set the window on all desktops
      */
-    Q_SCRIPTABLE virtual void windowToDesktop(KWin::EffectWindow* w, int desktop) = 0;
+    Q_SCRIPTABLE virtual void windowToDesktop(KWin::EffectWindow *w, int desktop) = 0;
 
     /**
      * Moves a window to the given desktops
@@ -964,9 +958,9 @@ public:
      *
      * @arg desktopIds a list of desktops the window should be placed on. NET::OnAllDesktops is not a valid desktop X11Id
      */
-    Q_SCRIPTABLE virtual void windowToDesktops(KWin::EffectWindow* w, const QVector<uint> &desktopIds) = 0;
+    Q_SCRIPTABLE virtual void windowToDesktops(KWin::EffectWindow *w, const QVector<uint> &desktopIds) = 0;
 
-    Q_SCRIPTABLE virtual void windowToScreen(KWin::EffectWindow* w, int screen) = 0;
+    Q_SCRIPTABLE virtual void windowToScreen(KWin::EffectWindow *w, int screen) = 0;
     virtual void setShowingDesktop(bool showing) = 0;
 
     // Activities
@@ -1049,10 +1043,10 @@ public:
 
     virtual int activeScreen() const = 0; // Xinerama
     virtual int numScreens() const = 0; // Xinerama
-    Q_SCRIPTABLE virtual int screenNumber(const QPoint& pos) const = 0;   // Xinerama
+    Q_SCRIPTABLE virtual int screenNumber(const QPoint &pos) const = 0; // Xinerama
     virtual QRect clientArea(clientAreaOption, int screen, int desktop) const = 0;
-    virtual QRect clientArea(clientAreaOption, const EffectWindow* c) const = 0;
-    virtual QRect clientArea(clientAreaOption, const QPoint& p, int desktop) const = 0;
+    virtual QRect clientArea(clientAreaOption, const EffectWindow *c) const = 0;
+    virtual QRect clientArea(clientAreaOption, const QPoint &p, int desktop) const = 0;
 
     /**
      * The bounding size of all screens combined. Overlapping areas
@@ -1082,8 +1076,8 @@ public:
     virtual double animationTimeFactor() const = 0;
     virtual WindowQuadType newWindowQuadType() = 0;
 
-    Q_SCRIPTABLE virtual KWin::EffectWindow* findWindow(WId id) const = 0;
-    Q_SCRIPTABLE virtual KWin::EffectWindow* findWindow(KWaylandServer::SurfaceInterface *surf) const = 0;
+    Q_SCRIPTABLE virtual KWin::EffectWindow *findWindow(WId id) const = 0;
+    Q_SCRIPTABLE virtual KWin::EffectWindow *findWindow(KWaylandServer::SurfaceInterface *surf) const = 0;
     /**
      * Finds the EffectWindow for the internal window @p w.
      * If there is no such window @c null is returned.
@@ -1103,20 +1097,20 @@ public:
     Q_SCRIPTABLE virtual KWin::EffectWindow *findWindow(const QUuid &id) const = 0;
     virtual EffectWindowList stackingOrder() const = 0;
     // window will be temporarily painted as if being at the top of the stack
-    Q_SCRIPTABLE virtual void setElevatedWindow(KWin::EffectWindow* w, bool set) = 0;
+    Q_SCRIPTABLE virtual void setElevatedWindow(KWin::EffectWindow *w, bool set) = 0;
 
-    virtual void setTabBoxWindow(EffectWindow*) = 0;
+    virtual void setTabBoxWindow(EffectWindow *) = 0;
     virtual void setTabBoxDesktop(int) = 0;
     virtual EffectWindowList currentTabBoxWindowList() const = 0;
     virtual void refTabBox() = 0;
     virtual void unrefTabBox() = 0;
     virtual void closeTabBox() = 0;
-    virtual QList< int > currentTabBoxDesktopList() const = 0;
+    virtual QList<int> currentTabBoxDesktopList() const = 0;
     virtual int currentTabBoxDesktop() const = 0;
-    virtual EffectWindow* currentTabBoxWindow() const = 0;
+    virtual EffectWindow *currentTabBoxWindow() const = 0;
 
-    virtual void setActiveFullScreenEffect(Effect* e) = 0;
-    virtual Effect* activeFullScreenEffect() const = 0;
+    virtual void setActiveFullScreenEffect(Effect *e) = 0;
+    virtual Effect *activeFullScreenEffect() const = 0;
 
     /**
      * Schedules the entire workspace to be repainted next time.
@@ -1124,8 +1118,8 @@ public:
      *  affect the current painting.
      */
     Q_SCRIPTABLE virtual void addRepaintFull() = 0;
-    Q_SCRIPTABLE virtual void addRepaint(const QRect& r) = 0;
-    Q_SCRIPTABLE virtual void addRepaint(const QRegion& r) = 0;
+    Q_SCRIPTABLE virtual void addRepaint(const QRect &r) = 0;
+    Q_SCRIPTABLE virtual void addRepaint(const QRegion &r) = 0;
     Q_SCRIPTABLE virtual void addRepaint(int x, int y, int w, int h) = 0;
 
     CompositingType compositingType() const;
@@ -1205,8 +1199,8 @@ public:
      * EffectFrame.
      * @since 4.6
      */
-    virtual EffectFrame* effectFrame(EffectFrameStyle style, bool staticSize = true,
-                                     const QPoint& position = QPoint(-1, -1), Qt::Alignment alignment = Qt::AlignCenter) const = 0;
+    virtual EffectFrame *
+    effectFrame(EffectFrameStyle style, bool staticSize = true, const QPoint &position = QPoint(-1, -1), Qt::Alignment alignment = Qt::AlignCenter) const = 0;
 
     /**
      * Allows an effect to trigger a reload of itself.
@@ -1301,7 +1295,7 @@ public:
      * @param callback The function to invoke once the interactive window selection ends
      * @since 5.9
      */
-    virtual void startInteractiveWindowSelection(std::function<void(KWin::EffectWindow*)> callback) = 0;
+    virtual void startInteractiveWindowSelection(std::function<void(KWin::EffectWindow *)> callback) = 0;
 
     /**
      * Starts an interactive position selection process.
@@ -1402,11 +1396,11 @@ Q_SIGNALS:
      */
     void desktopPresenceChanged(KWin::EffectWindow *window, int oldDesktop, int newDesktop);
     /**
-    * Signal emitted when the number of currently existing desktops is changed.
-    * @param old The previous number of desktops in used.
-    * @see EffectsHandler::numberOfDesktops.
-    * @since 4.7
-    */
+     * Signal emitted when the number of currently existing desktops is changed.
+     * @param old The previous number of desktops in used.
+     * @see EffectsHandler::numberOfDesktops.
+     * @since 4.7
+     */
     void numberDesktopsChanged(uint old);
     /**
      * Signal emitted when the number of screens changed.
@@ -1612,10 +1606,10 @@ Q_SIGNALS:
      * @see refTabBox
      * @since 4.7
      */
-    void tabBoxKeyEvent(QKeyEvent* event);
-    void currentTabAboutToChange(KWin::EffectWindow* from, KWin::EffectWindow* to);
-    void tabAdded(KWin::EffectWindow* from, KWin::EffectWindow* to);   // from merged with to
-    void tabRemoved(KWin::EffectWindow* c, KWin::EffectWindow* group);   // c removed from group
+    void tabBoxKeyEvent(QKeyEvent *event);
+    void currentTabAboutToChange(KWin::EffectWindow *from, KWin::EffectWindow *to);
+    void tabAdded(KWin::EffectWindow *from, KWin::EffectWindow *to); // from merged with to
+    void tabRemoved(KWin::EffectWindow *c, KWin::EffectWindow *group); // c removed from group
     /**
      * Signal emitted when mouse changed.
      * If an effect needs to get updated mouse positions, it needs to first call startMousePolling.
@@ -1629,9 +1623,12 @@ Q_SIGNALS:
      * @see startMousePolling
      * @since 4.7
      */
-    void mouseChanged(const QPoint& pos, const QPoint& oldpos,
-                              Qt::MouseButtons buttons, Qt::MouseButtons oldbuttons,
-                              Qt::KeyboardModifiers modifiers, Qt::KeyboardModifiers oldmodifiers);
+    void mouseChanged(const QPoint &pos,
+                      const QPoint &oldpos,
+                      Qt::MouseButtons buttons,
+                      Qt::MouseButtons oldbuttons,
+                      Qt::KeyboardModifiers modifiers,
+                      Qt::KeyboardModifiers oldmodifiers);
     /**
      * Signal emitted when the cursor shape changed.
      * You'll likely want to query the current cursor as reaction: xcb_xfixes_get_cursor_image_unchecked
@@ -1648,7 +1645,7 @@ Q_SIGNALS:
      * @param atom The property
      * @since 4.7
      */
-    void propertyNotify(KWin::EffectWindow* w, long atom);
+    void propertyNotify(KWin::EffectWindow *w, long atom);
 
     /**
      * Signal emitted after the screen geometry changed (e.g. add of a monitor).
@@ -1824,11 +1821,10 @@ Q_SIGNALS:
     void sessionStateChanged();
 
 protected:
-    QVector< EffectPair > loaded_effects;
-    //QHash< QString, EffectFactory* > effect_factories;
+    QVector<EffectPair> loaded_effects;
+    // QHash< QString, EffectFactory* > effect_factories;
     CompositingType compositing_type;
 };
-
 
 /**
  * @short Representation of a window used by/for Effect classes.
@@ -2129,17 +2125,17 @@ public:
     /**  Flags explaining why painting should be disabled  */
     enum {
         /**  Window will not be painted  */
-        PAINT_DISABLED                 = 1 << 0,
+        PAINT_DISABLED = 1 << 0,
         /**  Window will not be painted because it is deleted  */
-        PAINT_DISABLED_BY_DELETE       = 1 << 1,
+        PAINT_DISABLED_BY_DELETE = 1 << 1,
         /**  Window will not be painted because of which desktop it's on  */
-        PAINT_DISABLED_BY_DESKTOP      = 1 << 2,
+        PAINT_DISABLED_BY_DESKTOP = 1 << 2,
         /**  Window will not be painted because it is minimized  */
-        PAINT_DISABLED_BY_MINIMIZE     = 1 << 3,
+        PAINT_DISABLED_BY_MINIMIZE = 1 << 3,
         /**  Deprecated, tab groups have been removed: Window will not be painted because it is not the active window in a client group */
         PAINT_DISABLED_BY_TAB_GROUP = 1 << 4,
         /**  Window will not be painted because it's not on the current activity  */
-        PAINT_DISABLED_BY_ACTIVITY     = 1 << 5
+        PAINT_DISABLED_BY_ACTIVITY = 1 << 5
     };
 
     explicit EffectWindow(QObject *parent = nullptr);
@@ -2258,7 +2254,7 @@ public:
     virtual QIcon icon() const = 0;
     virtual QString windowClass() const = 0;
     virtual QString windowRole() const = 0;
-    virtual const EffectWindowGroup* group() const = 0;
+    virtual const EffectWindowGroup *group() const = 0;
 
     /**
      * Returns whether the window is a desktop background window (the one with wallpaper).
@@ -2373,9 +2369,9 @@ public:
     virtual bool keepBelow() const = 0;
 
     virtual bool isModal() const = 0;
-    Q_SCRIPTABLE virtual KWin::EffectWindow* findModal() = 0;
-    Q_SCRIPTABLE virtual KWin::EffectWindow* transientFor() = 0;
-    Q_SCRIPTABLE virtual QList<KWin::EffectWindow*> mainWindows() const = 0;
+    Q_SCRIPTABLE virtual KWin::EffectWindow *findModal() = 0;
+    Q_SCRIPTABLE virtual KWin::EffectWindow *transientFor() = 0;
+    Q_SCRIPTABLE virtual QList<KWin::EffectWindow *> mainWindows() const = 0;
 
     /**
      * Returns whether the window should be excluded from window switching effects.
@@ -2506,19 +2502,15 @@ public:
     virtual EffectWindowList members() const = 0;
 };
 
-
-struct GLVertex2D
-{
+struct GLVertex2D {
     QVector2D position;
     QVector2D texcoord;
 };
 
-struct GLVertex3D
-{
+struct GLVertex3D {
     QVector3D position;
     QVector2D texcoord;
 };
-
 
 /**
  * @short Vertex class
@@ -2533,14 +2525,38 @@ public:
     WindowVertex(const QPointF &position, const QPointF &textureCoordinate);
     WindowVertex(double x, double y, double tx, double ty);
 
-    double x() const { return px; }
-    double y() const { return py; }
-    double u() const { return tx; }
-    double v() const { return ty; }
-    double originalX() const { return ox; }
-    double originalY() const { return oy; }
-    double textureX() const { return tx; }
-    double textureY() const { return ty; }
+    double x() const
+    {
+        return px;
+    }
+    double y() const
+    {
+        return py;
+    }
+    double u() const
+    {
+        return tx;
+    }
+    double v() const
+    {
+        return ty;
+    }
+    double originalX() const
+    {
+        return ox;
+    }
+    double originalY() const
+    {
+        return oy;
+    }
+    double textureX() const
+    {
+        return tx;
+    }
+    double textureY() const
+    {
+        return ty;
+    }
     void move(double x, double y);
     void setX(double x);
     void setY(double y);
@@ -2564,11 +2580,17 @@ class KWINEFFECTS_EXPORT WindowQuad
 public:
     explicit WindowQuad(WindowQuadType type, int id = -1);
     WindowQuad makeSubQuad(double x1, double y1, double x2, double y2) const;
-    WindowVertex& operator[](int index);
-    const WindowVertex& operator[](int index) const;
+    WindowVertex &operator[](int index);
+    const WindowVertex &operator[](int index) const;
     WindowQuadType type() const;
-    void setUVAxisSwapped(bool value) { uvSwapped = value; }
-    bool uvAxisSwapped() const { return uvSwapped; }
+    void setUVAxisSwapped(bool value)
+    {
+        uvSwapped = value;
+    }
+    bool uvAxisSwapped() const
+    {
+        return uvSwapped;
+    }
     int id() const;
     bool decoration() const;
     bool effect() const;
@@ -2582,16 +2604,16 @@ public:
     double originalBottom() const;
     bool smoothNeeded() const;
     bool isTransformed() const;
+
 private:
     friend class WindowQuadList;
-    WindowVertex verts[ 4 ];
+    WindowVertex verts[4];
     WindowQuadType quadType; // 0 - contents, 1 - decoration
     bool uvSwapped;
     int quadID;
 };
 
-class KWINEFFECTS_EXPORT WindowQuadList
-    : public QVector<WindowQuad>
+class KWINEFFECTS_EXPORT WindowQuadList : public QVector<WindowQuad>
 {
 public:
     WindowQuadList splitAtX(double x) const;
@@ -2602,7 +2624,7 @@ public:
     WindowQuadList filterOut(WindowQuadType type) const;
     bool smoothNeeded() const;
     void makeInterleavedArrays(unsigned int type, GLVertex2D *vertices, const QMatrix4x4 &matrix) const;
-    void makeArrays(float** vertices, float** texcoords, const QSizeF &size, bool yInverted) const;
+    void makeArrays(float **vertices, float **texcoords, const QSizeF &size, bool yInverted) const;
     bool isTransformed() const;
 };
 
@@ -2789,14 +2811,14 @@ protected:
     PaintData(const PaintData &other);
 
 private:
-    PaintDataPrivate * const d;
+    PaintDataPrivate *const d;
 };
 
 class KWINEFFECTS_EXPORT WindowPaintData : public PaintData
 {
 public:
-    explicit WindowPaintData(EffectWindow* w);
-    explicit WindowPaintData(EffectWindow* w, const QMatrix4x4 &screenProjectionMatrix);
+    explicit WindowPaintData(EffectWindow *w);
+    explicit WindowPaintData(EffectWindow *w, const QMatrix4x4 &screenProjectionMatrix);
     WindowPaintData(const WindowPaintData &other);
     ~WindowPaintData() override;
     /**
@@ -2804,42 +2826,42 @@ public:
      * Multiplies all three components by the given factor.
      * @since 4.10
      */
-    WindowPaintData& operator*=(qreal scale);
+    WindowPaintData &operator*=(qreal scale);
     /**
      * Scales the window by @p scale factor.
      * Performs a component wise multiplication on x and y components.
      * @since 4.10
      */
-    WindowPaintData& operator*=(const QVector2D &scale);
+    WindowPaintData &operator*=(const QVector2D &scale);
     /**
      * Scales the window by @p scale factor.
      * Performs a component wise multiplication.
      * @since 4.10
      */
-    WindowPaintData& operator*=(const QVector3D &scale);
+    WindowPaintData &operator*=(const QVector3D &scale);
     /**
      * Translates the window by the given @p translation and returns a reference to the ScreenPaintData.
      * @since 4.10
      */
-    WindowPaintData& operator+=(const QPointF &translation);
-    /**
-     * Translates the window by the given @p translation and returns a reference to the ScreenPaintData.
-     * Overloaded method for convenience.
-     * @since 4.10
-     */
-    WindowPaintData& operator+=(const QPoint &translation);
+    WindowPaintData &operator+=(const QPointF &translation);
     /**
      * Translates the window by the given @p translation and returns a reference to the ScreenPaintData.
      * Overloaded method for convenience.
      * @since 4.10
      */
-    WindowPaintData& operator+=(const QVector2D &translation);
+    WindowPaintData &operator+=(const QPoint &translation);
     /**
      * Translates the window by the given @p translation and returns a reference to the ScreenPaintData.
      * Overloaded method for convenience.
      * @since 4.10
      */
-    WindowPaintData& operator+=(const QVector3D &translation);
+    WindowPaintData &operator+=(const QVector2D &translation);
+    /**
+     * Translates the window by the given @p translation and returns a reference to the ScreenPaintData.
+     * Overloaded method for convenience.
+     * @since 4.10
+     */
+    WindowPaintData &operator+=(const QVector3D &translation);
     /**
      * Window opacity, in range 0 = transparent to 1 = fully opaque
      * @see setOpacity
@@ -2986,10 +3008,10 @@ public:
     /**
      * Shader to be used for rendering, if any.
      */
-    GLShader* shader;
+    GLShader *shader;
 
 private:
-    WindowPaintDataPrivate * const d;
+    WindowPaintDataPrivate *const d;
 };
 
 class KWINEFFECTS_EXPORT ScreenPaintData : public PaintData
@@ -3004,43 +3026,43 @@ public:
      * Multiplies all three components by the given factor.
      * @since 4.10
      */
-    ScreenPaintData& operator*=(qreal scale);
+    ScreenPaintData &operator*=(qreal scale);
     /**
      * Scales the screen by @p scale factor.
      * Performs a component wise multiplication on x and y components.
      * @since 4.10
      */
-    ScreenPaintData& operator*=(const QVector2D &scale);
+    ScreenPaintData &operator*=(const QVector2D &scale);
     /**
      * Scales the screen by @p scale factor.
      * Performs a component wise multiplication.
      * @since 4.10
      */
-    ScreenPaintData& operator*=(const QVector3D &scale);
+    ScreenPaintData &operator*=(const QVector3D &scale);
     /**
      * Translates the screen by the given @p translation and returns a reference to the ScreenPaintData.
      * @since 4.10
      */
-    ScreenPaintData& operator+=(const QPointF &translation);
-    /**
-     * Translates the screen by the given @p translation and returns a reference to the ScreenPaintData.
-     * Overloaded method for convenience.
-     * @since 4.10
-     */
-    ScreenPaintData& operator+=(const QPoint &translation);
+    ScreenPaintData &operator+=(const QPointF &translation);
     /**
      * Translates the screen by the given @p translation and returns a reference to the ScreenPaintData.
      * Overloaded method for convenience.
      * @since 4.10
      */
-    ScreenPaintData& operator+=(const QVector2D &translation);
+    ScreenPaintData &operator+=(const QPoint &translation);
     /**
      * Translates the screen by the given @p translation and returns a reference to the ScreenPaintData.
      * Overloaded method for convenience.
      * @since 4.10
      */
-    ScreenPaintData& operator+=(const QVector3D &translation);
-    ScreenPaintData& operator=(const ScreenPaintData &rhs);
+    ScreenPaintData &operator+=(const QVector2D &translation);
+    /**
+     * Translates the screen by the given @p translation and returns a reference to the ScreenPaintData.
+     * Overloaded method for convenience.
+     * @since 4.10
+     */
+    ScreenPaintData &operator+=(const QVector3D &translation);
+    ScreenPaintData &operator=(const ScreenPaintData &rhs);
 
     /**
      * The projection matrix used by the scene for the current rendering pass.
@@ -3065,6 +3087,7 @@ public:
      * @since 5.19
      */
     qreal screenScale() const;
+
 private:
     class Private;
     QScopedPointer<Private> d;
@@ -3092,7 +3115,7 @@ public:
     /**
      * Calls push().
      */
-    explicit PaintClipper(const QRegion& allowed_area);
+    explicit PaintClipper(const QRegion &allowed_area);
     /**
      * Calls pop().
      */
@@ -3101,11 +3124,11 @@ public:
      * Allows painting only in the given area. When areas have been already
      * specified, painting is allowed only in the intersection of all areas.
      */
-    static void push(const QRegion& allowed_area);
+    static void push(const QRegion &allowed_area);
     /**
      * Removes the given area. It must match the top item in the stack.
      */
-    static void pop(const QRegion& allowed_area);
+    static void pop(const QRegion &allowed_area);
     /**
      * Returns true if any clipping should be performed.
      */
@@ -3133,20 +3156,21 @@ public:
         bool isDone();
         void next();
         QRect boundingRect() const;
+
     private:
         struct Data;
-        Data* data;
+        Data *data;
     };
+
 private:
     QRegion area;
-    static QStack< QRegion >* areas;
+    static QStack<QRegion> *areas;
 };
 
 /**
  * @internal
  */
-template <typename T>
-class KWINEFFECTS_EXPORT Motion
+template<typename T> class KWINEFFECTS_EXPORT Motion
 {
 public:
     /**
@@ -3163,46 +3187,58 @@ public:
     Motion(const Motion<T> &other);
     ~Motion();
 
-    inline T value() const {
+    inline T value() const
+    {
         return m_value;
     }
-    inline void setValue(const T value) {
+    inline void setValue(const T value)
+    {
         m_value = value;
     }
-    inline T target() const {
+    inline T target() const
+    {
         return m_target;
     }
-    inline void setTarget(const T target) {
+    inline void setTarget(const T target)
+    {
         m_start = m_value;
         m_target = target;
     }
-    inline T velocity() const {
+    inline T velocity() const
+    {
         return m_velocity;
     }
-    inline void setVelocity(const T velocity) {
+    inline void setVelocity(const T velocity)
+    {
         m_velocity = velocity;
     }
 
-    inline double strength() const {
+    inline double strength() const
+    {
         return m_strength;
     }
-    inline void setStrength(const double strength) {
+    inline void setStrength(const double strength)
+    {
         m_strength = strength;
     }
-    inline double smoothness() const {
+    inline double smoothness() const
+    {
         return m_smoothness;
     }
-    inline void setSmoothness(const double smoothness) {
+    inline void setSmoothness(const double smoothness)
+    {
         m_smoothness = smoothness;
     }
-    inline T startValue() {
+    inline T startValue()
+    {
         return m_start;
     }
 
     /**
      * The distance between the current position and the target.
      */
-    inline T distance() const {
+    inline T distance() const
+    {
         return m_target - m_value;
     }
 
@@ -3284,7 +3320,8 @@ public:
     /**
      * Register a list of windows for managing.
      */
-    inline void manage(const EffectWindowList &list) {
+    inline void manage(const EffectWindowList &list)
+    {
         for (int i = 0; i < list.size(); i++)
             manage(list.at(i));
     }
@@ -3338,10 +3375,10 @@ public:
      * Ask the manager to move the window to the target rectangle.
      * Automatically determines scale.
      */
-    inline void moveWindow(EffectWindow *w, QRect target) {
+    inline void moveWindow(EffectWindow *w, QRect target)
+    {
         // TODO: Scale might be slightly different in the comparison due to rounding
-        moveWindow(w, target.topLeft(),
-                   target.width() / double(w->width()), target.height() / double(w->height()));
+        moveWindow(w, target.topLeft(), target.width() / double(w->width()), target.height() / double(w->height()));
     }
 
     /**
@@ -3366,26 +3403,29 @@ public:
      * order as it's what the user sees, but it is slightly
      * slower to process.
      */
-    EffectWindow* windowAtPoint(QPoint point, bool useStackingOrder = true) const;
+    EffectWindow *windowAtPoint(QPoint point, bool useStackingOrder = true) const;
 
     /**
      * Return a list of all currently registered windows.
      */
-    inline EffectWindowList managedWindows() const {
+    inline EffectWindowList managedWindows() const
+    {
         return m_managedWindows.keys();
     }
     /**
      * Returns whether or not a specified window is being managed
      * by this manager object.
      */
-    inline bool isManaging(EffectWindow *w) const {
+    inline bool isManaging(EffectWindow *w) const
+    {
         return m_managedWindows.contains(w);
     }
     /**
      * Returns whether or not this manager object is actually
      * managing any windows or not.
      */
-    inline bool managingWindows() const {
+    inline bool managingWindows() const
+    {
         return !m_managedWindows.empty();
     }
     /**
@@ -3393,14 +3433,16 @@ public:
      * or not. Can be used to see if an effect should be
      * processed and displayed or not.
      */
-    inline bool areWindowsMoving() const {
+    inline bool areWindowsMoving() const
+    {
         return !m_movingWindowsSet.isEmpty();
     }
     /**
      * Returns whether a window has reached its targets yet
      * or not.
      */
-    inline bool isWindowMoving(EffectWindow *w) const {
+    inline bool isWindowMoving(EffectWindow *w) const
+    {
         return m_movingWindowsSet.contains(w);
     }
 
@@ -3411,8 +3453,8 @@ private:
         Motion2D translation; // Absolute position
         Motion2D scale; // xScale and yScale
     };
-    QHash<EffectWindow*, WindowMotion> m_managedWindows;
-    QSet<EffectWindow*> m_movingWindowsSet;
+    QHash<EffectWindow *, WindowMotion> m_managedWindows;
+    QSet<EffectWindow *> m_movingWindowsSet;
 };
 
 /**
@@ -3440,43 +3482,43 @@ public:
      */
     virtual void render(const QRegion &region = infiniteRegion(), double opacity = 1.0, double frameOpacity = 1.0) = 0;
 
-    virtual void setPosition(const QPoint& point) = 0;
+    virtual void setPosition(const QPoint &point) = 0;
     /**
      * Set the text alignment for static frames and the position alignment
      * for non-static.
      */
     virtual void setAlignment(Qt::Alignment alignment) = 0;
     virtual Qt::Alignment alignment() const = 0;
-    virtual void setGeometry(const QRect& geometry, bool force = false) = 0;
-    virtual const QRect& geometry() const = 0;
+    virtual void setGeometry(const QRect &geometry, bool force = false) = 0;
+    virtual const QRect &geometry() const = 0;
 
-    virtual void setText(const QString& text) = 0;
-    virtual const QString& text() const = 0;
-    virtual void setFont(const QFont& font) = 0;
-    virtual const QFont& font() const = 0;
+    virtual void setText(const QString &text) = 0;
+    virtual const QString &text() const = 0;
+    virtual void setFont(const QFont &font) = 0;
+    virtual const QFont &font() const = 0;
     /**
      * Set the icon that will appear on the left-hand size of the frame.
      */
-    virtual void setIcon(const QIcon& icon) = 0;
-    virtual const QIcon& icon() const = 0;
-    virtual void setIconSize(const QSize& size) = 0;
-    virtual const QSize& iconSize() const = 0;
+    virtual void setIcon(const QIcon &icon) = 0;
+    virtual const QIcon &icon() const = 0;
+    virtual void setIconSize(const QSize &size) = 0;
+    virtual const QSize &iconSize() const = 0;
 
     /**
      * Sets the geometry of a selection.
      * To remove the selection set a null rect.
      * @param selection The geometry of the selection in screen coordinates.
      */
-    virtual void setSelection(const QRect& selection) = 0;
+    virtual void setSelection(const QRect &selection) = 0;
 
     /**
      * @param shader The GLShader for rendering.
      */
-    virtual void setShader(GLShader* shader) = 0;
+    virtual void setShader(GLShader *shader) = 0;
     /**
      * @returns The GLShader used for rendering or null if none.
      */
-    virtual GLShader* shader() const = 0;
+    virtual GLShader *shader() const = 0;
 
     /**
      * @returns The style of this EffectFrame.
@@ -3538,7 +3580,7 @@ protected:
     void setScreenProjectionMatrix(const QMatrix4x4 &projection);
 
 private:
-    EffectFramePrivate* const d;
+    EffectFramePrivate *const d;
 };
 
 /**
@@ -3556,10 +3598,7 @@ public:
      * When the direction of the timeline is Backward, the progress
      * value will go from 1.0 to 0.0.
      */
-    enum Direction {
-        Forward,
-        Backward
-    };
+    enum Direction { Forward, Backward };
 
     /**
      * Constructs a new instance of TimeLine.
@@ -3568,8 +3607,7 @@ public:
      * @param direction Direction of the timeline
      * @since 5.14
      */
-    explicit TimeLine(std::chrono::milliseconds duration = std::chrono::milliseconds(1000),
-                      Direction direction = Forward);
+    explicit TimeLine(std::chrono::milliseconds duration = std::chrono::milliseconds(1000), Direction direction = Forward);
     TimeLine(const TimeLine &other);
     ~TimeLine();
 
@@ -3725,10 +3763,7 @@ public:
      */
     void reset();
 
-    enum class RedirectMode {
-        Strict,
-        Relaxed
-    };
+    enum class RedirectMode { Strict, Relaxed };
 
     /**
      * Returns the redirect mode for the source position.
@@ -3797,46 +3832,54 @@ private:
 /**
  * Pointer to the global EffectsHandler object.
  */
-extern KWINEFFECTS_EXPORT EffectsHandler* effects;
+extern KWINEFFECTS_EXPORT EffectsHandler *effects;
 
 /***************************************************************
  WindowVertex
 ***************************************************************/
 
-inline
-WindowVertex::WindowVertex()
-    : px(0), py(0), ox(0), oy(0), tx(0), ty(0)
+inline WindowVertex::WindowVertex()
+    : px(0)
+    , py(0)
+    , ox(0)
+    , oy(0)
+    , tx(0)
+    , ty(0)
 {
 }
 
-inline
-WindowVertex::WindowVertex(double _x, double _y, double _tx, double _ty)
-    : px(_x), py(_y), ox(_x), oy(_y), tx(_tx), ty(_ty)
+inline WindowVertex::WindowVertex(double _x, double _y, double _tx, double _ty)
+    : px(_x)
+    , py(_y)
+    , ox(_x)
+    , oy(_y)
+    , tx(_tx)
+    , ty(_ty)
 {
 }
 
-
-inline
-WindowVertex::WindowVertex(const QPointF &position, const QPointF &texturePosition)
-    : px(position.x()), py(position.y()), ox(position.x()), oy(position.y()), tx(texturePosition.x()), ty(texturePosition.y())
+inline WindowVertex::WindowVertex(const QPointF &position, const QPointF &texturePosition)
+    : px(position.x())
+    , py(position.y())
+    , ox(position.x())
+    , oy(position.y())
+    , tx(texturePosition.x())
+    , ty(texturePosition.y())
 {
 }
 
-inline
-void WindowVertex::move(double x, double y)
+inline void WindowVertex::move(double x, double y)
 {
     px = x;
     py = y;
 }
 
-inline
-void WindowVertex::setX(double x)
+inline void WindowVertex::setX(double x)
 {
     px = x;
 }
 
-inline
-void WindowVertex::setY(double y)
+inline void WindowVertex::setY(double y)
 {
     py = y;
 }
@@ -3845,147 +3888,127 @@ void WindowVertex::setY(double y)
  WindowQuad
 ***************************************************************/
 
-inline
-WindowQuad::WindowQuad(WindowQuadType t, int id)
+inline WindowQuad::WindowQuad(WindowQuadType t, int id)
     : quadType(t)
     , uvSwapped(false)
     , quadID(id)
 {
 }
 
-inline
-WindowVertex& WindowQuad::operator[](int index)
+inline WindowVertex &WindowQuad::operator[](int index)
 {
     Q_ASSERT(index >= 0 && index < 4);
-    return verts[ index ];
+    return verts[index];
 }
 
-inline
-const WindowVertex& WindowQuad::operator[](int index) const
+inline const WindowVertex &WindowQuad::operator[](int index) const
 {
     Q_ASSERT(index >= 0 && index < 4);
-    return verts[ index ];
+    return verts[index];
 }
 
-inline
-WindowQuadType WindowQuad::type() const
+inline WindowQuadType WindowQuad::type() const
 {
     Q_ASSERT(quadType != WindowQuadError);
     return quadType;
 }
 
-inline
-int WindowQuad::id() const
+inline int WindowQuad::id() const
 {
     return quadID;
 }
 
-inline
-bool WindowQuad::decoration() const
+inline bool WindowQuad::decoration() const
 {
     Q_ASSERT(quadType != WindowQuadError);
     return quadType == WindowQuadDecoration;
 }
 
-inline
-bool WindowQuad::effect() const
+inline bool WindowQuad::effect() const
 {
     Q_ASSERT(quadType != WindowQuadError);
     return quadType >= EFFECT_QUAD_TYPE_START;
 }
 
-inline
-bool WindowQuad::isTransformed() const
+inline bool WindowQuad::isTransformed() const
 {
-    return !(verts[ 0 ].px == verts[ 0 ].ox && verts[ 0 ].py == verts[ 0 ].oy
-             && verts[ 1 ].px == verts[ 1 ].ox && verts[ 1 ].py == verts[ 1 ].oy
-             && verts[ 2 ].px == verts[ 2 ].ox && verts[ 2 ].py == verts[ 2 ].oy
-             && verts[ 3 ].px == verts[ 3 ].ox && verts[ 3 ].py == verts[ 3 ].oy);
+    return !(verts[0].px == verts[0].ox && verts[0].py == verts[0].oy && verts[1].px == verts[1].ox && verts[1].py == verts[1].oy && verts[2].px == verts[2].ox
+             && verts[2].py == verts[2].oy && verts[3].px == verts[3].ox && verts[3].py == verts[3].oy);
 }
 
-inline
-double WindowQuad::left() const
+inline double WindowQuad::left() const
 {
-    return qMin(verts[ 0 ].px, qMin(verts[ 1 ].px, qMin(verts[ 2 ].px, verts[ 3 ].px)));
+    return qMin(verts[0].px, qMin(verts[1].px, qMin(verts[2].px, verts[3].px)));
 }
 
-inline
-double WindowQuad::right() const
+inline double WindowQuad::right() const
 {
-    return qMax(verts[ 0 ].px, qMax(verts[ 1 ].px, qMax(verts[ 2 ].px, verts[ 3 ].px)));
+    return qMax(verts[0].px, qMax(verts[1].px, qMax(verts[2].px, verts[3].px)));
 }
 
-inline
-double WindowQuad::top() const
+inline double WindowQuad::top() const
 {
-    return qMin(verts[ 0 ].py, qMin(verts[ 1 ].py, qMin(verts[ 2 ].py, verts[ 3 ].py)));
+    return qMin(verts[0].py, qMin(verts[1].py, qMin(verts[2].py, verts[3].py)));
 }
 
-inline
-double WindowQuad::bottom() const
+inline double WindowQuad::bottom() const
 {
-    return qMax(verts[ 0 ].py, qMax(verts[ 1 ].py, qMax(verts[ 2 ].py, verts[ 3 ].py)));
+    return qMax(verts[0].py, qMax(verts[1].py, qMax(verts[2].py, verts[3].py)));
 }
 
-inline
-double WindowQuad::originalLeft() const
+inline double WindowQuad::originalLeft() const
 {
-    return verts[ 0 ].ox;
+    return verts[0].ox;
 }
 
-inline
-double WindowQuad::originalRight() const
+inline double WindowQuad::originalRight() const
 {
-    return verts[ 2 ].ox;
+    return verts[2].ox;
 }
 
-inline
-double WindowQuad::originalTop() const
+inline double WindowQuad::originalTop() const
 {
-    return verts[ 0 ].oy;
+    return verts[0].oy;
 }
 
-inline
-double WindowQuad::originalBottom() const
+inline double WindowQuad::originalBottom() const
 {
-    return verts[ 2 ].oy;
+    return verts[2].oy;
 }
 
 /***************************************************************
  Motion
 ***************************************************************/
 
-template <typename T>
+template<typename T>
 Motion<T>::Motion(T initial, double strength, double smoothness)
-    :   m_value(initial)
-    ,   m_start(initial)
-    ,   m_target(initial)
-    ,   m_velocity()
-    ,   m_strength(strength)
-    ,   m_smoothness(smoothness)
+    : m_value(initial)
+    , m_start(initial)
+    , m_target(initial)
+    , m_velocity()
+    , m_strength(strength)
+    , m_smoothness(smoothness)
 {
 }
 
-template <typename T>
+template<typename T>
 Motion<T>::Motion(const Motion &other)
-    :   m_value(other.value())
-    ,   m_start(other.target())
-    ,   m_target(other.target())
-    ,   m_velocity(other.velocity())
-    ,   m_strength(other.strength())
-    ,   m_smoothness(other.smoothness())
+    : m_value(other.value())
+    , m_start(other.target())
+    , m_target(other.target())
+    , m_velocity(other.velocity())
+    , m_strength(other.strength())
+    , m_smoothness(other.smoothness())
 {
 }
 
-template <typename T>
-Motion<T>::~Motion()
+template<typename T> Motion<T>::~Motion()
 {
 }
 
-template <typename T>
-void Motion<T>::calculate(const int msec)
+template<typename T> void Motion<T>::calculate(const int msec)
 {
-    if (m_value == m_target && m_velocity == T())   // At target and not moving
+    if (m_value == m_target && m_velocity == T()) // At target and not moving
         return;
 
     // Poor man's time independent calculation
@@ -3998,8 +4021,7 @@ void Motion<T>::calculate(const int msec)
     }
 }
 
-template <typename T>
-void Motion<T>::finish()
+template<typename T> void Motion<T>::finish()
 {
     m_value = m_target;
     m_velocity = T();
@@ -4008,21 +4030,19 @@ void Motion<T>::finish()
 /***************************************************************
  Effect
 ***************************************************************/
-template <typename T>
-int Effect::animationTime(int defaultDuration)
+template<typename T> int Effect::animationTime(int defaultDuration)
 {
     return animationTime(T::duration() != 0 ? T::duration() : defaultDuration);
 }
 
-template <typename T>
-void Effect::initConfig()
+template<typename T> void Effect::initConfig()
 {
     T::instance(effects->config());
 }
 
 } // namespace
-Q_DECLARE_METATYPE(KWin::EffectWindow*)
-Q_DECLARE_METATYPE(QList<KWin::EffectWindow*>)
+Q_DECLARE_METATYPE(KWin::EffectWindow *)
+Q_DECLARE_METATYPE(QList<KWin::EffectWindow *>)
 Q_DECLARE_METATYPE(KWin::TimeLine)
 Q_DECLARE_METATYPE(KWin::TimeLine::Direction)
 

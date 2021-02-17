@@ -7,27 +7,27 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "inputmethod.h"
-#include "virtualkeyboard_dbus.h"
 #include "input.h"
 #include "keyboard_input.h"
-#include "utils.h"
+#include "screenlockerwatcher.h"
 #include "screens.h"
+#include "utils.h"
+#include "virtualkeyboard_dbus.h"
 #include "wayland_server.h"
 #include "workspace.h"
-#include "screenlockerwatcher.h"
 
 #include <KWaylandServer/display.h>
-#include <KWaylandServer/seat_interface.h>
-#include <KWaylandServer/textinput_v3_interface.h>
-#include <KWaylandServer/surface_interface.h>
 #include <KWaylandServer/inputmethod_v1_interface.h>
+#include <KWaylandServer/seat_interface.h>
+#include <KWaylandServer/surface_interface.h>
+#include <KWaylandServer/textinput_v3_interface.h>
 
-#include <KStatusNotifierItem>
 #include <KLocalizedString>
+#include <KStatusNotifierItem>
 
 #include <QDBusConnection>
-#include <QDBusPendingCall>
 #include <QDBusMessage>
+#include <QDBusPendingCall>
 
 #include <linux/input-event-codes.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -36,7 +36,6 @@ using namespace KWaylandServer;
 
 namespace KWin
 {
-
 KWIN_SINGLETON_FACTORY(InputMethod)
 
 InputMethod::InputMethod(QObject *parent)
@@ -57,12 +56,10 @@ void InputMethod::init()
     if (waylandServer()) {
         m_enabled = !input()->hasAlphaNumericKeyboard();
         qCDebug(KWIN_VIRTUALKEYBOARD) << "enabled by default: " << m_enabled;
-        connect(input(), &InputRedirection::hasAlphaNumericKeyboardChanged, this,
-            [this] (bool set) {
-                qCDebug(KWIN_VIRTUALKEYBOARD) << "AlphaNumeric Keyboard changed:" << set << "toggling virtual keyboard.";
-                setEnabled(!set);
-            }
-        );
+        connect(input(), &InputRedirection::hasAlphaNumericKeyboardChanged, this, [this](bool set) {
+            qCDebug(KWIN_VIRTUALKEYBOARD) << "AlphaNumeric Keyboard changed:" << set << "toggling virtual keyboard.";
+            setEnabled(!set);
+        });
     }
 
     qCDebug(KWIN_VIRTUALKEYBOARD) << "Registering the SNI";
@@ -72,11 +69,9 @@ void InputMethod::init()
     m_sni->setStatus(KStatusNotifierItem::Passive);
     m_sni->setTitle(i18n("Virtual Keyboard"));
     updateSni();
-    connect(m_sni, &KStatusNotifierItem::activateRequested, this,
-        [this] {
-            setEnabled(!m_enabled);
-        }
-    );
+    connect(m_sni, &KStatusNotifierItem::activateRequested, this, [this] {
+        setEnabled(!m_enabled);
+    });
     connect(this, &InputMethod::enabledChanged, this, &InputMethod::updateSni);
 
     auto dbus = new VirtualKeyboardDBus(this);
@@ -120,7 +115,7 @@ void InputMethod::hide()
     updateInputPanelState();
 }
 
-void InputMethod::clientAdded(AbstractClient* client)
+void InputMethod::clientAdded(AbstractClient *client)
 {
     if (!client->isInputMethod()) {
         return;
@@ -275,19 +270,17 @@ void InputMethod::setEnabled(bool enabled)
     emit enabledChanged(m_enabled);
 
     // send OSD message
-    QDBusMessage msg = QDBusMessage::createMethodCall(
-        QStringLiteral("org.kde.plasmashell"),
-        QStringLiteral("/org/kde/osdService"),
-        QStringLiteral("org.kde.osdService"),
-        QStringLiteral("virtualKeyboardEnabledChanged")
-    );
+    QDBusMessage msg = QDBusMessage::createMethodCall(QStringLiteral("org.kde.plasmashell"),
+                                                      QStringLiteral("/org/kde/osdService"),
+                                                      QStringLiteral("org.kde.osdService"),
+                                                      QStringLiteral("virtualKeyboardEnabledChanged"));
     msg.setArguments({enabled});
     QDBusConnection::sessionBus().asyncCall(msg);
 }
 
 static quint32 keysymToKeycode(quint32 sym)
 {
-    switch(sym) {
+    switch (sym) {
     case XKB_KEY_BackSpace:
         return KEY_BACKSPACE;
     case XKB_KEY_Return:
@@ -397,7 +390,6 @@ void InputMethod::setPreeditCursor(qint32 index)
         t3->sendPreEditString(preedit.text, preedit.begin, preedit.end);
     }
 }
-
 
 void InputMethod::setPreeditString(uint32_t serial, const QString &text, const QString &commit)
 {

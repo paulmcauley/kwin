@@ -13,7 +13,6 @@
 
 namespace KWin
 {
-
 class SoftwareVsyncMonitor;
 class X11StandalonePlatform;
 

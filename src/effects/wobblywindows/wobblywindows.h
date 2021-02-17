@@ -15,7 +15,6 @@
 
 namespace KWin
 {
-
 struct ParameterSet;
 
 /**
@@ -38,18 +37,18 @@ class WobblyWindowsEffect : public Effect
     Q_PROPERTY(bool moveWobble READ isMoveWobble)
     Q_PROPERTY(bool resizeWobble READ isResizeWobble)
 public:
-
     WobblyWindowsEffect();
     ~WobblyWindowsEffect() override;
 
     void reconfigure(ReconfigureFlags) override;
-    void prePaintScreen(ScreenPrePaintData& data, std::chrono::milliseconds presentTime) override;
-    void prePaintWindow(EffectWindow* w, WindowPrePaintData& data, std::chrono::milliseconds presentTime) override;
-    void paintWindow(EffectWindow* w, int mask, QRegion region, WindowPaintData& data) override;
+    void prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime) override;
+    void prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::chrono::milliseconds presentTime) override;
+    void paintWindow(EffectWindow *w, int mask, QRegion region, WindowPaintData &data) override;
     void postPaintScreen() override;
     bool isActive() const override;
 
-    int requestedEffectChainPosition() const override {
+    int requestedEffectChainPosition() const override
+    {
         // Please notice that the Wobbly Windows effect has to be placed
         // after the Maximize effect in the effect chain, otherwise there
         // can be visual artifacts when dragging maximized windows.
@@ -75,43 +74,56 @@ public:
     static bool supported();
 
     // for properties
-    qreal stiffness() const {
+    qreal stiffness() const
+    {
         return m_stiffness;
     }
-    qreal drag() const {
+    qreal drag() const
+    {
         return m_drag;
     }
-    qreal moveFactor() const {
+    qreal moveFactor() const
+    {
         return m_move_factor;
     }
-    qreal xTesselation() const {
+    qreal xTesselation() const
+    {
         return m_xTesselation;
     }
-    qreal yTesselation() const {
+    qreal yTesselation() const
+    {
         return m_yTesselation;
     }
-    qreal minVelocity() const {
+    qreal minVelocity() const
+    {
         return m_minVelocity;
     }
-    qreal maxVelocity() const {
+    qreal maxVelocity() const
+    {
         return m_maxVelocity;
     }
-    qreal stopVelocity() const {
+    qreal stopVelocity() const
+    {
         return m_stopVelocity;
     }
-    qreal minAcceleration() const {
+    qreal minAcceleration() const
+    {
         return m_minAcceleration;
     }
-    qreal maxAcceleration() const {
+    qreal maxAcceleration() const
+    {
         return m_maxAcceleration;
     }
-    qreal stopAcceleration() const {
+    qreal stopAcceleration() const
+    {
         return m_stopAcceleration;
     }
-    bool isMoveWobble() const {
+    bool isMoveWobble() const
+    {
         return m_moveWobble;
     }
-    bool isResizeWobble() const {
+    bool isResizeWobble() const
+    {
         return m_resizeWobble;
     }
 
@@ -122,26 +134,26 @@ public Q_SLOTS:
     void slotWindowMaximizeStateChanged(KWin::EffectWindow *w, bool horizontal, bool vertical);
 
 private:
-    void startMovedResized(EffectWindow* w);
-    void stepMovedResized(EffectWindow* w);
-    bool updateWindowWobblyDatas(EffectWindow* w, qreal time);
+    void startMovedResized(EffectWindow *w);
+    void stepMovedResized(EffectWindow *w);
+    bool updateWindowWobblyDatas(EffectWindow *w, qreal time);
 
     struct WindowWobblyInfos {
-        Pair* origin;
-        Pair* position;
-        Pair* velocity;
-        Pair* acceleration;
-        Pair* buffer;
+        Pair *origin;
+        Pair *position;
+        Pair *velocity;
+        Pair *acceleration;
+        Pair *buffer;
 
         // if true, the physics system moves this point based only on it "normal" destination
         // given by the window position, ignoring neighbour points.
-        bool* constraint;
+        bool *constraint;
 
         unsigned int width;
         unsigned int height;
         unsigned int count;
 
-        Pair* bezierSurface;
+        Pair *bezierSurface;
         unsigned int bezierWidth;
         unsigned int bezierHeight;
         unsigned int bezierCount;
@@ -155,7 +167,7 @@ private:
         std::chrono::milliseconds lastPresentTime;
     };
 
-    QHash< const EffectWindow*,  WindowWobblyInfos > windows;
+    QHash<const EffectWindow *, WindowWobblyInfos> windows;
 
     QRegion m_updateRegion;
 
@@ -179,14 +191,14 @@ private:
     bool m_moveWobble;
     bool m_resizeWobble;
 
-    void initWobblyInfo(WindowWobblyInfos& wwi, QRect geometry) const;
-    void freeWobblyInfo(WindowWobblyInfos& wwi) const;
+    void initWobblyInfo(WindowWobblyInfos &wwi, QRect geometry) const;
+    void freeWobblyInfo(WindowWobblyInfos &wwi) const;
 
-    WobblyWindowsEffect::Pair computeBezierPoint(const WindowWobblyInfos& wwi, Pair point) const;
+    WobblyWindowsEffect::Pair computeBezierPoint(const WindowWobblyInfos &wwi, Pair point) const;
 
-    static void heightRingLinearMean(Pair** data_pointer, WindowWobblyInfos& wwi);
+    static void heightRingLinearMean(Pair **data_pointer, WindowWobblyInfos &wwi);
 
-    void setParameterSet(const ParameterSet& pset);
+    void setParameterSet(const ParameterSet &pset);
 };
 
 } // namespace KWin

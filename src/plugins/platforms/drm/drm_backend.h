@@ -8,8 +8,8 @@
 */
 #ifndef KWIN_DRM_BACKEND_H
 #define KWIN_DRM_BACKEND_H
-#include "platform.h"
 #include "input.h"
+#include "platform.h"
 
 #include "drm_buffer.h"
 #if HAVE_GBM
@@ -33,7 +33,6 @@ struct gbm_surface;
 
 namespace KWin
 {
-
 class Udev;
 class UdevMonitor;
 
@@ -55,7 +54,7 @@ public:
     ~DrmBackend() override;
 
     QPainterBackend *createQPainterBackend() override;
-    OpenGLBackend* createOpenGLBackend() override;
+    OpenGLBackend *createOpenGLBackend() override;
     DmaBufTexture *createDmaBufTexture(const QSize &size) override;
 
     void init() override;
@@ -65,10 +64,12 @@ public:
 
     Outputs outputs() const override;
     Outputs enabledOutputs() const override;
-    QVector<DrmOutput*> drmOutputs() const {
+    QVector<DrmOutput *> drmOutputs() const
+    {
         return m_outputs;
     }
-    QVector<DrmOutput*> drmEnabledOutputs() const {
+    QVector<DrmOutput *> drmEnabledOutputs() const
+    {
         return m_enabledOutputs;
     }
 
@@ -91,8 +92,8 @@ protected:
 
 private:
     friend class DrmGpu;
-    void addOutput(DrmOutput* output);
-    void removeOutput(DrmOutput* output);
+    void addOutput(DrmOutput *output);
+    void removeOutput(DrmOutput *output);
     static void pageFlipHandler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void *data);
     void openDrm();
     void activate(bool active);
@@ -111,18 +112,16 @@ private:
     QScopedPointer<UdevMonitor> m_udevMonitor;
 
     // active output pipelines (planes + crtc + encoder + connector)
-    QVector<DrmOutput*> m_outputs;
+    QVector<DrmOutput *> m_outputs;
     // active and enabled pipelines (above + wl_output)
-    QVector<DrmOutput*> m_enabledOutputs;
+    QVector<DrmOutput *> m_enabledOutputs;
 
     int m_pageFlipsPending = 0;
     bool m_active = false;
-    QVector<DrmGpu*> m_gpus;
+    QVector<DrmGpu *> m_gpus;
     QScopedPointer<DpmsInputEventFilter> m_dpmsFilter;
 };
-
 
 }
 
 #endif
-

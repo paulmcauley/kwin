@@ -15,26 +15,17 @@
 #include <QQuickWindow>
 #include <QWindow>
 
-K_PLUGIN_FACTORY_WITH_JSON(DesktopEffectsKCMFactory,
-                           "kcm_kwin_effects.json",
-                           registerPlugin<KWin::DesktopEffectsKCM>();)
+K_PLUGIN_FACTORY_WITH_JSON(DesktopEffectsKCMFactory, "kcm_kwin_effects.json", registerPlugin<KWin::DesktopEffectsKCM>();)
 
 namespace KWin
 {
-
 DesktopEffectsKCM::DesktopEffectsKCM(QObject *parent, const QVariantList &args)
     : KQuickAddons::ConfigModule(parent, args)
     , m_model(new EffectsModel(this))
 {
     qmlRegisterType<EffectsFilterProxyModel>("org.kde.private.kcms.kwin.effects", 1, 0, "EffectsFilterProxyModel");
 
-    auto about = new KAboutData(
-        QStringLiteral("kcm_kwin_effects"),
-        i18n("Desktop Effects"),
-        QStringLiteral("2.0"),
-        QString(),
-        KAboutLicense::GPL
-    );
+    auto about = new KAboutData(QStringLiteral("kcm_kwin_effects"), i18n("Desktop Effects"), QStringLiteral("2.0"), QString(), KAboutLicense::GPL);
     about->addAuthor(i18n("Vlad Zahorodnii"), QString(), QStringLiteral("vlad.zahorodnii@kde.org"));
     setAboutData(about);
 

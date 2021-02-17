@@ -20,8 +20,7 @@
 
 namespace KWin
 {
-
-DrmBuffer:: DrmBuffer(int fd)
+DrmBuffer::DrmBuffer(int fd)
     : m_fd(fd)
 {
 }
@@ -43,8 +42,7 @@ DrmDumbBuffer::DrmDumbBuffer(int fd, const QSize &size)
     m_handle = createArgs.handle;
     m_bufferSize = createArgs.size;
     m_stride = createArgs.pitch;
-    if (drmModeAddFB(fd, size.width(), size.height(), 24, 32,
-                     m_stride, createArgs.handle, &m_bufferId) != 0) {
+    if (drmModeAddFB(fd, size.width(), size.height(), 24, 32, m_stride, createArgs.handle, &m_bufferId) != 0) {
         qCWarning(KWIN_DRM) << "drmModeAddFB failed with errno" << errno;
     }
 }
@@ -66,8 +64,9 @@ DrmDumbBuffer::~DrmDumbBuffer()
     }
 }
 
-bool DrmDumbBuffer::needsModeChange(DrmBuffer *b) const {
-    if (DrmDumbBuffer *db = dynamic_cast<DrmDumbBuffer*>(b)) {
+bool DrmDumbBuffer::needsModeChange(DrmBuffer *b) const
+{
+    if (DrmDumbBuffer *db = dynamic_cast<DrmDumbBuffer *>(b)) {
         return m_stride != db->stride();
     } else {
         return true;
@@ -90,7 +89,7 @@ bool DrmDumbBuffer::map(QImage::Format format)
         return false;
     }
     m_memory = address;
-    m_image = new QImage((uchar*)m_memory, m_size.width(), m_size.height(), m_stride, format);
+    m_image = new QImage((uchar *)m_memory, m_size.width(), m_size.height(), m_stride, format);
     return !m_image->isNull();
 }
 

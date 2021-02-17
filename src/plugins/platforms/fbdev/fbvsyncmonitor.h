@@ -10,7 +10,6 @@
 
 namespace KWin
 {
-
 /**
  * The FramebufferVsyncMonitorHelper class is responsible for waiting vsync events using the
  * FBIO_WAITFORVSYNC ioctl. Note that the helper runs on a separate thread.

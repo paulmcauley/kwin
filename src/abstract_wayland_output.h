@@ -34,7 +34,6 @@ class XdgOutputV1Interface;
 
 namespace KWin
 {
-
 /**
  * Generic output representation in a Wayland session
  */
@@ -42,16 +41,7 @@ class KWIN_EXPORT AbstractWaylandOutput : public AbstractOutput
 {
     Q_OBJECT
 public:
-    enum class Transform {
-        Normal,
-        Rotated90,
-        Rotated180,
-        Rotated270,
-        Flipped,
-        Flipped90,
-        Flipped180,
-        Flipped270
-    };
+    enum class Transform { Normal, Rotated90, Rotated180, Rotated270, Flipped, Flipped90, Flipped180, Flipped270 };
 
     explicit AbstractWaylandOutput(QObject *parent = nullptr);
     ~AbstractWaylandOutput() override;
@@ -88,7 +78,8 @@ public:
      */
     int refreshRate() const override;
 
-    bool isInternal() const override {
+    bool isInternal() const override
+    {
         return m_internal;
     }
 
@@ -101,7 +92,8 @@ public:
 
     void applyChanges(const KWaylandServer::OutputChangeSet *changeSet) override;
 
-    QPointer<KWaylandServer::OutputInterface> waylandOutput() const {
+    QPointer<KWaylandServer::OutputInterface> waylandOutput() const
+    {
         return m_waylandOutput;
     }
 
@@ -131,36 +123,46 @@ Q_SIGNALS:
     void outputChange(const QRegion &damagedRegion);
 
 protected:
-    void initInterfaces(const QString &model, const QString &manufacturer,
-                        const QByteArray &uuid, const QSize &physicalSize,
+    void initInterfaces(const QString &model,
+                        const QString &manufacturer,
+                        const QByteArray &uuid,
+                        const QSize &physicalSize,
                         const QVector<KWaylandServer::OutputDeviceInterface::Mode> &modes,
                         const QByteArray &edid);
 
     QPoint globalPos() const;
 
-    bool internal() const {
+    bool internal() const
+    {
         return m_internal;
     }
-    void setName(const QString &name) {
+    void setName(const QString &name)
+    {
         m_name = name;
     }
-    void setInternal(bool set) {
+    void setInternal(bool set)
+    {
         m_internal = set;
     }
-    void setDpmsSupported(bool set) {
+    void setDpmsSupported(bool set)
+    {
         m_waylandOutput->setDpmsSupported(set);
     }
 
-    virtual void updateEnablement(bool enable) {
+    virtual void updateEnablement(bool enable)
+    {
         Q_UNUSED(enable);
     }
-    virtual void updateDpms(KWaylandServer::OutputInterface::DpmsMode mode) {
+    virtual void updateDpms(KWaylandServer::OutputInterface::DpmsMode mode)
+    {
         Q_UNUSED(mode);
     }
-    virtual void updateMode(int modeIndex) {
+    virtual void updateMode(int modeIndex)
+    {
         Q_UNUSED(modeIndex);
     }
-    virtual void updateTransform(Transform transform) {
+    virtual void updateTransform(Transform transform)
+    {
         Q_UNUSED(transform);
     }
 

@@ -9,19 +9,18 @@
 // own
 #include "globalshortcuts.h"
 // kwin
-#include <config-kwin.h>
-#include "main.h"
 #include "gestures.h"
+#include "main.h"
 #include "utils.h"
+#include <config-kwin.h>
 // KDE
-#include <KGlobalAccel/private/kglobalacceld.h>
 #include <KGlobalAccel/private/kglobalaccel_interface.h>
+#include <KGlobalAccel/private/kglobalacceld.h>
 // Qt
 #include <QAction>
 
 namespace KWin
 {
-
 uint qHash(SwipeDirection direction)
 {
     return uint(direction);
@@ -125,8 +124,7 @@ GlobalShortcutsManager::GlobalShortcutsManager(QObject *parent)
 {
 }
 
-template <typename T>
-void clearShortcuts(T &shortcuts)
+template<typename T> void clearShortcuts(T &shortcuts)
 {
     for (auto it = shortcuts.begin(); it != shortcuts.end(); ++it) {
         qDeleteAll((*it));
@@ -155,14 +153,13 @@ void GlobalShortcutsManager::init()
     }
 }
 
-template <typename T>
-void handleDestroyedAction(QObject *object, T &shortcuts)
+template<typename T> void handleDestroyedAction(QObject *object, T &shortcuts)
 {
     for (auto it = shortcuts.begin(); it != shortcuts.end(); ++it) {
         auto &list = it.value();
         auto it2 = list.begin();
         while (it2 != list.end()) {
-            if (InternalGlobalShortcut *shortcut = dynamic_cast<InternalGlobalShortcut*>(it2.value())) {
+            if (InternalGlobalShortcut *shortcut = dynamic_cast<InternalGlobalShortcut *>(it2.value())) {
                 if (shortcut->action() == object) {
                     it2 = list.erase(it2);
                     delete shortcut;
@@ -181,8 +178,7 @@ void GlobalShortcutsManager::objectDeleted(QObject *object)
     handleDestroyedAction(object, m_swipeShortcuts);
 }
 
-template <typename T, typename R>
-GlobalShortcut *addShortcut(T &shortcuts, QAction *action, Qt::KeyboardModifiers modifiers, R value)
+template<typename T, typename R> GlobalShortcut *addShortcut(T &shortcuts, QAction *action, Qt::KeyboardModifiers modifiers, R value)
 {
     GlobalShortcut *cut = new InternalGlobalShortcut(modifiers, value, action);
     auto it = shortcuts.find(modifiers);
@@ -190,7 +186,7 @@ GlobalShortcut *addShortcut(T &shortcuts, QAction *action, Qt::KeyboardModifiers
         // TODO: check if shortcut already exists
         (*it).insert(value, cut);
     } else {
-        QHash<R, GlobalShortcut*> s;
+        QHash<R, GlobalShortcut *> s;
         s.insert(value, cut);
         shortcuts.insert(modifiers, s);
     }
@@ -213,11 +209,10 @@ void GlobalShortcutsManager::registerTouchpadSwipe(QAction *action, SwipeDirecti
 {
     auto shortcut = addShortcut(m_swipeShortcuts, action, Qt::NoModifier, direction);
     connect(action, &QAction::destroyed, this, &GlobalShortcutsManager::objectDeleted);
-    m_gestureRecognizer->registerGesture(static_cast<InternalGlobalShortcut*>(shortcut)->swipeGesture());
+    m_gestureRecognizer->registerGesture(static_cast<InternalGlobalShortcut *>(shortcut)->swipeGesture());
 }
 
-template <typename T, typename U>
-bool processShortcut(Qt::KeyboardModifiers mods, T key, U &shortcuts)
+template<typename T, typename U> bool processShortcut(Qt::KeyboardModifiers mods, T key, U &shortcuts)
 {
     auto it = shortcuts.find(mods);
     if (it == shortcuts.end()) {
@@ -237,13 +232,13 @@ bool GlobalShortcutsManager::processKey(Qt::KeyboardModifiers mods, int keyQt)
         if (!keyQt && !mods) {
             return false;
         }
-        auto check = [this] (Qt::KeyboardModifiers mods, int keyQt) {
+        auto check = [this](Qt::KeyboardModifiers mods, int keyQt) {
             bool retVal = false;
             QMetaObject::invokeMethod(m_kglobalAccelInterface,
-                                        "checkKeyPressed",
-                                        Qt::DirectConnection,
-                                        Q_RETURN_ARG(bool, retVal),
-                                        Q_ARG(int, int(mods) | keyQt));
+                                      "checkKeyPressed",
+                                      Qt::DirectConnection,
+                                      Q_RETURN_ARG(bool, retVal),
+                                      Q_ARG(int, int(mods) | keyQt));
             return retVal;
         };
         if (check(mods, keyQt)) {

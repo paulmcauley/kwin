@@ -22,12 +22,12 @@
 #include "platform.h"
 #include "wayland_server.h"
 
-#include <kwinglplatform.h>
 #include <kwineffectquickview.h>
+#include <kwinglplatform.h>
 
-#include "utils.h"
-#include "x11client.h"
 #include "composite.h"
+#include "cursor.h"
+#include "decorations/decoratedclient.h"
 #include "deleted.h"
 #include "effects.h"
 #include "lanczosfilter.h"
@@ -35,8 +35,8 @@
 #include "overlaywindow.h"
 #include "renderloop.h"
 #include "screens.h"
-#include "cursor.h"
-#include "decorations/decoratedclient.h"
+#include "utils.h"
+#include "x11client.h"
 #include <logging.h>
 
 #include <KWaylandServer/buffer_interface.h>
@@ -52,11 +52,11 @@
 #include <QDBusConnectionInterface>
 #include <QDBusInterface>
 #include <QGraphicsScale>
+#include <QMatrix4x4>
 #include <QPainter>
 #include <QStringList>
 #include <QVector2D>
 #include <QVector4D>
-#include <QMatrix4x4>
 
 #include <KLocalizedString>
 #include <KNotification>
@@ -75,7 +75,6 @@
 
 namespace KWin
 {
-
 /**
  * SyncObject represents a fence used to synchronize operations in
  * the kwin command stream with operations in the X command stream.
@@ -88,7 +87,10 @@ public:
     SyncObject();
     ~SyncObject();
 
-    State state() const { return m_state; }
+    State state() const
+    {
+        return m_state;
+    }
 
     void trigger();
     void wait();
@@ -107,7 +109,7 @@ SyncObject::SyncObject()
 {
     m_state = Ready;
 
-    xcb_connection_t * const c = connection();
+    xcb_connection_t *const c = connection();
 
     m_fence = xcb_generate_id(c);
     xcb_sync_create_fence(c, rootWindow(), m_fence, false);
@@ -123,7 +125,7 @@ SyncObject::~SyncObject()
     // deadlocks waiting for the fence to be signalled.
     // To avoid this, make sure the fence is signalled before
     // deleting the sync.
-    if (m_state == Resetting || m_state == Ready){
+    if (m_state == Resetting || m_state == Ready) {
         trigger();
         // The flush is necessary!
         // The trigger command needs to be sent to the X server.
@@ -196,7 +198,7 @@ void SyncObject::reset()
 {
     Q_ASSERT(m_state == Done);
 
-    xcb_connection_t * const c = connection();
+    xcb_connection_t *const c = connection();
 
     // Send the reset request along with a sync request.
     // We use the cookie to ensure that the server has processed the reset
@@ -217,11 +219,7 @@ void SyncObject::finishResetting()
     m_state = Ready;
 }
 
-
-
 // -----------------------------------------------------------------------
-
-
 
 /**
  * SyncManager manages a set of fences used for explicit synchronization
@@ -291,7 +289,6 @@ bool SyncManager::updateFences()
     return true;
 }
 
-
 // -----------------------------------------------------------------------
 
 /************************************************
@@ -315,7 +312,7 @@ SceneOpenGL::SceneOpenGL(OpenGLBackend *backend, QObject *parent)
     // perform Scene specific checks
     GLPlatform *glPlatform = GLPlatform::instance();
     if (!glPlatform->isGLES() && !hasGLExtension(QByteArrayLiteral("GL_ARB_texture_non_power_of_two"))
-            && !hasGLExtension(QByteArrayLiteral("GL_ARB_texture_rectangle"))) {
+        && !hasGLExtension(QByteArrayLiteral("GL_ARB_texture_rectangle"))) {
         qCCritical(KWIN_OPENGL) << "GL_ARB_texture_non_power_of_two and GL_ARB_texture_rectangle missing";
         init_ok = false;
         return; // error
@@ -334,9 +331,7 @@ SceneOpenGL::SceneOpenGL(OpenGLBackend *backend, QObject *parent)
         options->setGlStrictBinding(!glPlatform->supports(LooseBinding));
     }
 
-    bool haveSyncObjects = glPlatform->isGLES()
-        ? hasGLVersion(3, 0)
-        : hasGLVersion(3, 2) || hasGLExtension("GL_ARB_sync");
+    bool haveSyncObjects = glPlatform->isGLES() ? hasGLVersion(3, 0) : hasGLVersion(3, 2) || hasGLExtension("GL_ARB_sync");
 
     if (hasGLExtension("GL_EXT_x11_sync_object") && haveSyncObjects && kwinApp()->operationMode() == Application::OperationModeX11) {
         const QByteArray useExplicitSync = qgetenv("KWIN_EXPLICIT_SYNC");
@@ -362,7 +357,6 @@ SceneOpenGL::~SceneOpenGL()
     // backend might be still needed for a different scene
     delete m_backend;
 }
-
 
 void SceneOpenGL::initDebugOutput()
 {
@@ -391,10 +385,7 @@ void SceneOpenGL::initDebugOutput()
     }
 
     // Set the callback function
-    auto callback = [](GLenum source, GLenum type, GLuint id,
-                       GLenum severity, GLsizei length,
-                       const GLchar *message,
-                       const GLvoid *userParam) {
+    auto callback = [](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const GLvoid *userParam) {
         Q_UNUSED(source)
         Q_UNUSED(severity)
         Q_UNUSED(userParam)
@@ -435,8 +426,7 @@ void SceneOpenGL::initDebugOutput()
 
     // Insert a test message
     const QByteArray message = QByteArrayLiteral("OpenGL debug output initialized");
-    glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, 0,
-                         GL_DEBUG_SEVERITY_LOW, message.length(), message.constData());
+    glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, 0, GL_DEBUG_SEVERITY_LOW, message.length(), message.constData());
 }
 
 SceneOpenGL *SceneOpenGL::createScene(QObject *parent)
@@ -519,7 +509,6 @@ void SceneOpenGL::handleGraphicsReset(GLenum status)
     m_resetOccurred = true;
 }
 
-
 void SceneOpenGL::triggerFence()
 {
     if (m_syncManager) {
@@ -541,12 +530,10 @@ void SceneOpenGL::insertWait()
  */
 void SceneOpenGL2::paintCursor(const QRegion &rendered)
 {
-    Cursor* cursor = Cursors::self()->currentCursor();
+    Cursor *cursor = Cursors::self()->currentCursor();
 
     // don't paint if we use hardware cursor or the cursor is hidden
-    if (!kwinApp()->platform()->usesSoftwareCursor() ||
-        kwinApp()->platform()->isCursorHidden() ||
-        cursor->image().isNull()) {
+    if (!kwinApp()->platform()->usesSoftwareCursor() || kwinApp()->platform()->isCursorHidden() || cursor->image().isNull()) {
         return;
     }
 
@@ -602,8 +589,7 @@ void SceneOpenGL::aboutToStartPainting(int screenId, const QRegion &damage)
     m_backend->aboutToStartPainting(screenId, damage);
 }
 
-void SceneOpenGL::paint(int screenId, const QRegion &damage, const QList<Toplevel *> &toplevels,
-                        RenderLoop *renderLoop)
+void SceneOpenGL::paint(int screenId, const QRegion &damage, const QList<Toplevel *> &toplevels, RenderLoop *renderLoop)
 {
     if (m_resetOccurred) {
         return; // A graphics reset has occurred, do nothing.
@@ -634,11 +620,11 @@ void SceneOpenGL::paint(int screenId, const QRegion &damage, const QList<Topleve
 
         bool directScanout = false;
         if (m_backend->directScanoutAllowed(screenId)) {
-            EffectsHandlerImpl *implEffects = static_cast<EffectsHandlerImpl*>(effects);
+            EffectsHandlerImpl *implEffects = static_cast<EffectsHandlerImpl *>(effects);
             if (!implEffects->blocksDirectScanout()) {
                 for (int i = stacking_order.count() - 1; i >= 0; i--) {
                     Window *window = stacking_order[i];
-                    AbstractClient *c = dynamic_cast<AbstractClient*>(window->window());
+                    AbstractClient *c = dynamic_cast<AbstractClient *>(window->window());
                     if (!c) {
                         break;
                     }
@@ -675,8 +661,7 @@ void SceneOpenGL::paint(int screenId, const QRegion &damage, const QList<Topleve
             int mask = 0;
             updateProjectionMatrix();
 
-            paintScreen(&mask, damage.intersected(geo), repaint, &update, &valid,
-                        renderLoop, projectionMatrix(), geo, scaling);   // call generic implementation
+            paintScreen(&mask, damage.intersected(geo), repaint, &update, &valid, renderLoop, projectionMatrix(), geo, scaling); // call generic implementation
             paintCursor(valid);
 
             if (!GLPlatform::instance()->isGLES() && screenId == -1) {
@@ -684,9 +669,7 @@ void SceneOpenGL::paint(int screenId, const QRegion &damage, const QList<Topleve
                 const QRegion displayRegion(0, 0, screenSize.width(), screenSize.height());
 
                 // copy dirty parts from front to backbuffer
-                if (!m_backend->supportsBufferAge() &&
-                    options->glPreferBufferSwap() == Options::CopyFrontBuffer &&
-                    valid != displayRegion) {
+                if (!m_backend->supportsBufferAge() && options->glPreferBufferSwap() == Options::CopyFrontBuffer && valid != displayRegion) {
                     glReadBuffer(GL_FRONT);
                     m_backend->copyPixels(displayRegion - valid);
                     glReadBuffer(GL_BACK);
@@ -772,14 +755,14 @@ void SceneOpenGL::extendPaintRegion(QRegion &region, bool opaqueFullscreen)
     if (options->glPreferBufferSwap() == Options::ExtendDamage) { // only Extend "large" repaints
         const QRegion displayRegion(0, 0, screenSize.width(), screenSize.height());
         uint damagedPixels = 0;
-        const uint fullRepaintLimit = (opaqueFullscreen?0.49f:0.748f)*screenSize.width()*screenSize.height();
+        const uint fullRepaintLimit = (opaqueFullscreen ? 0.49f : 0.748f) * screenSize.width() * screenSize.height();
         // 16:9 is 75% of 4:3 and 2.55:1 is 49.01% of 5:4
         // (5:4 is the most square format and 2.55:1 is Cinemascope55 - the widest ever shot
         // movie aspect - two times ;-) It's a Fox format, though, so maybe we want to restrict
         // to 2.20:1 - Panavision - which has actually been used for interesting movies ...)
         // would be 57% of 5/4
         for (const QRect &r : region) {
-//                 damagedPixels += r.width() * r.height(); // combined window damage test
+            //                 damagedPixels += r.width() * r.height(); // combined window damage test
             damagedPixels = r.width() * r.height(); // experimental single window damage testing
             if (damagedPixels > fullRepaintLimit) {
                 region = displayRegion;
@@ -796,7 +779,8 @@ SceneOpenGLTexture *SceneOpenGL::createTexture()
     return new SceneOpenGLTexture(m_backend);
 }
 
-bool SceneOpenGL::viewportLimitsMatched(const QSize &size) const {
+bool SceneOpenGL::viewportLimitsMatched(const QSize &size) const
+{
     if (kwinApp()->operationMode() != Application::OperationModeX11) {
         // TODO: On Wayland we can't suspend. Find a solution that works here as well!
         return true;
@@ -804,11 +788,14 @@ bool SceneOpenGL::viewportLimitsMatched(const QSize &size) const {
     GLint limit[2];
     glGetIntegerv(GL_MAX_VIEWPORT_DIMS, limit);
     if (limit[0] < size.width() || limit[1] < size.height()) {
-        auto compositor = static_cast<X11Compositor*>(Compositor::self());
-        QMetaObject::invokeMethod(compositor, [compositor]() {
-            qCDebug(KWIN_OPENGL) << "Suspending compositing because viewport limits are not met";
-            compositor->suspend(X11Compositor::AllReasonSuspend);
-        }, Qt::QueuedConnection);
+        auto compositor = static_cast<X11Compositor *>(Compositor::self());
+        QMetaObject::invokeMethod(
+            compositor,
+            [compositor]() {
+                qCDebug(KWIN_OPENGL) << "Suspending compositing because viewport limits are not met";
+                compositor->suspend(X11Compositor::AllReasonSuspend);
+            },
+            Qt::QueuedConnection);
         return false;
     }
     return true;
@@ -819,7 +806,7 @@ void SceneOpenGL::screenGeometryChanged(const QSize &size)
     if (!viewportLimitsMatched(size))
         return;
     Scene::screenGeometryChanged(size);
-    glViewport(0,0, size.width(), size.height());
+    glViewport(0, 0, size.width(), size.height());
     m_backend->screenGeometryChanged(size);
     GLRenderTarget::setVirtualScreenSize(size);
 }
@@ -902,7 +889,7 @@ QVector<QByteArray> SceneOpenGL::openGLPlatformInterfaceExtensions() const
     return m_backend->extensions().toVector();
 }
 
-QSharedPointer<GLTexture> SceneOpenGL::textureForOutput(AbstractOutput* output) const
+QSharedPointer<GLTexture> SceneOpenGL::textureForOutput(AbstractOutput *output) const
 {
     return m_backend->textureForOutput(output);
 }
@@ -989,15 +976,15 @@ QMatrix4x4 SceneOpenGL2::createProjectionMatrix() const
 {
     // Create a perspective projection with a 60° field-of-view,
     // and an aspect ratio of 1.0.
-    const float fovY   =   60.0f;
-    const float aspect =    1.0f;
-    const float zNear  =    0.1f;
-    const float zFar   =  100.0f;
+    const float fovY = 60.0f;
+    const float aspect = 1.0f;
+    const float zNear = 0.1f;
+    const float zFar = 100.0f;
 
-    const float yMax   =  zNear * std::tan(fovY * M_PI / 360.0f);
-    const float yMin   = -yMax;
-    const float xMin   =  yMin * aspect;
-    const float xMax   =  yMax * aspect;
+    const float yMax = zNear * std::tan(fovY * M_PI / 360.0f);
+    const float yMin = -yMax;
+    const float xMin = yMin * aspect;
+    const float xMax = yMax * aspect;
 
     QMatrix4x4 projection;
     projection.frustum(xMin, xMax, yMin, yMax, zNear, zFar);
@@ -1009,9 +996,7 @@ QMatrix4x4 SceneOpenGL2::createProjectionMatrix() const
 
     QMatrix4x4 matrix;
     matrix.translate(xMin * scaleFactor, yMax * scaleFactor, -1.1);
-    matrix.scale( (xMax - xMin) * scaleFactor / size.width(),
-                 -(yMax - yMin) * scaleFactor / size.height(),
-                  0.001);
+    matrix.scale((xMax - xMin) * scaleFactor / size.width(), -(yMax - yMin) * scaleFactor / size.height(), 0.001);
 
     // Combine the matrices
     return projection * matrix;
@@ -1038,7 +1023,7 @@ void SceneOpenGL2::paintGenericScreen(int mask, const ScreenPaintData &data)
     Scene::paintGenericScreen(mask, data);
 }
 
-void SceneOpenGL2::doPaintBackground(const QVector< float >& vertices)
+void SceneOpenGL2::doPaintBackground(const QVector<float> &vertices)
 {
     GLVertexBuffer *vbo = GLVertexBuffer::streamingBuffer();
     vbo->reset();
@@ -1056,7 +1041,7 @@ Scene::Window *SceneOpenGL2::createWindow(Toplevel *t)
     return new OpenGLWindow(t, this);
 }
 
-void SceneOpenGL2::finalDrawWindow(EffectWindowImpl* w, int mask, const QRegion &region, WindowPaintData& data)
+void SceneOpenGL2::finalDrawWindow(EffectWindowImpl *w, int mask, const QRegion &region, WindowPaintData &data)
 {
     if (waylandServer() && waylandServer()->isScreenLocked() && !w->window()->isLockScreen() && !w->window()->isInputMethod()) {
         return;
@@ -1064,7 +1049,7 @@ void SceneOpenGL2::finalDrawWindow(EffectWindowImpl* w, int mask, const QRegion 
     performPaintWindow(w, mask, region, data);
 }
 
-void SceneOpenGL2::performPaintWindow(EffectWindowImpl* w, int mask, const QRegion &region, WindowPaintData& data)
+void SceneOpenGL2::performPaintWindow(EffectWindowImpl *w, int mask, const QRegion &region, WindowPaintData &data)
 {
     if (mask & PAINT_WINDOW_LANCZOS) {
         if (!m_lanczosFilter) {
@@ -1181,8 +1166,8 @@ bool OpenGLWindow::beginRenderWindow(int mask, const QRegion &region, WindowPain
     }
 
     const GLVertexAttrib attribs[] = {
-        { VA_Position, 2, GL_FLOAT, offsetof(GLVertex2D, position) },
-        { VA_TexCoord, 2, GL_FLOAT, offsetof(GLVertex2D, texcoord) },
+        {VA_Position, 2, GL_FLOAT, offsetof(GLVertex2D, position)},
+        {VA_TexCoord, 2, GL_FLOAT, offsetof(GLVertex2D, texcoord)},
     };
 
     GLVertexBuffer *vbo = GLVertexBuffer::streamingBuffer();
@@ -1205,7 +1190,7 @@ GLTexture *OpenGLWindow::getDecorationTexture() const
         if (!client->isDecorated()) {
             return nullptr;
         }
-        if (SceneOpenGLDecorationRenderer *renderer = static_cast<SceneOpenGLDecorationRenderer*>(client->decoratedClient()->renderer())) {
+        if (SceneOpenGLDecorationRenderer *renderer = static_cast<SceneOpenGLDecorationRenderer *>(client->decoratedClient()->renderer())) {
             renderer->render();
             return renderer->texture();
         }
@@ -1214,7 +1199,7 @@ GLTexture *OpenGLWindow::getDecorationTexture() const
         if (!deleted->wasDecorated()) {
             return nullptr;
         }
-        if (const SceneOpenGLDecorationRenderer *renderer = static_cast<const SceneOpenGLDecorationRenderer*>(deleted->decorationRenderer())) {
+        if (const SceneOpenGLDecorationRenderer *renderer = static_cast<const SceneOpenGLDecorationRenderer *>(deleted->decorationRenderer())) {
             return renderer->texture();
         }
     }
@@ -1369,14 +1354,10 @@ void OpenGLWindow::initializeRenderContext(RenderContext &context, const WindowP
                 // previous Client's content space.
                 WindowQuad newQuad(WindowQuadContents);
                 for (int i = 0; i < 4; ++i) {
-                    const qreal xFactor = (quad[i].textureX() - toplevel->clientPos().x())
-                            / qreal(toplevel->clientSize().width());
-                    const qreal yFactor = (quad[i].textureY() - toplevel->clientPos().y())
-                            / qreal(toplevel->clientSize().height());
-                    const qreal u = (xFactor * oldGeometry.width() + oldGeometry.x())
-                            / qreal(previous->size().width());
-                    const qreal v = (yFactor * oldGeometry.height() + oldGeometry.y())
-                            / qreal(previous->size().height());
+                    const qreal xFactor = (quad[i].textureX() - toplevel->clientPos().x()) / qreal(toplevel->clientSize().width());
+                    const qreal yFactor = (quad[i].textureY() - toplevel->clientPos().y()) / qreal(toplevel->clientSize().height());
+                    const qreal u = (xFactor * oldGeometry.width() + oldGeometry.x()) / qreal(previous->size().width());
+                    const qreal v = (yFactor * oldGeometry.height() + oldGeometry.y()) / qreal(previous->size().height());
                     newQuad[i] = WindowVertex(quad[i].x(), quad[i].y(), u, v);
                 }
                 previousContentRenderNode.quads.append(newQuad);
@@ -1435,8 +1416,7 @@ void OpenGLWindow::performPaint(int mask, const QRegion &region, const WindowPai
     if (waylandServer()) {
         filter = GL_LINEAR;
     } else {
-        const bool isTransformed = mask & (Effect::PAINT_WINDOW_TRANSFORMED |
-                                           Effect::PAINT_SCREEN_TRANSFORMED);
+        const bool isTransformed = mask & (Effect::PAINT_WINDOW_TRANSFORMED | Effect::PAINT_SCREEN_TRANSFORMED);
         useX11TextureClamp = isTransformed;
         if (isTransformed && options->glSmoothScale() != 0) {
             filter = GL_LINEAR;
@@ -1473,7 +1453,7 @@ void OpenGLWindow::performPaint(int mask, const QRegion &region, const WindowPai
     const size_t size = verticesPerQuad * renderContext.quadCount * sizeof(GLVertex2D);
 
     GLVertexBuffer *vbo = GLVertexBuffer::streamingBuffer();
-    GLVertex2D *map = (GLVertex2D *) vbo->map(size);
+    GLVertex2D *map = (GLVertex2D *)vbo->map(size);
 
     for (int i = 0, v = 0; i < renderContext.renderNodes.count(); i++) {
         RenderNode &renderNode = renderContext.renderNodes[i];
@@ -1505,8 +1485,7 @@ void OpenGLWindow::performPaint(int mask, const QRegion &region, const WindowPai
         setBlendEnabled(renderNode.hasAlpha || renderNode.opacity < 1.0);
 
         if (opacity != renderNode.opacity) {
-            shader->setUniform(GLShader::ModulationConstant,
-                               modulate(renderNode.opacity, data.brightness()));
+            shader->setUniform(GLShader::ModulationConstant, modulate(renderNode.opacity, data.brightness()));
             opacity = renderNode.opacity;
         }
 
@@ -1533,8 +1512,7 @@ void OpenGLWindow::performPaint(int mask, const QRegion &region, const WindowPai
             shader->setUniform(GLShader::TextureClamp, QVector4D({0, 0, 1, 1}));
         }
 
-        vbo->draw(region, primitiveType, renderNode.firstVertex,
-                  renderNode.vertexCount, m_hardwareClipping);
+        vbo->draw(region, primitiveType, renderNode.firstVertex, renderNode.vertexCount, m_hardwareClipping);
     }
 
     vbo->unbindArrays();
@@ -1583,7 +1561,7 @@ QSharedPointer<GLTexture> OpenGLWindow::windowTexture()
 // OpenGLWindowPixmap
 //****************************************
 
-OpenGLWindowPixmap::OpenGLWindowPixmap(Scene::Window *window, SceneOpenGL* scene)
+OpenGLWindowPixmap::OpenGLWindowPixmap(Scene::Window *window, SceneOpenGL *scene)
     : WindowPixmap(window)
     , m_texture(scene->createTexture())
     , m_scene(scene)
@@ -1635,12 +1613,12 @@ bool OpenGLWindowPixmap::bind()
         }
         // also bind all children
         for (auto it = children().constBegin(); it != children().constEnd(); ++it) {
-            static_cast<OpenGLWindowPixmap*>(*it)->bind();
+            static_cast<OpenGLWindowPixmap *>(*it)->bind();
         }
         return true;
     }
     for (auto it = children().constBegin(); it != children().constEnd(); ++it) {
-        static_cast<OpenGLWindowPixmap*>(*it)->bind();
+        static_cast<OpenGLWindowPixmap *>(*it)->bind();
     }
     if (!isValid()) {
         return false;
@@ -1674,10 +1652,10 @@ bool OpenGLWindowPixmap::isValid() const
 // SceneOpenGL::EffectFrame
 //****************************************
 
-GLTexture* SceneOpenGL::EffectFrame::m_unstyledTexture = nullptr;
-QPixmap* SceneOpenGL::EffectFrame::m_unstyledPixmap = nullptr;
+GLTexture *SceneOpenGL::EffectFrame::m_unstyledTexture = nullptr;
+QPixmap *SceneOpenGL::EffectFrame::m_unstyledPixmap = nullptr;
 
-SceneOpenGL::EffectFrame::EffectFrame(EffectFrameImpl* frame, SceneOpenGL *scene)
+SceneOpenGL::EffectFrame::EffectFrame(EffectFrameImpl *frame, SceneOpenGL *scene)
     : Scene::EffectFrame(frame)
     , m_texture(nullptr)
     , m_textTexture(nullptr)
@@ -1769,7 +1747,7 @@ void SceneOpenGL::EffectFrame::render(const QRegion &_region, double opacity, do
     Q_UNUSED(_region);
     const QRegion region = infiniteRegion(); // TODO: Old region doesn't seem to work with OpenGL
 
-    GLShader* shader = m_effectFrame->shader();
+    GLShader *shader = m_effectFrame->shader();
     if (!shader) {
         shader = ShaderManager::instance()->pushShader(ShaderTrait::MapTexture | ShaderTrait::Modulate);
     } else if (shader) {
@@ -1908,7 +1886,7 @@ void SceneOpenGL::EffectFrame::render(const QRegion &_region, double opacity, do
         m_unstyledVBO->render(region, GL_TRIANGLES);
         m_unstyledTexture->unbind();
     } else if (m_effectFrame->style() == EffectFrameStyled) {
-        if (!m_texture)   // Lazy creation
+        if (!m_texture) // Lazy creation
             updateTexture();
 
         if (shader) {
@@ -1917,7 +1895,7 @@ void SceneOpenGL::EffectFrame::render(const QRegion &_region, double opacity, do
         }
         m_texture->bind();
         qreal left, top, right, bottom;
-        m_effectFrame->frame().getMargins(left, top, right, bottom);   // m_geometry is the inner geometry
+        m_effectFrame->frame().getMargins(left, top, right, bottom); // m_geometry is the inner geometry
         const QRect rect = m_effectFrame->geometry().adjusted(-left, -top, right, bottom);
 
         QMatrix4x4 mvp(projection);
@@ -1926,7 +1904,6 @@ void SceneOpenGL::EffectFrame::render(const QRegion &_region, double opacity, do
 
         m_texture->render(region, rect);
         m_texture->unbind();
-
     }
     if (!m_effectFrame->selection().isNull()) {
         if (!m_selectionTexture) { // Lazy creation
@@ -1952,8 +1929,7 @@ void SceneOpenGL::EffectFrame::render(const QRegion &_region, double opacity, do
 
     // Render icon
     if (!m_effectFrame->icon().isNull() && !m_effectFrame->iconSize().isEmpty()) {
-        QPoint topLeft(m_effectFrame->geometry().x(),
-                       m_effectFrame->geometry().center().y() - m_effectFrame->iconSize().height() / 2);
+        QPoint topLeft(m_effectFrame->geometry().x(), m_effectFrame->geometry().center().y() - m_effectFrame->iconSize().height() / 2);
 
         QMatrix4x4 mvp(projection);
         mvp.translate(topLeft.x(), topLeft.y());
@@ -2011,7 +1987,7 @@ void SceneOpenGL::EffectFrame::render(const QRegion &_region, double opacity, do
                 shader->setUniform(GLShader::ModulationConstant, constant);
             }
         }
-        if (!m_textTexture)   // Lazy creation
+        if (!m_textTexture) // Lazy creation
             updateTextTexture();
 
         if (m_textTexture) {
@@ -2106,7 +2082,7 @@ class DecorationShadowTextureCache
 {
 public:
     ~DecorationShadowTextureCache();
-    DecorationShadowTextureCache(const DecorationShadowTextureCache&) = delete;
+    DecorationShadowTextureCache(const DecorationShadowTextureCache &) = delete;
     static DecorationShadowTextureCache &instance();
 
     void unregister(SceneOpenGLShadow *shadow);
@@ -2116,9 +2092,9 @@ private:
     DecorationShadowTextureCache() = default;
     struct Data {
         QSharedPointer<GLTexture> texture;
-        QVector<SceneOpenGLShadow*> shadows;
+        QVector<SceneOpenGLShadow *> shadows;
     };
-    QHash<KDecoration2::DecorationShadow*, Data> m_cache;
+    QHash<KDecoration2::DecorationShadow *, Data> m_cache;
 };
 
 DecorationShadowTextureCache &DecorationShadowTextureCache::instance()
@@ -2230,15 +2206,12 @@ void SceneOpenGLShadow::buildQuads()
     const QSizeF left(elementSize(ShadowElementLeft));
     const QSizeF topLeft(elementSize(ShadowElementTopLeft));
 
-    const QMarginsF shadowMargins(
-        std::max({topLeft.width(), left.width(), bottomLeft.width()}),
-        std::max({topLeft.height(), top.height(), topRight.height()}),
-        std::max({topRight.width(), right.width(), bottomRight.width()}),
-        std::max({bottomRight.height(), bottom.height(), bottomLeft.height()}));
+    const QMarginsF shadowMargins(std::max({topLeft.width(), left.width(), bottomLeft.width()}),
+                                  std::max({topLeft.height(), top.height(), topRight.height()}),
+                                  std::max({topRight.width(), right.width(), bottomRight.width()}),
+                                  std::max({bottomRight.height(), bottom.height(), bottomLeft.height()}));
 
-    const QRectF outerRect(QPointF(-leftOffset(), -topOffset()),
-                           QPointF(topLevel()->width() + rightOffset(),
-                                   topLevel()->height() + bottomOffset()));
+    const QRectF outerRect(QPointF(-leftOffset(), -topOffset()), QPointF(topLevel()->width() + rightOffset(), topLevel()->height() + bottomOffset()));
 
     const int width = shadowMargins.left() + std::max(top.width(), bottom.width()) + shadowMargins.right();
     const int height = shadowMargins.top() + std::max(left.height(), right.height()) + shadowMargins.bottom();
@@ -2247,47 +2220,28 @@ void SceneOpenGLShadow::buildQuads()
     if (!topLeft.isEmpty()) {
         topLeftRect = QRectF(outerRect.topLeft(), topLeft);
     } else {
-        topLeftRect = QRectF(
-            outerRect.left() + shadowMargins.left(),
-            outerRect.top() + shadowMargins.top(),
-            0, 0);
+        topLeftRect = QRectF(outerRect.left() + shadowMargins.left(), outerRect.top() + shadowMargins.top(), 0, 0);
     }
 
     QRectF topRightRect;
     if (!topRight.isEmpty()) {
-        topRightRect = QRectF(
-            outerRect.right() - topRight.width(), outerRect.top(),
-            topRight.width(), topRight.height());
+        topRightRect = QRectF(outerRect.right() - topRight.width(), outerRect.top(), topRight.width(), topRight.height());
     } else {
-        topRightRect = QRectF(
-            outerRect.right() - shadowMargins.right(),
-            outerRect.top() + shadowMargins.top(),
-            0, 0);
+        topRightRect = QRectF(outerRect.right() - shadowMargins.right(), outerRect.top() + shadowMargins.top(), 0, 0);
     }
 
     QRectF bottomRightRect;
     if (!bottomRight.isEmpty()) {
-        bottomRightRect = QRectF(
-            outerRect.right() - bottomRight.width(),
-            outerRect.bottom() - bottomRight.height(),
-            bottomRight.width(), bottomRight.height());
+        bottomRightRect = QRectF(outerRect.right() - bottomRight.width(), outerRect.bottom() - bottomRight.height(), bottomRight.width(), bottomRight.height());
     } else {
-        bottomRightRect = QRectF(
-            outerRect.right() - shadowMargins.right(),
-            outerRect.bottom() - shadowMargins.bottom(),
-            0, 0);
+        bottomRightRect = QRectF(outerRect.right() - shadowMargins.right(), outerRect.bottom() - shadowMargins.bottom(), 0, 0);
     }
 
     QRectF bottomLeftRect;
     if (!bottomLeft.isEmpty()) {
-        bottomLeftRect = QRectF(
-            outerRect.left(), outerRect.bottom() - bottomLeft.height(),
-            bottomLeft.width(), bottomLeft.height());
+        bottomLeftRect = QRectF(outerRect.left(), outerRect.bottom() - bottomLeft.height(), bottomLeft.width(), bottomLeft.height());
     } else {
-        bottomLeftRect = QRectF(
-            outerRect.left() + shadowMargins.left(),
-            outerRect.bottom() - shadowMargins.bottom(),
-            0, 0);
+        bottomLeftRect = QRectF(outerRect.left() + shadowMargins.left(), outerRect.bottom() - shadowMargins.bottom(), 0, 0);
     }
 
     // Re-distribute the corner tiles so no one of them is overlapping with others.
@@ -2302,10 +2256,7 @@ void SceneOpenGLShadow::buildQuads()
     distributeVertically(topLeftRect, bottomLeftRect);
     distributeVertically(topRightRect, bottomRightRect);
 
-    qreal tx1 = 0.0,
-          tx2 = 0.0,
-          ty1 = 0.0,
-          ty2 = 0.0;
+    qreal tx1 = 0.0, tx2 = 0.0, ty1 = 0.0, ty2 = 0.0;
 
     m_shadowQuads.clear();
 
@@ -2315,10 +2266,10 @@ void SceneOpenGLShadow::buildQuads()
         tx2 = topLeftRect.width() / width;
         ty2 = topLeftRect.height() / height;
         WindowQuad topLeftQuad(WindowQuadShadow);
-        topLeftQuad[0] = WindowVertex(topLeftRect.left(),  topLeftRect.top(),    tx1, ty1);
-        topLeftQuad[1] = WindowVertex(topLeftRect.right(), topLeftRect.top(),    tx2, ty1);
+        topLeftQuad[0] = WindowVertex(topLeftRect.left(), topLeftRect.top(), tx1, ty1);
+        topLeftQuad[1] = WindowVertex(topLeftRect.right(), topLeftRect.top(), tx2, ty1);
         topLeftQuad[2] = WindowVertex(topLeftRect.right(), topLeftRect.bottom(), tx2, ty2);
-        topLeftQuad[3] = WindowVertex(topLeftRect.left(),  topLeftRect.bottom(), tx1, ty2);
+        topLeftQuad[3] = WindowVertex(topLeftRect.left(), topLeftRect.bottom(), tx1, ty2);
         m_shadowQuads.append(topLeftQuad);
     }
 
@@ -2328,10 +2279,10 @@ void SceneOpenGLShadow::buildQuads()
         tx2 = 1.0;
         ty2 = topRightRect.height() / height;
         WindowQuad topRightQuad(WindowQuadShadow);
-        topRightQuad[0] = WindowVertex(topRightRect.left(),  topRightRect.top(),    tx1, ty1);
-        topRightQuad[1] = WindowVertex(topRightRect.right(), topRightRect.top(),    tx2, ty1);
+        topRightQuad[0] = WindowVertex(topRightRect.left(), topRightRect.top(), tx1, ty1);
+        topRightQuad[1] = WindowVertex(topRightRect.right(), topRightRect.top(), tx2, ty1);
         topRightQuad[2] = WindowVertex(topRightRect.right(), topRightRect.bottom(), tx2, ty2);
-        topRightQuad[3] = WindowVertex(topRightRect.left(),  topRightRect.bottom(), tx1, ty2);
+        topRightQuad[3] = WindowVertex(topRightRect.left(), topRightRect.bottom(), tx1, ty2);
         m_shadowQuads.append(topRightQuad);
     }
 
@@ -2341,10 +2292,10 @@ void SceneOpenGLShadow::buildQuads()
         ty1 = 1.0 - bottomRightRect.height() / height;
         ty2 = 1.0;
         WindowQuad bottomRightQuad(WindowQuadShadow);
-        bottomRightQuad[0] = WindowVertex(bottomRightRect.left(),  bottomRightRect.top(),    tx1, ty1);
-        bottomRightQuad[1] = WindowVertex(bottomRightRect.right(), bottomRightRect.top(),    tx2, ty1);
+        bottomRightQuad[0] = WindowVertex(bottomRightRect.left(), bottomRightRect.top(), tx1, ty1);
+        bottomRightQuad[1] = WindowVertex(bottomRightRect.right(), bottomRightRect.top(), tx2, ty1);
         bottomRightQuad[2] = WindowVertex(bottomRightRect.right(), bottomRightRect.bottom(), tx2, ty2);
-        bottomRightQuad[3] = WindowVertex(bottomRightRect.left(),  bottomRightRect.bottom(), tx1, ty2);
+        bottomRightQuad[3] = WindowVertex(bottomRightRect.left(), bottomRightRect.bottom(), tx1, ty2);
         m_shadowQuads.append(bottomRightQuad);
     }
 
@@ -2354,28 +2305,20 @@ void SceneOpenGLShadow::buildQuads()
         ty1 = 1.0 - bottomLeftRect.height() / height;
         ty2 = 1.0;
         WindowQuad bottomLeftQuad(WindowQuadShadow);
-        bottomLeftQuad[0] = WindowVertex(bottomLeftRect.left(),  bottomLeftRect.top(),    tx1, ty1);
-        bottomLeftQuad[1] = WindowVertex(bottomLeftRect.right(), bottomLeftRect.top(),    tx2, ty1);
+        bottomLeftQuad[0] = WindowVertex(bottomLeftRect.left(), bottomLeftRect.top(), tx1, ty1);
+        bottomLeftQuad[1] = WindowVertex(bottomLeftRect.right(), bottomLeftRect.top(), tx2, ty1);
         bottomLeftQuad[2] = WindowVertex(bottomLeftRect.right(), bottomLeftRect.bottom(), tx2, ty2);
-        bottomLeftQuad[3] = WindowVertex(bottomLeftRect.left(),  bottomLeftRect.bottom(), tx1, ty2);
+        bottomLeftQuad[3] = WindowVertex(bottomLeftRect.left(), bottomLeftRect.bottom(), tx1, ty2);
         m_shadowQuads.append(bottomLeftQuad);
     }
 
-    QRectF topRect(
-        QPointF(topLeftRect.right(), outerRect.top()),
-        QPointF(topRightRect.left(), outerRect.top() + top.height()));
+    QRectF topRect(QPointF(topLeftRect.right(), outerRect.top()), QPointF(topRightRect.left(), outerRect.top() + top.height()));
 
-    QRectF rightRect(
-        QPointF(outerRect.right() - right.width(), topRightRect.bottom()),
-        QPointF(outerRect.right(), bottomRightRect.top()));
+    QRectF rightRect(QPointF(outerRect.right() - right.width(), topRightRect.bottom()), QPointF(outerRect.right(), bottomRightRect.top()));
 
-    QRectF bottomRect(
-        QPointF(bottomLeftRect.right(), outerRect.bottom() - bottom.height()),
-        QPointF(bottomRightRect.left(), outerRect.bottom()));
+    QRectF bottomRect(QPointF(bottomLeftRect.right(), outerRect.bottom() - bottom.height()), QPointF(bottomRightRect.left(), outerRect.bottom()));
 
-    QRectF leftRect(
-        QPointF(outerRect.left(), topLeftRect.bottom()),
-        QPointF(outerRect.left() + left.width(), bottomLeftRect.top()));
+    QRectF leftRect(QPointF(outerRect.left(), topLeftRect.bottom()), QPointF(outerRect.left() + left.width(), bottomLeftRect.top()));
 
     // Re-distribute left/right and top/bottom shadow tiles so they don't
     // overlap when the window is too small. Please notice that we don't
@@ -2391,10 +2334,10 @@ void SceneOpenGLShadow::buildQuads()
         tx2 = tx1 + top.width() / width;
         ty2 = topRect.height() / height;
         WindowQuad topQuad(WindowQuadShadow);
-        topQuad[0] = WindowVertex(topRect.left(),  topRect.top(),    tx1, ty1);
-        topQuad[1] = WindowVertex(topRect.right(), topRect.top(),    tx2, ty1);
+        topQuad[0] = WindowVertex(topRect.left(), topRect.top(), tx1, ty1);
+        topQuad[1] = WindowVertex(topRect.right(), topRect.top(), tx2, ty1);
         topQuad[2] = WindowVertex(topRect.right(), topRect.bottom(), tx2, ty2);
-        topQuad[3] = WindowVertex(topRect.left(),  topRect.bottom(), tx1, ty2);
+        topQuad[3] = WindowVertex(topRect.left(), topRect.bottom(), tx1, ty2);
         m_shadowQuads.append(topQuad);
     }
 
@@ -2404,10 +2347,10 @@ void SceneOpenGLShadow::buildQuads()
         tx2 = 1.0;
         ty2 = ty1 + right.height() / height;
         WindowQuad rightQuad(WindowQuadShadow);
-        rightQuad[0] = WindowVertex(rightRect.left(),  rightRect.top(),    tx1, ty1);
-        rightQuad[1] = WindowVertex(rightRect.right(), rightRect.top(),    tx2, ty1);
+        rightQuad[0] = WindowVertex(rightRect.left(), rightRect.top(), tx1, ty1);
+        rightQuad[1] = WindowVertex(rightRect.right(), rightRect.top(), tx2, ty1);
         rightQuad[2] = WindowVertex(rightRect.right(), rightRect.bottom(), tx2, ty2);
-        rightQuad[3] = WindowVertex(rightRect.left(),  rightRect.bottom(), tx1, ty2);
+        rightQuad[3] = WindowVertex(rightRect.left(), rightRect.bottom(), tx1, ty2);
         m_shadowQuads.append(rightQuad);
     }
 
@@ -2417,10 +2360,10 @@ void SceneOpenGLShadow::buildQuads()
         tx2 = tx1 + bottom.width() / width;
         ty2 = 1.0;
         WindowQuad bottomQuad(WindowQuadShadow);
-        bottomQuad[0] = WindowVertex(bottomRect.left(),  bottomRect.top(),    tx1, ty1);
-        bottomQuad[1] = WindowVertex(bottomRect.right(), bottomRect.top(),    tx2, ty1);
+        bottomQuad[0] = WindowVertex(bottomRect.left(), bottomRect.top(), tx1, ty1);
+        bottomQuad[1] = WindowVertex(bottomRect.right(), bottomRect.top(), tx2, ty1);
         bottomQuad[2] = WindowVertex(bottomRect.right(), bottomRect.bottom(), tx2, ty2);
-        bottomQuad[3] = WindowVertex(bottomRect.left(),  bottomRect.bottom(), tx1, ty2);
+        bottomQuad[3] = WindowVertex(bottomRect.left(), bottomRect.bottom(), tx1, ty2);
         m_shadowQuads.append(bottomQuad);
     }
 
@@ -2430,10 +2373,10 @@ void SceneOpenGLShadow::buildQuads()
         tx2 = leftRect.width() / width;
         ty2 = ty1 + left.height() / height;
         WindowQuad leftQuad(WindowQuadShadow);
-        leftQuad[0] = WindowVertex(leftRect.left(),  leftRect.top(),    tx1, ty1);
-        leftQuad[1] = WindowVertex(leftRect.right(), leftRect.top(),    tx2, ty1);
+        leftQuad[0] = WindowVertex(leftRect.left(), leftRect.top(), tx1, ty1);
+        leftQuad[1] = WindowVertex(leftRect.right(), leftRect.top(), tx2, ty1);
         leftQuad[2] = WindowVertex(leftRect.right(), leftRect.bottom(), tx2, ty2);
-        leftQuad[3] = WindowVertex(leftRect.left(),  leftRect.bottom(), tx1, ty2);
+        leftQuad[3] = WindowVertex(leftRect.left(), leftRect.bottom(), tx1, ty2);
         m_shadowQuads.append(leftQuad);
     }
 }
@@ -2457,12 +2400,10 @@ bool SceneOpenGLShadow::prepareBackend()
     const QSize topLeft(shadowPixmap(ShadowElementTopLeft).size());
     const QSize bottomRight(shadowPixmap(ShadowElementBottomRight).size());
 
-    const int width = std::max({topLeft.width(), left.width(), bottomLeft.width()}) +
-                      std::max(top.width(), bottom.width()) +
-                      std::max({topRight.width(), right.width(), bottomRight.width()});
-    const int height = std::max({topLeft.height(), top.height(), topRight.height()}) +
-                       std::max(left.height(), right.height()) +
-                       std::max({bottomLeft.height(), bottom.height(), bottomRight.height()});
+    const int width = std::max({topLeft.width(), left.width(), bottomLeft.width()}) + std::max(top.width(), bottom.width())
+        + std::max({topRight.width(), right.width(), bottomRight.width()});
+    const int height = std::max({topLeft.height(), top.height(), topRight.height()}) + std::max(left.height(), right.height())
+        + std::max({bottomLeft.height(), bottom.height(), bottomRight.height()});
 
     if (width == 0 || height == 0) {
         return false;
@@ -2496,8 +2437,8 @@ bool SceneOpenGLShadow::prepareBackend()
         bool alphaOnly = true;
 
         for (ptrdiff_t y = 0; alphaOnly && y < image.height(); y++) {
-            const uint32_t * const src = reinterpret_cast<const uint32_t *>(image.scanLine(y));
-            uint8_t * const dst = reinterpret_cast<uint8_t *>(alphaImage.scanLine(y));
+            const uint32_t *const src = reinterpret_cast<const uint32_t *>(image.scanLine(y));
+            uint8_t *const dst = reinterpret_cast<uint8_t *>(alphaImage.scanLine(y));
 
             for (ptrdiff_t x = 0; x < image.width(); x++) {
                 if (src[x] & 0x00ffffff)
@@ -2529,7 +2470,7 @@ SceneOpenGLDecorationRenderer::SceneOpenGLDecorationRenderer(Decoration::Decorat
     : Renderer(client)
     , m_texture()
 {
-    connect(this, &Renderer::renderScheduled, client->client(), static_cast<void (AbstractClient::*)(const QRect&)>(&AbstractClient::addRepaint));
+    connect(this, &Renderer::renderScheduled, client->client(), static_cast<void (AbstractClient::*)(const QRect &)>(&AbstractClient::addRepaint));
 }
 
 SceneOpenGLDecorationRenderer::~SceneOpenGLDecorationRenderer()
@@ -2706,10 +2647,8 @@ void SceneOpenGLDecorationRenderer::resizeTexture()
     client()->client()->layoutDecorationRects(left, top, right, bottom);
     QSize size;
 
-    size.rwidth() = qMax(qMax(top.width(), bottom.width()),
-                         qMax(left.height(), right.height()));
-    size.rheight() = top.height() + bottom.height() +
-                     left.width() + right.width();
+    size.rwidth() = qMax(qMax(top.width(), bottom.width()), qMax(left.height(), right.height()));
+    size.rheight() = top.height() + bottom.height() + left.width() + right.width();
 
     // Reserve some space for padding. We pad decoration parts to avoid texture bleeding.
     const int padding = 1;
@@ -2737,7 +2676,6 @@ void SceneOpenGLDecorationRenderer::reparent(Deleted *deleted)
     render();
     Renderer::reparent(deleted);
 }
-
 
 OpenGLFactory::OpenGLFactory(QObject *parent)
     : SceneFactory(parent)

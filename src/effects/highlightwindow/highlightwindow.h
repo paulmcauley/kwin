@@ -14,7 +14,6 @@
 
 namespace KWin
 {
-
 class HighlightWindowEffect : public AnimationEffect
 {
     Q_OBJECT
@@ -22,7 +21,8 @@ class HighlightWindowEffect : public AnimationEffect
 public:
     HighlightWindowEffect();
 
-    int requestedEffectChainPosition() const override {
+    int requestedEffectChainPosition() const override
+    {
         return 70;
     }
 
@@ -30,10 +30,10 @@ public:
     bool perform(Feature feature, const QVariantList &arguments) override;
 
 public Q_SLOTS:
-    void slotWindowAdded(KWin::EffectWindow* w);
+    void slotWindowAdded(KWin::EffectWindow *w);
     void slotWindowClosed(KWin::EffectWindow *w);
     void slotWindowDeleted(KWin::EffectWindow *w);
-    void slotPropertyNotify(KWin::EffectWindow* w, long atom, EffectWindow *addedWindow = nullptr);
+    void slotPropertyNotify(KWin::EffectWindow *w, long atom, EffectWindow *addedWindow = nullptr);
 
 private:
     void startGhostAnimation(EffectWindow *window, int duration = -1);

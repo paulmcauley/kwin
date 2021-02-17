@@ -10,9 +10,9 @@
 #define KWIN_DRM_OUTPUT_H
 
 #include "abstract_wayland_output.h"
-#include "drm_pointer.h"
 #include "drm_object.h"
 #include "drm_object_plane.h"
+#include "drm_pointer.h"
 #include "edid.h"
 
 #include <QObject>
@@ -23,7 +23,6 @@
 
 namespace KWin
 {
-
 class DrmBackend;
 class DrmBuffer;
 class DrmDumbBuffer;
@@ -37,12 +36,12 @@ class KWIN_EXPORT DrmOutput : public AbstractWaylandOutput
 {
     Q_OBJECT
 public:
-    ///deletes the output, calling this whilst a page flip is pending will result in an error
+    /// deletes the output, calling this whilst a page flip is pending will result in an error
     ~DrmOutput() override;
 
     RenderLoop *renderLoop() const override;
 
-    ///queues deleting the output after a page flip has completed.
+    /// queues deleting the output after a page flip has completed.
     void teardown();
     void releaseGbm();
     bool showCursor(DrmDumbBuffer *buffer);
@@ -55,32 +54,33 @@ public:
     void pageFlipped();
 
     // These values are defined by the kernel
-    enum class DpmsMode {
-        On = DRM_MODE_DPMS_ON,
-        Standby = DRM_MODE_DPMS_STANDBY,
-        Suspend = DRM_MODE_DPMS_SUSPEND,
-        Off = DRM_MODE_DPMS_OFF
-    };
+    enum class DpmsMode { On = DRM_MODE_DPMS_ON, Standby = DRM_MODE_DPMS_STANDBY, Suspend = DRM_MODE_DPMS_SUSPEND, Off = DRM_MODE_DPMS_OFF };
     Q_ENUM(DpmsMode);
-    bool isDpmsEnabled() const {
+    bool isDpmsEnabled() const
+    {
         // We care for current as well as pending mode in order to allow first present in AMS.
         return m_dpmsModePending == DpmsMode::On;
     }
 
-    DpmsMode dpmsMode() const {
+    DpmsMode dpmsMode() const
+    {
         return m_dpmsMode;
     }
-    DpmsMode dpmsModePending() const {
+    DpmsMode dpmsModePending() const
+    {
         return m_dpmsModePending;
     }
 
-    const DrmCrtc *crtc() const {
+    const DrmCrtc *crtc() const
+    {
         return m_crtc;
     }
-    const DrmConnector *connector() const {
+    const DrmConnector *connector() const
+    {
         return m_conn;
     }
-    const DrmPlane *primaryPlane() const {
+    const DrmPlane *primaryPlane() const
+    {
         return m_primaryPlane;
     }
 
@@ -94,23 +94,21 @@ public:
      */
     bool hardwareTransforms() const;
 
-    DrmGpu *gpu() {
+    DrmGpu *gpu()
+    {
         return m_gpu;
     }
 
 private:
     friend class DrmGpu;
     friend class DrmBackend;
-    friend class DrmCrtc;   // TODO: For use of setModeLegacy. Remove later when we allow multiple connectors per crtc
-                            //       and save the connector ids in the DrmCrtc instance.
-    DrmOutput(DrmBackend *backend, DrmGpu* gpu);
+    friend class DrmCrtc; // TODO: For use of setModeLegacy. Remove later when we allow multiple connectors per crtc
+                          //       and save the connector ids in the DrmCrtc instance.
+    DrmOutput(DrmBackend *backend, DrmGpu *gpu);
 
     bool presentAtomically(DrmBuffer *buffer);
 
-    enum class AtomicCommitMode {
-        Test,
-        Real
-    };
+    enum class AtomicCommitMode { Test, Real };
     bool doAtomicCommit(AtomicCommitMode mode);
 
     bool presentLegacy(DrmBuffer *buffer);
@@ -159,7 +157,7 @@ private:
     uint32_t m_blobId = 0;
     DrmPlane *m_primaryPlane = nullptr;
     DrmPlane *m_cursorPlane = nullptr;
-    QVector<DrmPlane*> m_nextPlanesFlipList;
+    QVector<DrmPlane *> m_nextPlanesFlipList;
     bool m_pageFlipPending = false;
     bool m_atomicOffPending = false;
     bool m_modesetRequested = true;
@@ -179,9 +177,8 @@ private:
 
 }
 
-Q_DECLARE_METATYPE(KWin::DrmOutput*)
+Q_DECLARE_METATYPE(KWin::DrmOutput *)
 
-QDebug& operator<<(QDebug& stream, const KWin::DrmOutput *);
+QDebug &operator<<(QDebug &stream, const KWin::DrmOutput *);
 
 #endif
-

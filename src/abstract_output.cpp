@@ -11,7 +11,6 @@
 
 namespace KWin
 {
-
 GammaRamp::GammaRamp(uint32_t size)
     : m_table(3 * size)
     , m_size(size)

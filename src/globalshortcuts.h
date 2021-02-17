@@ -19,7 +19,6 @@ class KGlobalAccelInterface;
 
 namespace KWin
 {
-
 class GlobalShortcut;
 class SwipeGesture;
 class GestureRecognizer;
@@ -91,15 +90,16 @@ public:
     void processSwipeCancel();
     void processSwipeEnd();
 
-    void setKGlobalAccelInterface(KGlobalAccelInterface *interface) {
+    void setKGlobalAccelInterface(KGlobalAccelInterface *interface)
+    {
         m_kglobalAccelInterface = interface;
     }
 
 private:
     void objectDeleted(QObject *object);
-    QHash<Qt::KeyboardModifiers, QHash<Qt::MouseButtons, GlobalShortcut*> > m_pointerShortcuts;
-    QHash<Qt::KeyboardModifiers, QHash<PointerAxisDirection, GlobalShortcut*> > m_axisShortcuts;
-    QHash<Qt::KeyboardModifiers, QHash<SwipeDirection, GlobalShortcut*> > m_swipeShortcuts;
+    QHash<Qt::KeyboardModifiers, QHash<Qt::MouseButtons, GlobalShortcut *>> m_pointerShortcuts;
+    QHash<Qt::KeyboardModifiers, QHash<PointerAxisDirection, GlobalShortcut *>> m_axisShortcuts;
+    QHash<Qt::KeyboardModifiers, QHash<SwipeDirection, GlobalShortcut *>> m_swipeShortcuts;
     KGlobalAccelD *m_kglobalAccel = nullptr;
     KGlobalAccelInterface *m_kglobalAccelInterface = nullptr;
     GestureRecognizer *m_gestureRecognizer;
@@ -113,7 +113,8 @@ public:
     const QKeySequence &shortcut() const;
     Qt::KeyboardModifiers pointerButtonModifiers() const;
     Qt::MouseButtons pointerButtons() const;
-    SwipeDirection swipeDirection() const {
+    SwipeDirection swipeDirection() const
+    {
         return m_swipeDirection;
     }
     virtual void invoke() = 0;
@@ -128,7 +129,8 @@ private:
     QKeySequence m_shortcut;
     Qt::KeyboardModifiers m_pointerModifiers;
     Qt::MouseButtons m_pointerButtons;
-    SwipeDirection m_swipeDirection = SwipeDirection::Invalid;;
+    SwipeDirection m_swipeDirection = SwipeDirection::Invalid;
+    ;
 };
 
 class InternalGlobalShortcut : public GlobalShortcut
@@ -144,34 +146,32 @@ public:
 
     QAction *action() const;
 
-    SwipeGesture *swipeGesture() const {
+    SwipeGesture *swipeGesture() const
+    {
         return m_swipe.data();
     }
+
 private:
     QAction *m_action;
     QScopedPointer<SwipeGesture> m_swipe;
 };
 
-inline
-QAction *InternalGlobalShortcut::action() const
+inline QAction *InternalGlobalShortcut::action() const
 {
     return m_action;
 }
 
-inline
-const QKeySequence &GlobalShortcut::shortcut() const
+inline const QKeySequence &GlobalShortcut::shortcut() const
 {
     return m_shortcut;
 }
 
-inline
-Qt::KeyboardModifiers GlobalShortcut::pointerButtonModifiers() const
+inline Qt::KeyboardModifiers GlobalShortcut::pointerButtonModifiers() const
 {
     return m_pointerModifiers;
 }
 
-inline
-Qt::MouseButtons GlobalShortcut::pointerButtons() const
+inline Qt::MouseButtons GlobalShortcut::pointerButtons() const
 {
     return m_pointerButtons;
 }

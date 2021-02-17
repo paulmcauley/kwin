@@ -14,7 +14,6 @@
 
 namespace KWin
 {
-
 class AbstractClient;
 
 namespace Decoration
@@ -27,7 +26,7 @@ class KWIN_EXPORT Deleted : public Toplevel
     Q_OBJECT
 
 public:
-    static Deleted* create(Toplevel* c);
+    static Deleted *create(Toplevel *c);
     // used by effects to keep the window around for e.g. fadeout effects when it's destroyed
     void refWindow();
     void unrefWindow();
@@ -39,7 +38,8 @@ public:
     QStringList activities() const override;
     QVector<VirtualDesktop *> desktops() const override;
     QPoint clientPos() const override;
-    QPoint clientContentPos() const override {
+    QPoint clientContentPos() const override
+    {
         return m_contentPos;
     }
     QRect transparentRect() const override;
@@ -47,39 +47,49 @@ public:
     xcb_window_t frameId() const override;
     bool wasDecorated() const;
     void layoutDecorationRects(QRect &left, QRect &top, QRect &right, QRect &bottom) const;
-    Layer layer() const override {
+    Layer layer() const override
+    {
         return m_layer;
     }
-    bool isMinimized() const {
+    bool isMinimized() const
+    {
         return m_minimized;
     }
-    bool isModal() const {
+    bool isModal() const
+    {
         return m_modal;
     }
-    QList<AbstractClient*> mainClients() const {
+    QList<AbstractClient *> mainClients() const
+    {
         return m_mainClients;
     }
     NET::WindowType windowType(bool direct = false, int supported_types = 0) const override;
-    bool wasClient() const {
+    bool wasClient() const
+    {
         return m_wasClient;
     }
     QByteArray windowRole() const override;
 
-    const Decoration::Renderer *decorationRenderer() const {
+    const Decoration::Renderer *decorationRenderer() const
+    {
         return m_decorationRenderer;
     }
 
-    bool isFullScreen() const {
+    bool isFullScreen() const
+    {
         return m_fullscreen;
     }
 
-    bool keepAbove() const {
+    bool keepAbove() const
+    {
         return m_keepAbove;
     }
-    bool keepBelow() const {
+    bool keepBelow() const
+    {
         return m_keepBelow;
     }
-    QString caption() const {
+    QString caption() const
+    {
         return m_caption;
     }
 
@@ -89,7 +99,8 @@ public:
      * @returns @c true if the client was active at the time when it was closed,
      *   @c false otherwise
      */
-    bool wasActive() const {
+    bool wasActive() const
+    {
         return m_wasActive;
     }
 
@@ -98,7 +109,8 @@ public:
      *
      * @returns @c true if it was an X11 client, @c false otherwise.
      */
-    bool wasX11Client() const {
+    bool wasX11Client() const
+    {
         return m_wasX11Client;
     }
 
@@ -107,7 +119,8 @@ public:
      *
      * @returns @c true if it was a Wayland client, @c false otherwise.
      */
-    bool wasWaylandClient() const {
+    bool wasWaylandClient() const
+    {
         return m_wasWaylandClient;
     }
 
@@ -116,7 +129,8 @@ public:
      *
      * @returns @c true if it was a transient, @c false otherwise.
      */
-    bool wasTransient() const {
+    bool wasTransient() const
+    {
         return !m_transientFor.isEmpty();
     }
 
@@ -126,7 +140,8 @@ public:
      * @returns @c true if it was a group transient, @c false otherwise.
      * @note This is relevant only for X11 clients.
      */
-    bool wasGroupTransient() const {
+    bool wasGroupTransient() const
+    {
         return m_wasGroupTransient;
     }
 
@@ -136,7 +151,8 @@ public:
      * @param toplevel Toplevel against which we are testing.
      * @returns @c true if it was a transient for given toplevel, @c false otherwise.
      */
-    bool wasTransientFor(const Toplevel *toplevel) const {
+    bool wasTransientFor(const Toplevel *toplevel) const
+    {
         return m_transientFor.contains(const_cast<Toplevel *>(toplevel));
     }
 
@@ -145,7 +161,8 @@ public:
      *
      * Because the window is Deleted, it can have only Deleted child transients.
      */
-    QList<Deleted *> transients() const {
+    QList<Deleted *> transients() const
+    {
         return m_transients;
     }
 
@@ -154,7 +171,8 @@ public:
      *
      * @returns @c true if the client was a popup, @c false otherwise.
      */
-    bool isPopupWindow() const override {
+    bool isPopupWindow() const override
+    {
         return m_wasPopupWindow;
     }
 
@@ -163,7 +181,8 @@ public:
     /**
      * Whether this Deleted represents the outline.
      */
-    bool isOutline() const override {
+    bool isOutline() const override
+    {
         return m_wasOutline;
     }
 
@@ -172,8 +191,8 @@ private Q_SLOTS:
     void transientForClosed(Toplevel *toplevel, Deleted *deleted);
 
 private:
-    Deleted();   // use create()
-    void copyToDeleted(Toplevel* c);
+    Deleted(); // use create()
+    void copyToDeleted(Toplevel *c);
     ~Deleted() override; // deleted only using unrefWindow()
 
     void addTransient(Deleted *transient);
@@ -191,7 +210,7 @@ private:
     QPoint m_contentPos;
     QRect transparent_rect;
     xcb_window_t m_frame;
-    QVector <VirtualDesktop *> m_desktops;
+    QVector<VirtualDesktop *> m_desktops;
 
     QRect decoration_left;
     QRect decoration_right;
@@ -200,7 +219,7 @@ private:
     Layer m_layer;
     bool m_minimized;
     bool m_modal;
-    QList<AbstractClient*> m_mainClients;
+    QList<AbstractClient *> m_mainClients;
     bool m_wasClient;
     Decoration::Renderer *m_decorationRenderer;
     NET::WindowType m_type = NET::Unknown;
@@ -228,6 +247,6 @@ inline void Deleted::refWindow()
 
 } // namespace
 
-Q_DECLARE_METATYPE(KWin::Deleted*)
+Q_DECLARE_METATYPE(KWin::Deleted *)
 
 #endif

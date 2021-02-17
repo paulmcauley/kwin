@@ -18,7 +18,8 @@ class QRect;
 class QScriptContext;
 class QSize;
 
-namespace KWin {
+namespace KWin
+{
 class AbstractClient;
 class Toplevel;
 class X11Client;
@@ -26,22 +27,20 @@ class X11Client;
 
 typedef KWin::AbstractClient *KAbstractClientRef;
 typedef KWin::X11Client *KClientRef;
-typedef KWin::Toplevel* KToplevelRef;
+typedef KWin::Toplevel *KToplevelRef;
 
 namespace KWin
 {
 namespace MetaScripting
 {
-
-
 /**
  * The toScriptValue and fromScriptValue functions used in qScriptRegisterMetaType.
  * Conversion functions for QPoint
  */
 namespace Point
 {
-QScriptValue toScriptValue(QScriptEngine*, const QPoint&);
-void fromScriptValue(const QScriptValue&, QPoint&);
+QScriptValue toScriptValue(QScriptEngine *, const QPoint &);
+void fromScriptValue(const QScriptValue &, QPoint &);
 }
 
 /**
@@ -50,8 +49,8 @@ void fromScriptValue(const QScriptValue&, QPoint&);
  */
 namespace Size
 {
-QScriptValue toScriptValue(QScriptEngine*, const QSize&);
-void fromScriptValue(const QScriptValue&, QSize&);
+QScriptValue toScriptValue(QScriptEngine *, const QSize &);
+void fromScriptValue(const QScriptValue &, QSize &);
 }
 
 /**
@@ -62,8 +61,8 @@ void fromScriptValue(const QScriptValue&, QSize&);
  */
 namespace Rect
 {
-QScriptValue toScriptValue(QScriptEngine*, const QRect&);
-void fromScriptValue(const QScriptValue&, QRect&);
+QScriptValue toScriptValue(QScriptEngine *, const QRect &);
+void fromScriptValue(const QScriptValue &, QRect &);
 }
 
 namespace AbstractClient
@@ -75,43 +74,43 @@ void fromScriptValue(const QScriptValue &value, KAbstractClientRef &client);
 namespace X11Client
 {
 QScriptValue toScriptValue(QScriptEngine *eng, const KClientRef &client);
-void fromScriptValue(const QScriptValue &value, KClientRef& client);
+void fromScriptValue(const QScriptValue &value, KClientRef &client);
 }
 
 namespace Toplevel
 {
 QScriptValue toScriptValue(QScriptEngine *eng, const KToplevelRef &client);
-void fromScriptValue(const QScriptValue &value, KToplevelRef& client);
+void fromScriptValue(const QScriptValue &value, KToplevelRef &client);
 }
 
 /**
  * Merges the second QScriptValue in the first one.
  */
-void valueMerge(QScriptValue&, QScriptValue);
+void valueMerge(QScriptValue &, QScriptValue);
 
 /**
  * Registers all the meta conversion to the provided QScriptEngine
  */
-void registration(QScriptEngine* eng);
+void registration(QScriptEngine *eng);
 
 /**
  * Functions for the JS function objects, config.exists and config.get.
  * Read scripting/IMPLIST for details on how they work
  */
-QScriptValue configExists(QScriptContext*, QScriptEngine*);
-QScriptValue getConfigValue(QScriptContext*, QScriptEngine*);
+QScriptValue configExists(QScriptContext *, QScriptEngine *);
+QScriptValue getConfigValue(QScriptContext *, QScriptEngine *);
 
 /**
  * Provide a config object to the given QScriptEngine depending
  * on the keys provided in the QVariant. The provided QVariant
  * MUST returns (true) on isHash()
  */
-void supplyConfig(QScriptEngine*, const QVariant&);
+void supplyConfig(QScriptEngine *, const QVariant &);
 
 /**
  * For engines whose scripts have no associated configuration.
  */
-void supplyConfig(QScriptEngine*);
+void supplyConfig(QScriptEngine *);
 
 }
 }

@@ -8,13 +8,12 @@
 */
 #include "scene_qpainter_drm_backend.h"
 #include "drm_backend.h"
-#include "drm_output.h"
 #include "drm_gpu.h"
+#include "drm_output.h"
 #include "renderloop_p.h"
 
 namespace KWin
 {
-
 DrmQPainterBackend::DrmQPainterBackend(DrmBackend *backend, DrmGpu *gpu)
     : QObject()
     , QPainterBackend()
@@ -22,25 +21,21 @@ DrmQPainterBackend::DrmQPainterBackend(DrmBackend *backend, DrmGpu *gpu)
     , m_gpu(gpu)
 {
     const auto outputs = m_backend->drmOutputs();
-    for (auto output: outputs) {
+    for (auto output : outputs) {
         initOutput(output);
     }
     connect(m_gpu, &DrmGpu::outputEnabled, this, &DrmQPainterBackend::initOutput);
-    connect(m_gpu, &DrmGpu::outputDisabled, this,
-        [this] (DrmOutput *o) {
-            auto it = std::find_if(m_outputs.begin(), m_outputs.end(),
-                [o] (const Output &output) {
-                    return output.output == o;
-                }
-            );
-            if (it == m_outputs.end()) {
-                return;
-            }
-            delete (*it).buffer[0];
-            delete (*it).buffer[1];
-            m_outputs.erase(it);
+    connect(m_gpu, &DrmGpu::outputDisabled, this, [this](DrmOutput *o) {
+        auto it = std::find_if(m_outputs.begin(), m_outputs.end(), [o](const Output &output) {
+            return output.output == o;
+        });
+        if (it == m_outputs.end()) {
+            return;
         }
-    );
+        delete (*it).buffer[0];
+        delete (*it).buffer[1];
+        m_outputs.erase(it);
+    });
 }
 
 DrmQPainterBackend::~DrmQPainterBackend()
@@ -54,34 +49,30 @@ DrmQPainterBackend::~DrmQPainterBackend()
 void DrmQPainterBackend::initOutput(DrmOutput *output)
 {
     Output o;
-    auto initBuffer = [&o, output, this] (int index) {
+    auto initBuffer = [&o, output, this](int index) {
         o.buffer[index] = m_gpu->createBuffer(output->pixelSize());
         if (o.buffer[index]->map()) {
             o.buffer[index]->image()->fill(Qt::black);
         }
     };
-    connect(output, &DrmOutput::modeChanged, this,
-        [output, this] {
-            auto it = std::find_if(m_outputs.begin(), m_outputs.end(),
-                [output] (const auto &o) {
-                    return o.output == output;
-                }
-            );
-            if (it == m_outputs.end()) {
-                return;
-            }
-            delete (*it).buffer[0];
-            delete (*it).buffer[1];
-            auto initBuffer = [it, output, this] (int index) {
-                it->buffer[index] = m_gpu->createBuffer(output->pixelSize());
-                if (it->buffer[index]->map()) {
-                    it->buffer[index]->image()->fill(Qt::black);
-                }
-            };
-            initBuffer(0);
-            initBuffer(1);
+    connect(output, &DrmOutput::modeChanged, this, [output, this] {
+        auto it = std::find_if(m_outputs.begin(), m_outputs.end(), [output](const auto &o) {
+            return o.output == output;
+        });
+        if (it == m_outputs.end()) {
+            return;
         }
-    );
+        delete (*it).buffer[0];
+        delete (*it).buffer[1];
+        auto initBuffer = [it, output, this](int index) {
+            it->buffer[index] = m_gpu->createBuffer(output->pixelSize());
+            if (it->buffer[index]->map()) {
+                it->buffer[index]->image()->fill(Qt::black);
+            }
+        };
+        initBuffer(0);
+        initBuffer(1);
+    });
     initBuffer(0);
     initBuffer(1);
     o.output = output;

@@ -16,7 +16,6 @@
 
 namespace KWin
 {
-
 DpmsInputEventFilter::DpmsInputEventFilter(DrmBackend *backend)
     : InputEventFilter()
     , m_backend(backend)

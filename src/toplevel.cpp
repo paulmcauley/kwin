@@ -27,7 +27,6 @@
 
 namespace KWin
 {
-
 Toplevel::Toplevel()
     : m_visual(XCB_NONE)
     , bit_depth(24)
@@ -103,7 +102,7 @@ void Toplevel::detectShape(xcb_window_t id)
 }
 
 // used only by Deleted::copy()
-void Toplevel::copyToDeleted(Toplevel* c)
+void Toplevel::copyToDeleted(Toplevel *c)
 {
     m_internalId = c->internalId();
     m_frameGeometry = c->m_frameGeometry;
@@ -238,7 +237,7 @@ void Toplevel::getResourceClass()
 
 void Toplevel::setResourceClass(const QByteArray &name, const QByteArray &className)
 {
-    resource_name  = name;
+    resource_name = name;
     resource_class = className;
     emit windowClassChanged();
 }
@@ -297,8 +296,7 @@ void Toplevel::finishCompositing(ReleaseReason releaseReason)
         delete effect_window;
     }
 
-    if (damage_handle != XCB_NONE &&
-            releaseReason != ReleaseReason::Destroyed) {
+    if (damage_handle != XCB_NONE && releaseReason != ReleaseReason::Destroyed) {
         xcb_damage_destroy(connection(), damage_handle);
     }
 
@@ -371,8 +369,7 @@ void Toplevel::getDamageRegionReply()
     m_damageReplyPending = false;
 
     // Get the fetch-region reply
-    xcb_xfixes_fetch_region_reply_t *reply =
-            xcb_xfixes_fetch_region_reply(connection(), m_regionCookie, nullptr);
+    xcb_xfixes_fetch_region_reply_t *reply = xcb_xfixes_fetch_region_reply(connection(), m_regionCookie, nullptr);
 
     if (!reply)
         return;
@@ -392,8 +389,7 @@ void Toplevel::getDamageRegionReply()
 
         region.setRects(qrects.constData(), count);
     } else
-        region += QRect(reply->extents.x, reply->extents.y,
-                        reply->extents.width, reply->extents.height);
+        region += QRect(reply->extents.x, reply->extents.y, reply->extents.width, reply->extents.height);
     free(reply);
 
     addDamage_helper(region);
@@ -459,7 +455,7 @@ void Toplevel::addWorkspaceRepaint(int x, int y, int w, int h)
     addWorkspaceRepaint(QRect(x, y, w, h));
 }
 
-void Toplevel::addWorkspaceRepaint(const QRect& r2)
+void Toplevel::addWorkspaceRepaint(const QRect &r2)
 {
     if (!compositing())
         return;
@@ -554,7 +550,7 @@ bool Toplevel::isOnOutput(AbstractOutput *output) const
 
 void Toplevel::updateShadow()
 {
-    QRect dirtyRect;  // old & new shadow region
+    QRect dirtyRect; // old & new shadow region
     const QRect oldVisibleRect = visibleGeometry();
     addWorkspaceRepaint(oldVisibleRect);
     if (shadow()) {
@@ -701,21 +697,17 @@ void Toplevel::setSurface(KWaylandServer::SurfaceInterface *surface)
     m_surface = surface;
     connect(m_surface, &SurfaceInterface::damaged, this, &Toplevel::addDamage);
     connect(m_surface, &SurfaceInterface::sizeChanged, this, &Toplevel::discardWindowPixmap);
-    connect(m_surface, &SurfaceInterface::subSurfaceTreeChanged, this,
-        [this] {
-            // TODO improve to only update actual visual area
-            if (ready_for_painting) {
-                addDamageFull();
-                m_isDamaged = true;
-            }
+    connect(m_surface, &SurfaceInterface::subSurfaceTreeChanged, this, [this] {
+        // TODO improve to only update actual visual area
+        if (ready_for_painting) {
+            addDamageFull();
+            m_isDamaged = true;
         }
-    );
-    connect(m_surface, &SurfaceInterface::destroyed, this,
-        [this] {
-            m_surface = nullptr;
-            m_surfaceId = 0;
-        }
-    );
+    });
+    connect(m_surface, &SurfaceInterface::destroyed, this, [this] {
+        m_surface = nullptr;
+        m_surfaceId = 0;
+    });
     m_surfaceId = surface->id();
     emit surfaceChanged();
 }
@@ -816,4 +808,3 @@ QMargins Toplevel::frameMargins() const
 }
 
 } // namespace
-

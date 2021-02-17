@@ -6,16 +6,14 @@
 
 #pragma once
 
-#include <rules.h>
 #include "rulebookmodel.h"
 #include "rulesmodel.h"
+#include <rules.h>
 
 #include <KQuickAddons/ConfigModule>
 
-
 namespace KWin
 {
-
 class KCMKWinRules : public KQuickAddons::ConfigModule
 {
     Q_OBJECT
@@ -54,7 +52,7 @@ private:
 
 private:
     RuleBookModel *m_ruleBookModel;
-    RulesModel* m_rulesModel;
+    RulesModel *m_rulesModel;
 
     QPersistentModelIndex m_editIndex;
 };

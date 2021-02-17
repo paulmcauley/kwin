@@ -12,29 +12,27 @@
 #include <config-kwin.h>
 #include <kwineffects_interface.h>
 
-#include <kconfiggroup.h>
 #include <KAboutData>
 #include <KPluginFactory>
 #include <QVBoxLayout>
+#include <kconfiggroup.h>
 
-K_PLUGIN_FACTORY_WITH_JSON(CubeSlideEffectConfigFactory,
-                           "cubeslide_config.json",
-                           registerPlugin<KWin::CubeSlideEffectConfig>();)
+K_PLUGIN_FACTORY_WITH_JSON(CubeSlideEffectConfigFactory, "cubeslide_config.json", registerPlugin<KWin::CubeSlideEffectConfig>();)
 
 namespace KWin
 {
-
-CubeSlideEffectConfigForm::CubeSlideEffectConfigForm(QWidget* parent) : QWidget(parent)
+CubeSlideEffectConfigForm::CubeSlideEffectConfigForm(QWidget *parent)
+    : QWidget(parent)
 {
     setupUi(this);
 }
 
-CubeSlideEffectConfig::CubeSlideEffectConfig(QWidget* parent, const QVariantList& args) :
-    KCModule(parent, args)
+CubeSlideEffectConfig::CubeSlideEffectConfig(QWidget *parent, const QVariantList &args)
+    : KCModule(parent, args)
 {
     m_ui = new CubeSlideEffectConfigForm(this);
 
-    QVBoxLayout* layout = new QVBoxLayout(this);
+    QVBoxLayout *layout = new QVBoxLayout(this);
 
     layout->addWidget(m_ui);
 
@@ -47,9 +45,7 @@ CubeSlideEffectConfig::CubeSlideEffectConfig(QWidget* parent, const QVariantList
 void CubeSlideEffectConfig::save()
 {
     KCModule::save();
-    OrgKdeKwinEffectsInterface interface(QStringLiteral("org.kde.KWin"),
-                                         QStringLiteral("/Effects"),
-                                         QDBusConnection::sessionBus());
+    OrgKdeKwinEffectsInterface interface(QStringLiteral("org.kde.KWin"), QStringLiteral("/Effects"), QDBusConnection::sessionBus());
     interface.reconfigureEffect(QStringLiteral("cubeslide"));
 }
 

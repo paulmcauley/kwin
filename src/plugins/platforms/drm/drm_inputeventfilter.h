@@ -14,7 +14,6 @@
 
 namespace KWin
 {
-
 class DrmBackend;
 
 class DpmsInputEventFilter : public InputEventFilter
@@ -40,6 +39,4 @@ private:
 
 }
 
-
 #endif
-

@@ -13,7 +13,6 @@
 
 namespace KWin
 {
-
 DrmPlane::DrmPlane(uint32_t plane_id, int fd)
     : DrmObject(plane_id, fd)
 {
@@ -56,40 +55,31 @@ bool DrmPlane::atomicPopulate(drmModeAtomicReq *req) const
 
 bool DrmPlane::initProps()
 {
-    setPropertyNames( {
-        QByteArrayLiteral("type"),
-        QByteArrayLiteral("SRC_X"),
-        QByteArrayLiteral("SRC_Y"),
-        QByteArrayLiteral("SRC_W"),
-        QByteArrayLiteral("SRC_H"),
-        QByteArrayLiteral("CRTC_X"),
-        QByteArrayLiteral("CRTC_Y"),
-        QByteArrayLiteral("CRTC_W"),
-        QByteArrayLiteral("CRTC_H"),
-        QByteArrayLiteral("FB_ID"),
-        QByteArrayLiteral("CRTC_ID"),
-        QByteArrayLiteral("rotation")
-    });
+    setPropertyNames({QByteArrayLiteral("type"),
+                      QByteArrayLiteral("SRC_X"),
+                      QByteArrayLiteral("SRC_Y"),
+                      QByteArrayLiteral("SRC_W"),
+                      QByteArrayLiteral("SRC_H"),
+                      QByteArrayLiteral("CRTC_X"),
+                      QByteArrayLiteral("CRTC_Y"),
+                      QByteArrayLiteral("CRTC_W"),
+                      QByteArrayLiteral("CRTC_H"),
+                      QByteArrayLiteral("FB_ID"),
+                      QByteArrayLiteral("CRTC_ID"),
+                      QByteArrayLiteral("rotation")});
 
-    QVector<QByteArray> typeNames = {
-        QByteArrayLiteral("Overlay"),
-        QByteArrayLiteral("Primary"),
-        QByteArrayLiteral("Cursor")
-    };
+    QVector<QByteArray> typeNames = {QByteArrayLiteral("Overlay"), QByteArrayLiteral("Primary"), QByteArrayLiteral("Cursor")};
 
-    const QVector<QByteArray> rotationNames{
-        QByteArrayLiteral("rotate-0"),
-        QByteArrayLiteral("rotate-90"),
-        QByteArrayLiteral("rotate-180"),
-        QByteArrayLiteral("rotate-270"),
-        QByteArrayLiteral("reflect-x"),
-        QByteArrayLiteral("reflect-y")
-    };
+    const QVector<QByteArray> rotationNames{QByteArrayLiteral("rotate-0"),
+                                            QByteArrayLiteral("rotate-90"),
+                                            QByteArrayLiteral("rotate-180"),
+                                            QByteArrayLiteral("rotate-270"),
+                                            QByteArrayLiteral("reflect-x"),
+                                            QByteArrayLiteral("reflect-y")};
 
-    DrmScopedPointer<drmModeObjectProperties> properties(
-        drmModeObjectGetProperties(fd(), m_id, DRM_MODE_OBJECT_PLANE));
-    if (!properties){
-        qCWarning(KWIN_DRM) << "Failed to get properties for plane " << m_id ;
+    DrmScopedPointer<drmModeObjectProperties> properties(drmModeObjectGetProperties(fd(), m_id, DRM_MODE_OBJECT_PLANE));
+    if (!properties) {
+        qCWarning(KWIN_DRM) << "Failed to get properties for plane " << m_id;
         return false;
     }
 
@@ -101,7 +91,7 @@ bool DrmPlane::initProps()
             initProp(j, properties.data(), rotationNames);
             m_supportedTransformations = Transformations();
 
-            auto checkSupport = [j, this] (uint64_t value, Transformation t) {
+            auto checkSupport = [j, this](uint64_t value, Transformation t) {
                 if (propHasEnum(j, value)) {
                     m_supportedTransformations |= t;
                 }
@@ -130,9 +120,9 @@ DrmPlane::TypeIndex DrmPlane::type()
     }
     int typeCount = int(TypeIndex::Count);
     for (int i = 0; i < typeCount; i++) {
-            if (property->enumMap(i) == property->value()) {
-                    return TypeIndex(i);
-            }
+        if (property->enumMap(i) == property->value()) {
+            return TypeIndex(i);
+        }
     }
     return TypeIndex::Overlay;
 }

@@ -14,28 +14,26 @@
 
 #include "ui_cubeslide_config.h"
 
-
 namespace KWin
 {
-
 class CubeSlideEffectConfigForm : public QWidget, public Ui::CubeSlideEffectConfigForm
 {
     Q_OBJECT
 public:
-    explicit CubeSlideEffectConfigForm(QWidget* parent);
+    explicit CubeSlideEffectConfigForm(QWidget *parent);
 };
 
 class CubeSlideEffectConfig : public KCModule
 {
     Q_OBJECT
 public:
-    explicit CubeSlideEffectConfig(QWidget* parent = nullptr, const QVariantList& args = QVariantList());
+    explicit CubeSlideEffectConfig(QWidget *parent = nullptr, const QVariantList &args = QVariantList());
 
 public Q_SLOTS:
     void save() override;
 
 private:
-    CubeSlideEffectConfigForm* m_ui;
+    CubeSlideEffectConfigForm *m_ui;
 };
 
 } // namespace

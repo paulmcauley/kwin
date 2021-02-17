@@ -17,7 +17,6 @@
 
 namespace KWin
 {
-
 OpenGLBackend::OpenGLBackend()
     : m_directRendering(false)
     , m_haveBufferAge(false)
@@ -59,7 +58,7 @@ QRegion OpenGLBackend::accumulatedDamageHistory(int bufferAge) const
     return region;
 }
 
-OverlayWindow* OpenGLBackend::overlayWindow() const
+OverlayWindow *OpenGLBackend::overlayWindow() const
 {
     return nullptr;
 }
@@ -84,7 +83,7 @@ void OpenGLBackend::copyPixels(const QRegion &region)
     }
 }
 
-QSharedPointer<KWin::GLTexture> OpenGLBackend::textureForOutput(AbstractOutput* output) const
+QSharedPointer<KWin::GLTexture> OpenGLBackend::textureForOutput(AbstractOutput *output) const
 {
     Q_UNUSED(output)
     return {};
@@ -95,7 +94,6 @@ void OpenGLBackend::aboutToStartPainting(int screenId, const QRegion &damage)
     Q_UNUSED(screenId)
     Q_UNUSED(damage)
 }
-
 
 bool OpenGLBackend::directScanoutAllowed(int screen) const
 {

@@ -13,12 +13,15 @@
 
 namespace KWin
 {
-
 class CubeInsideEffect : public Effect
 {
 public:
-    CubeInsideEffect() {}
-    ~CubeInsideEffect() override {}
+    CubeInsideEffect()
+    {
+    }
+    ~CubeInsideEffect() override
+    {
+    }
 
     virtual void paint() = 0;
     virtual void setActive(bool active) = 0;

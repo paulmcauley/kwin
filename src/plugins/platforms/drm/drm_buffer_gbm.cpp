@@ -17,15 +17,14 @@
 // c++
 #include <cerrno>
 // drm
+#include <gbm.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
-#include <gbm.h>
 // KWaylandServer
 #include "KWaylandServer/buffer_interface.h"
 
 namespace KWin
 {
-
 // DrmSurfaceBuffer
 DrmSurfaceBuffer::DrmSurfaceBuffer(int fd, const std::shared_ptr<GbmSurface> &surface)
     : DrmBuffer(fd)

@@ -11,8 +11,8 @@
 // KWin
 #include <kwinglobals.h>
 // Qt
-#include <QObject>
 #include <QHash>
+#include <QObject>
 
 namespace KWin
 {
@@ -38,12 +38,7 @@ class FocusChain : public QObject
 {
     Q_OBJECT
 public:
-    enum Change {
-        MakeFirst,
-        MakeLast,
-        Update,
-        MakeFirstMinimized = MakeFirst
-    };
+    enum Change { MakeFirst, MakeLast, Update, MakeFirstMinimized = MakeFirst };
     ~FocusChain() override;
     /**
      * @brief Updates the position of the @p client according to the requested @p change in the
@@ -178,7 +173,7 @@ public Q_SLOTS:
     bool isUsableFocusCandidate(AbstractClient *c, AbstractClient *prev) const;
 
 private:
-    using Chain = QList<AbstractClient*>;
+    using Chain = QList<AbstractClient *>;
     /**
      * @brief Makes @p client the first Client in the given focus @p chain.
      *
@@ -213,26 +208,22 @@ private:
     KWIN_SINGLETON_VARIABLE(FocusChain, s_manager)
 };
 
-inline
-bool FocusChain::contains(AbstractClient *client) const
+inline bool FocusChain::contains(AbstractClient *client) const
 {
     return m_mostRecentlyUsed.contains(client);
 }
 
-inline
-void FocusChain::setSeparateScreenFocus(bool enabled)
+inline void FocusChain::setSeparateScreenFocus(bool enabled)
 {
     m_separateScreenFocus = enabled;
 }
 
-inline
-void FocusChain::setActiveClient(AbstractClient *client)
+inline void FocusChain::setActiveClient(AbstractClient *client)
 {
     m_activeClient = client;
 }
 
-inline
-void FocusChain::setCurrentDesktop(uint previous, uint newDesktop)
+inline void FocusChain::setCurrentDesktop(uint previous, uint newDesktop)
 {
     Q_UNUSED(previous)
     m_currentDesktop = newDesktop;

@@ -38,7 +38,6 @@
 
 namespace KWin
 {
-
 KscreenEffect::KscreenEffect()
     : Effect()
     , m_lastPresentTime(std::chrono::milliseconds::zero())
@@ -47,11 +46,9 @@ KscreenEffect::KscreenEffect()
 {
     initConfig<KscreenConfig>();
     connect(effects, &EffectsHandler::propertyNotify, this, &KscreenEffect::propertyNotify);
-    connect(effects, &EffectsHandler::xcbConnectionChanged, this,
-        [this] {
-            m_atom = effects->announceSupportProperty(QByteArrayLiteral("_KDE_KWIN_KSCREEN_SUPPORT"), this);
-        }
-    );
+    connect(effects, &EffectsHandler::xcbConnectionChanged, this, [this] {
+        m_atom = effects->announceSupportProperty(QByteArrayLiteral("_KDE_KWIN_KSCREEN_SUPPORT"), this);
+    });
     reconfigure(ReconfigureAll);
 }
 
@@ -64,8 +61,7 @@ void KscreenEffect::reconfigure(ReconfigureFlags flags)
     Q_UNUSED(flags)
 
     KscreenConfig::self()->read();
-    m_timeLine.setDuration(
-        std::chrono::milliseconds(animationTime<KscreenConfig>(250)));
+    m_timeLine.setDuration(std::chrono::milliseconds(animationTime<KscreenConfig>(250)));
 }
 
 void KscreenEffect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime)
@@ -108,23 +104,23 @@ void KscreenEffect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, st
 
 void KscreenEffect::paintWindow(EffectWindow *w, int mask, QRegion region, WindowPaintData &data)
 {
-    //fade to black and fully opaque
+    // fade to black and fully opaque
     switch (m_state) {
-        case StateFadingOut:
-            data.setOpacity(data.opacity() + (1.0 - data.opacity()) * m_timeLine.value());
-            data.multiplyBrightness(1.0 - m_timeLine.value());
-            break;
-        case StateFadedOut:
-            data.multiplyOpacity(0.0);
-            data.multiplyBrightness(0.0);
-            break;
-        case StateFadingIn:
-            data.setOpacity(data.opacity() + (1.0 - data.opacity()) * (1.0 - m_timeLine.value()));
-            data.multiplyBrightness(m_timeLine.value());
-            break;
-        default:
-            // no adjustment
-            break;
+    case StateFadingOut:
+        data.setOpacity(data.opacity() + (1.0 - data.opacity()) * m_timeLine.value());
+        data.multiplyBrightness(1.0 - m_timeLine.value());
+        break;
+    case StateFadedOut:
+        data.multiplyOpacity(0.0);
+        data.multiplyBrightness(0.0);
+        break;
+    case StateFadingIn:
+        data.setOpacity(data.opacity() + (1.0 - data.opacity()) * (1.0 - m_timeLine.value()));
+        data.multiplyBrightness(m_timeLine.value());
+        break;
+    default:
+        // no adjustment
+        break;
     }
     effects->paintWindow(w, mask, region, data);
 }

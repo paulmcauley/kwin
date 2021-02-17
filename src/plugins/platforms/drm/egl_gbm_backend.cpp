@@ -10,31 +10,30 @@
 // kwin
 #include "composite.h"
 #include "drm_backend.h"
+#include "drm_gpu.h"
 #include "drm_output.h"
 #include "gbm_surface.h"
+#include "linux_dmabuf.h"
 #include "logging.h"
 #include "options.h"
 #include "renderloop_p.h"
 #include "screens.h"
-#include "drm_gpu.h"
-#include "linux_dmabuf.h"
 // kwin libs
-#include <kwinglplatform.h>
 #include <kwineglimagetexture.h>
+#include <kwinglplatform.h>
 // system
+#include <errno.h>
 #include <gbm.h>
 #include <unistd.h>
-#include <errno.h>
 // kwayland server
-#include "KWaylandServer/surface_interface.h"
 #include "KWaylandServer/buffer_interface.h"
 #include "KWaylandServer/linuxdmabuf_v1_interface.h"
-#include <egl_dmabuf.h>
+#include "KWaylandServer/surface_interface.h"
 #include <drm_fourcc.h>
+#include <egl_dmabuf.h>
 
 namespace KWin
 {
-
 EglGbmBackend::EglGbmBackend(DrmBackend *drmBackend, DrmGpu *gpu)
     : AbstractEglDrmBackend(drmBackend, gpu)
 {
@@ -91,10 +90,10 @@ bool EglGbmBackend::initializeEgl()
         const bool hasKHRGBM = hasClientExtension(QByteArrayLiteral("EGL_KHR_platform_gbm"));
         const GLenum platform = hasMesaGBM ? EGL_PLATFORM_GBM_MESA : EGL_PLATFORM_GBM_KHR;
 
-        if (!hasClientExtension(QByteArrayLiteral("EGL_EXT_platform_base")) ||
-                (!hasMesaGBM && !hasKHRGBM)) {
-            setFailed("Missing one or more extensions between EGL_EXT_platform_base, "
-                      "EGL_MESA_platform_gbm, EGL_KHR_platform_gbm");
+        if (!hasClientExtension(QByteArrayLiteral("EGL_EXT_platform_base")) || (!hasMesaGBM && !hasKHRGBM)) {
+            setFailed(
+                "Missing one or more extensions between EGL_EXT_platform_base, "
+                "EGL_MESA_platform_gbm, EGL_KHR_platform_gbm");
             return false;
         }
 
@@ -144,7 +143,7 @@ bool EglGbmBackend::initRenderingContext()
 
     const auto outputs = m_gpu->outputs();
 
-    for (DrmOutput *drmOutput: outputs) {
+    for (DrmOutput *drmOutput : outputs) {
         addOutput(drmOutput);
     }
 
@@ -164,8 +163,7 @@ bool EglGbmBackend::initRenderingContext()
 
 EGLSurface EglGbmBackend::createEglSurface(std::shared_ptr<GbmSurface> gbmSurface) const
 {
-    auto eglSurface = eglCreatePlatformWindowSurfaceEXT(eglDisplay(), config(),
-                                                        (void *)(gbmSurface->surface()), nullptr);
+    auto eglSurface = eglCreatePlatformWindowSurfaceEXT(eglDisplay(), config(), (void *)(gbmSurface->surface()), nullptr);
     if (eglSurface == EGL_NO_SURFACE) {
         qCCritical(KWIN_DRM) << "Creating EGL surface failed";
         return EGL_NO_SURFACE;
@@ -176,18 +174,14 @@ EGLSurface EglGbmBackend::createEglSurface(std::shared_ptr<GbmSurface> gbmSurfac
 bool EglGbmBackend::resetOutput(Output &output, DrmOutput *drmOutput)
 {
     output.output = drmOutput;
-    const QSize size = drmOutput->hardwareTransforms() ? drmOutput->pixelSize() :
-                                                         drmOutput->modeSize();
+    const QSize size = drmOutput->hardwareTransforms() ? drmOutput->pixelSize() : drmOutput->modeSize();
     int flags = GBM_BO_USE_RENDERING;
     if (drmOutput->gpu() == m_gpu) {
         flags |= GBM_BO_USE_SCANOUT;
     } else {
         flags |= GBM_BO_USE_LINEAR;
     }
-    auto gbmSurface = std::make_shared<GbmSurface>(m_gpu->gbmDevice(),
-                                                   size.width(), size.height(),
-                                                   GBM_FORMAT_XRGB8888,
-                                                   flags);
+    auto gbmSurface = std::make_shared<GbmSurface>(m_gpu->gbmDevice(), size.width(), size.height(), GBM_FORMAT_XRGB8888, flags);
     if (!gbmSurface) {
         qCCritical(KWIN_DRM) << "Creating GBM surface failed";
         return false;
@@ -217,19 +211,15 @@ void EglGbmBackend::addOutput(DrmOutput *drmOutput)
         Output newOutput;
         if (resetOutput(newOutput, drmOutput)) {
             QVector<Output> &outputs = drmOutput->gpu() == m_gpu ? m_outputs : m_secondaryGpuOutputs;
-            connect(drmOutput, &DrmOutput::modeChanged, this,
-                [drmOutput, &outputs, this] {
-                    auto it = std::find_if(outputs.begin(), outputs.end(),
-                        [drmOutput] (const auto &output) {
-                            return output.output == drmOutput;
-                        }
-                    );
-                    if (it == outputs.end()) {
-                        return;
-                    }
-                    resetOutput(*it, drmOutput);
+            connect(drmOutput, &DrmOutput::modeChanged, this, [drmOutput, &outputs, this] {
+                auto it = std::find_if(outputs.begin(), outputs.end(), [drmOutput](const auto &output) {
+                    return output.output == drmOutput;
+                });
+                if (it == outputs.end()) {
+                    return;
                 }
-            );
+                resetOutput(*it, drmOutput);
+            });
             outputs << newOutput;
         }
     } else {
@@ -243,11 +233,9 @@ void EglGbmBackend::addOutput(DrmOutput *drmOutput)
 void EglGbmBackend::removeOutput(DrmOutput *drmOutput)
 {
     QVector<Output> &outputs = drmOutput->gpu() == m_gpu ? m_outputs : m_secondaryGpuOutputs;
-    auto it = std::find_if(outputs.begin(), outputs.end(),
-        [drmOutput] (const Output &output) {
-            return output.output == drmOutput;
-        }
-    );
+    auto it = std::find_if(outputs.begin(), outputs.end(), [drmOutput](const Output &output) {
+        return output.output == drmOutput;
+    });
     if (it == outputs.end()) {
         return;
     }
@@ -261,12 +249,10 @@ void EglGbmBackend::removeOutput(DrmOutput *drmOutput)
 
 int EglGbmBackend::getDmabufForSecondaryGpuOutput(AbstractOutput *output, uint32_t *format, uint32_t *stride)
 {
-    DrmOutput *drmOutput = static_cast<DrmOutput*>(output);
-    auto it = std::find_if(m_secondaryGpuOutputs.begin(), m_secondaryGpuOutputs.end(),
-        [drmOutput] (const Output &output) {
-            return output.output == drmOutput;
-        }
-    );
+    DrmOutput *drmOutput = static_cast<DrmOutput *>(output);
+    auto it = std::find_if(m_secondaryGpuOutputs.begin(), m_secondaryGpuOutputs.end(), [drmOutput](const Output &output) {
+        return output.output == drmOutput;
+    });
     if (it == m_secondaryGpuOutputs.end()) {
         return -1;
     }
@@ -298,12 +284,10 @@ int EglGbmBackend::getDmabufForSecondaryGpuOutput(AbstractOutput *output, uint32
 
 QRegion EglGbmBackend::beginFrameForSecondaryGpu(AbstractOutput *output)
 {
-    DrmOutput *drmOutput = static_cast<DrmOutput*>(output);
-    auto it = std::find_if(m_secondaryGpuOutputs.begin(), m_secondaryGpuOutputs.end(),
-        [drmOutput] (const Output &output) {
-            return output.output == drmOutput;
-        }
-    );
+    DrmOutput *drmOutput = static_cast<DrmOutput *>(output);
+    auto it = std::find_if(m_secondaryGpuOutputs.begin(), m_secondaryGpuOutputs.end(), [drmOutput](const Output &output) {
+        return output.output == drmOutput;
+    });
     if (it == m_secondaryGpuOutputs.end()) {
         return QRegion();
     }
@@ -311,24 +295,34 @@ QRegion EglGbmBackend::beginFrameForSecondaryGpu(AbstractOutput *output)
 }
 
 const float vertices[] = {
-   -1.0f,  1.0f,
-   -1.0f, -1.0f,
-    1.0f, -1.0f,
+    -1.0f,
+    1.0f,
+    -1.0f,
+    -1.0f,
+    1.0f,
+    -1.0f,
 
-   -1.0f,  1.0f,
-    1.0f, -1.0f,
-    1.0f,  1.0f,
+    -1.0f,
+    1.0f,
+    1.0f,
+    -1.0f,
+    1.0f,
+    1.0f,
 };
 
-const float texCoords[] = {
-    0.0f,  1.0f,
-    0.0f,  0.0f,
-    1.0f,  0.0f,
+const float texCoords[] = {0.0f,
+                           1.0f,
+                           0.0f,
+                           0.0f,
+                           1.0f,
+                           0.0f,
 
-    0.0f,  1.0f,
-    1.0f,  0.0f,
-    1.0f,  1.0f
-};
+                           0.0f,
+                           1.0f,
+                           1.0f,
+                           0.0f,
+                           1.0f,
+                           1.0f};
 
 bool EglGbmBackend::resetFramebuffer(Output &output)
 {
@@ -349,17 +343,15 @@ bool EglGbmBackend::resetFramebuffer(Output &output)
     glBindTexture(GL_TEXTURE_2D, output.render.texture);
 
     const QSize texSize = output.output->pixelSize();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texSize.width(), texSize.height(),
-                 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texSize.width(), texSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                           output.render.texture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, output.render.texture, 0);
 
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         qCWarning(KWIN_DRM) << "Error: framebuffer not complete";
         return false;
     }
@@ -445,8 +437,8 @@ void EglGbmBackend::renderFramebufferToSurface(Output &output)
         if (fd != -1) {
             struct gbm_import_fd_data data = {};
             data.fd = fd;
-            data.width = (uint32_t) size.width();
-            data.height = (uint32_t) size.height();
+            data.width = (uint32_t)size.width();
+            data.height = (uint32_t)size.height();
             data.stride = stride;
             data.format = format;
             gbm_bo *importedBuffer = gbm_bo_import(m_gpu->gbmDevice(), GBM_BO_IMPORT_FD, &data, GBM_BO_USE_SCANOUT | GBM_BO_USE_LINEAR);
@@ -486,21 +478,26 @@ bool EglGbmBackend::makeContextCurrent(const Output &output) const
 bool EglGbmBackend::initBufferConfigs()
 {
     const EGLint config_attribs[] = {
-        EGL_SURFACE_TYPE,         EGL_WINDOW_BIT,
-        EGL_RED_SIZE,             1,
-        EGL_GREEN_SIZE,           1,
-        EGL_BLUE_SIZE,            1,
-        EGL_ALPHA_SIZE,           0,
-        EGL_RENDERABLE_TYPE,      isOpenGLES() ? EGL_OPENGL_ES2_BIT : EGL_OPENGL_BIT,
-        EGL_CONFIG_CAVEAT,        EGL_NONE,
+        EGL_SURFACE_TYPE,
+        EGL_WINDOW_BIT,
+        EGL_RED_SIZE,
+        1,
+        EGL_GREEN_SIZE,
+        1,
+        EGL_BLUE_SIZE,
+        1,
+        EGL_ALPHA_SIZE,
+        0,
+        EGL_RENDERABLE_TYPE,
+        isOpenGLES() ? EGL_OPENGL_ES2_BIT : EGL_OPENGL_BIT,
+        EGL_CONFIG_CAVEAT,
+        EGL_NONE,
         EGL_NONE,
     };
 
     EGLint count;
     EGLConfig configs[1024];
-    if (!eglChooseConfig(eglDisplay(), config_attribs, configs,
-                         sizeof(configs) / sizeof(EGLConfig),
-                         &count)) {
+    if (!eglChooseConfig(eglDisplay(), config_attribs, configs, sizeof(configs) / sizeof(EGLConfig), &count)) {
         qCCritical(KWIN_DRM) << "choose config failed";
         return false;
     }
@@ -524,9 +521,8 @@ bool EglGbmBackend::initBufferConfigs()
             eglGetConfigAttrib(eglDisplay(), configs[i], EGL_GREEN_SIZE, &greenSize);
             eglGetConfigAttrib(eglDisplay(), configs[i], EGL_BLUE_SIZE, &blueSize);
             eglGetConfigAttrib(eglDisplay(), configs[i], EGL_ALPHA_SIZE, &alphaSize);
-            qCDebug(KWIN_DRM) << "  EGL config #" << i << " has GBM FOURCC format:" << gbmFormatStr
-                              << "; color sizes (RGBA order):"
-                              << redSize << greenSize << blueSize << alphaSize;
+            qCDebug(KWIN_DRM) << "  EGL config #" << i << " has GBM FOURCC format:" << gbmFormatStr << "; color sizes (RGBA order):" << redSize << greenSize
+                              << blueSize << alphaSize;
         }
 
         if ((gbmFormat == GBM_FORMAT_XRGB8888) || (gbmFormat == GBM_FORMAT_ARGB8888)) {
@@ -535,8 +531,7 @@ bool EglGbmBackend::initBufferConfigs()
         }
     }
 
-    qCCritical(KWIN_DRM) << "Choosing EGL config did not return a suitable config. There were"
-                         << count << "configs.";
+    qCCritical(KWIN_DRM) << "Choosing EGL config did not return a suitable config. There were" << count << "configs.";
     return false;
 }
 
@@ -544,9 +539,7 @@ static QVector<EGLint> regionToRects(const QRegion &region, AbstractWaylandOutpu
 {
     const int height = output->modeSize().height();
 
-    const QMatrix4x4 matrix = DrmOutput::logicalToNativeMatrix(output->geometry(),
-                                                               output->scale(),
-                                                               output->transform());
+    const QMatrix4x4 matrix = DrmOutput::logicalToNativeMatrix(output->geometry(), output->scale(), output->transform());
 
     QVector<EGLint> rects;
     rects.reserve(region.rectCount() * 4);
@@ -569,8 +562,7 @@ void EglGbmBackend::aboutToStartPainting(int screenId, const QRegion &damagedReg
         const QRegion region = damagedRegion & output.output->geometry();
 
         QVector<EGLint> rects = regionToRects(region, output.output);
-        const bool correct = eglSetDamageRegionKHR(eglDisplay(), output.eglSurface,
-                                                   rects.data(), rects.count()/4);
+        const bool correct = eglSetDamageRegionKHR(eglDisplay(), output.eglSurface, rects.data(), rects.count() / 4);
         if (!correct) {
             qCWarning(KWIN_DRM) << "failed eglSetDamageRegionKHR" << eglGetError();
         }
@@ -584,8 +576,7 @@ bool EglGbmBackend::presentOnOutput(Output &output, const QRegion &damagedRegion
     } else if (isPrimary()) {
         if (supportsSwapBuffersWithDamage()) {
             QVector<EGLint> rects = regionToRects(output.damageHistory.constFirst(), output.output);
-            if (!eglSwapBuffersWithDamageEXT(eglDisplay(), output.eglSurface,
-                                             rects.data(), rects.count() / 4)) {
+            if (!eglSwapBuffersWithDamageEXT(eglDisplay(), output.eglSurface, rects.data(), rects.count() / 4)) {
                 qCCritical(KWIN_DRM, "eglSwapBuffersWithDamageEXT() failed: %x", eglGetError());
                 return false;
             }
@@ -623,8 +614,7 @@ void EglGbmBackend::setViewport(const Output &output) const
     const QRect &v = output.output->geometry();
     qreal scale = output.output->scale();
 
-    glViewport(-v.x() * scale, (v.height() - overall.height() + v.y()) * scale,
-               overall.width() * scale, overall.height() * scale);
+    glViewport(-v.x() * scale, (v.height() - overall.height() + v.y()) * scale, overall.width() * scale, overall.height() * scale);
 }
 
 QRegion EglGbmBackend::beginFrame(int screenId)
@@ -665,8 +655,7 @@ QRegion EglGbmBackend::prepareRenderingForOutput(Output &output) const
     return output.output->geometry();
 }
 
-void EglGbmBackend::endFrame(int screenId, const QRegion &renderedRegion,
-                             const QRegion &damagedRegion)
+void EglGbmBackend::endFrame(int screenId, const QRegion &renderedRegion, const QRegion &damagedRegion)
 {
     Q_UNUSED(renderedRegion)
 
@@ -701,19 +690,16 @@ bool EglGbmBackend::scanout(int screenId, KWaylandServer::SurfaceInterface *surf
     if (buffer->linuxDmabufBuffer()->size() != output.output->modeSize()) {
         return false;
     }
-    EglDmabufBuffer *dmabuf = static_cast<EglDmabufBuffer*>(buffer->linuxDmabufBuffer());
-    if (!dmabuf || !dmabuf->planes().count() ||
-        !gbm_device_is_format_supported(m_gpu->gbmDevice(), dmabuf->format(), GBM_BO_USE_SCANOUT)) {
+    EglDmabufBuffer *dmabuf = static_cast<EglDmabufBuffer *>(buffer->linuxDmabufBuffer());
+    if (!dmabuf || !dmabuf->planes().count() || !gbm_device_is_format_supported(m_gpu->gbmDevice(), dmabuf->format(), GBM_BO_USE_SCANOUT)) {
         return false;
     }
     gbm_bo *importedBuffer;
-    if (dmabuf->planes()[0].modifier != DRM_FORMAT_MOD_INVALID
-        || dmabuf->planes()[0].offset > 0
-        || dmabuf->planes().size() > 1) {
+    if (dmabuf->planes()[0].modifier != DRM_FORMAT_MOD_INVALID || dmabuf->planes()[0].offset > 0 || dmabuf->planes().size() > 1) {
         gbm_import_fd_modifier_data data = {};
         data.format = dmabuf->format();
-        data.width = (uint32_t) dmabuf->size().width();
-        data.height = (uint32_t) dmabuf->size().height();
+        data.width = (uint32_t)dmabuf->size().width();
+        data.height = (uint32_t)dmabuf->size().height();
         data.num_fds = dmabuf->planes().count();
         data.modifier = dmabuf->planes()[0].modifier;
         for (int i = 0; i < dmabuf->planes().count(); i++) {
@@ -727,8 +713,8 @@ bool EglGbmBackend::scanout(int screenId, KWaylandServer::SurfaceInterface *surf
         auto plane = dmabuf->planes()[0];
         gbm_import_fd_data data = {};
         data.fd = plane.fd;
-        data.width = (uint32_t) dmabuf->size().width();
-        data.height = (uint32_t) dmabuf->size().height();
+        data.width = (uint32_t)dmabuf->size().width();
+        data.height = (uint32_t)dmabuf->size().height();
         data.stride = plane.stride;
         data.format = dmabuf->format();
         importedBuffer = gbm_bo_import(m_gpu->gbmDevice(), GBM_BO_IMPORT_FD, &data, GBM_BO_USE_SCANOUT);
@@ -761,11 +747,10 @@ bool EglGbmBackend::scanout(int screenId, KWaylandServer::SurfaceInterface *surf
 
 QSharedPointer<GLTexture> EglGbmBackend::textureForOutput(AbstractOutput *abstractOutput) const
 {
-    const QVector<KWin::EglGbmBackend::Output>::const_iterator itOutput = std::find_if(m_outputs.begin(), m_outputs.end(),
-        [abstractOutput] (const auto &output) {
+    const QVector<KWin::EglGbmBackend::Output>::const_iterator itOutput =
+        std::find_if(m_outputs.begin(), m_outputs.end(), [abstractOutput](const auto &output) {
             return output.output == abstractOutput;
-        }
-    );
+        });
     if (itOutput == m_outputs.end()) {
         return {};
     }
@@ -777,8 +762,11 @@ QSharedPointer<GLTexture> EglGbmBackend::textureForOutput(AbstractOutput *abstra
         return glTexture;
     }
 
-    EGLImageKHR image = eglCreateImageKHR(eglDisplay(), nullptr, EGL_NATIVE_PIXMAP_KHR,
-                                          itOutput->directScanoutBuffer ? itOutput->directScanoutBuffer : itOutput->buffer->getBo(), nullptr);
+    EGLImageKHR image = eglCreateImageKHR(eglDisplay(),
+                                          nullptr,
+                                          EGL_NATIVE_PIXMAP_KHR,
+                                          itOutput->directScanoutBuffer ? itOutput->directScanoutBuffer : itOutput->buffer->getBo(),
+                                          nullptr);
     if (image == EGL_NO_IMAGE_KHR) {
         qCWarning(KWIN_DRM) << "Failed to record frame: Error creating EGLImageKHR - " << glGetError();
         return {};

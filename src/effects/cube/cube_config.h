@@ -14,31 +14,30 @@
 
 #include "ui_cube_config.h"
 
-
 namespace KWin
 {
-
 class CubeEffectConfigForm : public QWidget, public Ui::CubeEffectConfigForm
 {
     Q_OBJECT
 public:
-    explicit CubeEffectConfigForm(QWidget* parent);
+    explicit CubeEffectConfigForm(QWidget *parent);
 };
 
 class CubeEffectConfig : public KCModule
 {
     Q_OBJECT
 public:
-    explicit CubeEffectConfig(QWidget* parent = nullptr, const QVariantList& args = QVariantList());
+    explicit CubeEffectConfig(QWidget *parent = nullptr, const QVariantList &args = QVariantList());
 
 public Q_SLOTS:
     void save() override;
 
 private Q_SLOTS:
     void capsSelectionChanged();
+
 private:
-    CubeEffectConfigForm* m_ui;
-    KActionCollection* m_actionCollection;
+    CubeEffectConfigForm *m_ui;
+    KActionCollection *m_actionCollection;
 };
 
 } // namespace

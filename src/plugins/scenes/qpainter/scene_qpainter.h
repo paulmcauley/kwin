@@ -16,17 +16,16 @@
 
 #include "decorations/decorationrenderer.h"
 
-namespace KWin {
-
+namespace KWin
+{
 class KWIN_EXPORT SceneQPainter : public Scene
 {
     Q_OBJECT
 
 public:
     ~SceneQPainter() override;
-    OverlayWindow* overlayWindow() const override;
-    void paint(int screenId, const QRegion &damage, const QList<Toplevel *> &windows,
-               RenderLoop *renderLoop) override;
+    OverlayWindow *overlayWindow() const override;
+    void paint(int screenId, const QRegion &damage, const QList<Toplevel *> &windows, RenderLoop *renderLoop) override;
     void paintGenericScreen(int mask, const ScreenPaintData &data) override;
     CompositingType compositingType() const override;
     bool initFailed() const override;
@@ -35,14 +34,16 @@ public:
     Decoration::Renderer *createDecorationRenderer(Decoration::DecoratedClientImpl *impl) override;
     void screenGeometryChanged(const QSize &size) override;
 
-    bool animationsSupported() const override {
+    bool animationsSupported() const override
+    {
         return false;
     }
 
     QPainter *scenePainter() const override;
     QImage *qpainterRenderBuffer(int screenId) const override;
 
-    QPainterBackend *backend() const {
+    QPainterBackend *backend() const
+    {
         return m_backend.data();
     }
 
@@ -74,6 +75,7 @@ public:
 
 protected:
     WindowPixmap *createChild(KWaylandServer::SubSurfaceInterface *subSurface) override;
+
 private:
     explicit QPainterWindowPixmap(KWaylandServer::SubSurfaceInterface *subSurface, WindowPixmap *parent);
     QImage m_image;
@@ -87,8 +89,10 @@ public:
     Window(SceneQPainter *scene, Toplevel *c);
     ~Window() override;
     void performPaint(int mask, const QRegion &region, const WindowPaintData &data) override;
+
 protected:
     WindowPixmap *createWindowPixmap() override;
+
 private:
     void renderWindowPixmap(QPainter *painter, QPainterWindowPixmap *windowPixmap);
     void renderShadow(QPainter *painter);
@@ -101,13 +105,26 @@ class QPainterEffectFrame : public Scene::EffectFrame
 public:
     QPainterEffectFrame(EffectFrameImpl *frame, SceneQPainter *scene);
     ~QPainterEffectFrame() override;
-    void crossFadeIcon() override {}
-    void crossFadeText() override {}
-    void free() override {}
-    void freeIconFrame() override {}
-    void freeTextFrame() override {}
-    void freeSelection() override {}
+    void crossFadeIcon() override
+    {
+    }
+    void crossFadeText() override
+    {
+    }
+    void free() override
+    {
+    }
+    void freeIconFrame() override
+    {
+    }
+    void freeTextFrame() override
+    {
+    }
+    void freeSelection() override
+    {
+    }
     void render(const QRegion &region, double opacity, double frameOpacity) override;
+
 private:
     SceneQPainter *m_scene;
 };
@@ -115,10 +132,11 @@ private:
 class SceneQPainterShadow : public Shadow
 {
 public:
-    SceneQPainterShadow(Toplevel* toplevel);
+    SceneQPainterShadow(Toplevel *toplevel);
     ~SceneQPainterShadow() override;
 
-    QImage &shadowTexture() {
+    QImage &shadowTexture()
+    {
         return m_texture;
     }
 
@@ -134,13 +152,7 @@ class SceneQPainterDecorationRenderer : public Decoration::Renderer
 {
     Q_OBJECT
 public:
-    enum class DecorationPart : int {
-        Left,
-        Top,
-        Right,
-        Bottom,
-        Count
-    };
+    enum class DecorationPart : int { Left, Top, Right, Bottom, Count };
     explicit SceneQPainterDecorationRenderer(Decoration::DecoratedClientImpl *client);
     ~SceneQPainterDecorationRenderer() override;
 
@@ -167,20 +179,17 @@ public:
     Scene *create(QObject *parent = nullptr) const override;
 };
 
-inline
-OverlayWindow* SceneQPainter::overlayWindow() const
+inline OverlayWindow *SceneQPainter::overlayWindow() const
 {
     return nullptr;
 }
 
-inline
-QPainter* SceneQPainter::scenePainter() const
+inline QPainter *SceneQPainter::scenePainter() const
 {
     return m_painter.data();
 }
 
-inline
-const QImage &QPainterWindowPixmap::image()
+inline const QImage &QPainterWindowPixmap::image()
 {
     return m_image;
 }

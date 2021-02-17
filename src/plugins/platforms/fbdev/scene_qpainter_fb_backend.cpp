@@ -7,10 +7,10 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "scene_qpainter_fb_backend.h"
-#include "fb_backend.h"
 #include "composite.h"
-#include "logind.h"
 #include "cursor.h"
+#include "fb_backend.h"
+#include "logind.h"
 #include "renderloop.h"
 #include "virtual_terminal.h"
 #include "vsyncmonitor.h"
@@ -29,10 +29,11 @@ FramebufferQPainterBackend::FramebufferQPainterBackend(FramebufferBackend *backe
     m_renderBuffer.fill(Qt::black);
     m_backend->map();
 
-    m_backBuffer = QImage((uchar*)m_backend->mappedMemory(),
+    m_backBuffer = QImage((uchar *)m_backend->mappedMemory(),
                           m_backend->bytesPerLine() / (m_backend->bitsPerPixel() / 8),
                           m_backend->bufferSize() / m_backend->bytesPerLine(),
-                          m_backend->bytesPerLine(), m_backend->imageFormat());
+                          m_backend->bytesPerLine(),
+                          m_backend->imageFormat());
     m_backBuffer.fill(Qt::black);
 
     connect(VirtualTerminal::self(), &VirtualTerminal::activeChanged, this, [this](bool active) {
@@ -63,7 +64,7 @@ void FramebufferQPainterBackend::deactivate()
 
 FramebufferQPainterBackend::~FramebufferQPainterBackend() = default;
 
-QImage* FramebufferQPainterBackend::bufferForScreen(int screenId)
+QImage *FramebufferQPainterBackend::bufferForScreen(int screenId)
 {
     Q_UNUSED(screenId)
     return &m_renderBuffer;

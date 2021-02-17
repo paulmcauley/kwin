@@ -13,8 +13,7 @@
 
 namespace KWin
 {
-
-CubeEffectProxy::CubeEffectProxy(CubeEffect* effect)
+CubeEffectProxy::CubeEffectProxy(CubeEffect *effect)
     : m_effect(effect)
 {
 }
@@ -23,12 +22,12 @@ CubeEffectProxy::~CubeEffectProxy()
 {
 }
 
-void CubeEffectProxy::registerCubeInsideEffect(CubeInsideEffect* effect)
+void CubeEffectProxy::registerCubeInsideEffect(CubeInsideEffect *effect)
 {
     m_effect->registerCubeInsideEffect(effect);
 }
 
-void CubeEffectProxy::unregisterCubeInsideEffect(CubeInsideEffect* effect)
+void CubeEffectProxy::unregisterCubeInsideEffect(CubeInsideEffect *effect)
 {
     m_effect->unregisterCubeInsideEffect(effect);
 }

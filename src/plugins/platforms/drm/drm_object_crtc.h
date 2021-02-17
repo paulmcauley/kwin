@@ -13,7 +13,6 @@
 
 namespace KWin
 {
-
 class DrmBackend;
 class DrmBuffer;
 class DrmDumbBuffer;
@@ -29,37 +28,39 @@ public:
 
     bool init() override;
 
-    enum class PropertyIndex {
-        ModeId = 0,
-        Active,
-        Count
-    };
+    enum class PropertyIndex { ModeId = 0, Active, Count };
 
     bool initProps() override;
 
-    int resIndex() const {
+    int resIndex() const
+    {
         return m_resIndex;
     }
 
-    DrmBuffer *current() {
+    DrmBuffer *current()
+    {
         return m_currentBuffer;
     }
-    DrmBuffer *next() {
+    DrmBuffer *next()
+    {
         return m_nextBuffer;
     }
-    void setNext(DrmBuffer *buffer) {
+    void setNext(DrmBuffer *buffer)
+    {
         m_nextBuffer = buffer;
     }
 
     void flipBuffer();
     bool blank(DrmOutput *output);
 
-    int gammaRampSize() const {
+    int gammaRampSize() const
+    {
         return m_gammaRampSize;
     }
     bool setGammaRamp(const GammaRamp &gamma);
 
-    DrmGpu *gpu() {
+    DrmGpu *gpu()
+    {
         return m_gpu;
     }
 
@@ -77,4 +78,3 @@ private:
 }
 
 #endif
-

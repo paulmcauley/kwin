@@ -11,9 +11,9 @@
 #define KWIN_SCRIPTINGUTILS_H
 
 #include "input.h"
-#include "workspace.h"
 #include "screenedge.h"
 #include "scripting_logging.h"
+#include "workspace.h"
 
 #include <KGlobalAccel>
 #include <KLocalizedString>
@@ -22,7 +22,6 @@
 
 namespace KWin
 {
-
 /**
  * Validates that argument at @p index of given @p context is of required type.
  * Throws a type error in the scripting context if there is a type mismatch.
@@ -30,14 +29,13 @@ namespace KWin
  * @param index The argument index to validate
  * @returns @c true if the argument is of required type, @c false otherwise
  */
-template<class T>
-bool validateArgumentType(QScriptContext *context, int index)
+template<class T> bool validateArgumentType(QScriptContext *context, int index)
 {
     const bool result = context->argument(index).toVariant().canConvert<T>();
     if (!result) {
-        context->throwError(QScriptContext::TypeError,
-            i18nc("KWin Scripting function received incorrect value for an expected type",
-                  "%1 is not of required type", context->argument(index).toString()));
+        context->throwError(
+            QScriptContext::TypeError,
+            i18nc("KWin Scripting function received incorrect value for an expected type", "%1 is not of required type", context->argument(index).toString()));
     }
     return result;
 }
@@ -48,14 +46,12 @@ bool validateArgumentType(QScriptContext *context, int index)
  * @param context The scripting context in which the argument type needs to be validated.
  * @returns @c true if the argument is of required type, @c false otherwise
  */
-template<class T>
-bool validateArgumentType(QScriptContext *context)
+template<class T> bool validateArgumentType(QScriptContext *context)
 {
     return validateArgumentType<T>(context, 0);
 }
 
-template<class T, class U>
-bool validateArgumentType(QScriptContext *context)
+template<class T, class U> bool validateArgumentType(QScriptContext *context)
 {
     if (!validateArgumentType<T>(context)) {
         return false;
@@ -63,8 +59,7 @@ bool validateArgumentType(QScriptContext *context)
     return validateArgumentType<U>(context, 1);
 }
 
-template<class T, class U, class V>
-bool validateArgumentType(QScriptContext *context)
+template<class T, class U, class V> bool validateArgumentType(QScriptContext *context)
 {
     if (!validateArgumentType<T, U>(context)) {
         return false;
@@ -72,8 +67,7 @@ bool validateArgumentType(QScriptContext *context)
     return validateArgumentType<V>(context, 2);
 }
 
-template<class T, class U, class V, class W>
-bool validateArgumentType(QScriptContext *context)
+template<class T, class U, class V, class W> bool validateArgumentType(QScriptContext *context)
 {
     if (!validateArgumentType<T, U, V>(context)) {
         return false;
@@ -91,8 +85,7 @@ bool validateArgumentType(QScriptContext *context)
  */
 bool validateParameters(QScriptContext *context, int min, int max);
 
-template<class T>
-QScriptValue globalShortcut(QScriptContext *context, QScriptEngine *engine)
+template<class T> QScriptValue globalShortcut(QScriptContext *context, QScriptEngine *engine)
 {
     T script = qobject_cast<T>(context->callee().data().toQObject());
     if (!script) {
@@ -102,7 +95,7 @@ QScriptValue globalShortcut(QScriptContext *context, QScriptEngine *engine)
         qCDebug(KWIN_SCRIPTING) << "Incorrect number of arguments! Expected: title, text, keySequence, callback";
         return engine->undefinedValue();
     }
-    QAction* a = new QAction(script);
+    QAction *a = new QAction(script);
     a->setObjectName(context->argument(0).toString());
     a->setText(context->argument(1).toString());
     const QKeySequence shortcut = QKeySequence(context->argument(2).toString());
@@ -112,14 +105,13 @@ QScriptValue globalShortcut(QScriptContext *context, QScriptEngine *engine)
     return engine->newVariant(true);
 }
 
-template<class T>
-void callGlobalShortcutCallback(T script, QObject *sender)
+template<class T> void callGlobalShortcutCallback(T script, QObject *sender)
 {
-    QAction *a = qobject_cast<QAction*>(sender);
+    QAction *a = qobject_cast<QAction *>(sender);
     if (!a) {
         return;
     }
-    QHash<QAction*, QScriptValue>::const_iterator it = script->shortcutCallbacks().find(a);
+    QHash<QAction *, QScriptValue>::const_iterator it = script->shortcutCallbacks().find(a);
     if (it == script->shortcutCallbacks().end()) {
         return;
     }
@@ -129,8 +121,7 @@ void callGlobalShortcutCallback(T script, QObject *sender)
     value.call(QScriptValue(), arguments);
 }
 
-template<class T>
-QScriptValue registerScreenEdge(QScriptContext *context, QScriptEngine *engine)
+template<class T> QScriptValue registerScreenEdge(QScriptContext *context, QScriptEngine *engine)
 {
     T script = qobject_cast<T>(context->callee().data().toQObject());
     if (!script) {
@@ -143,12 +134,12 @@ QScriptValue registerScreenEdge(QScriptContext *context, QScriptEngine *engine)
         return engine->undefinedValue();
     }
     if (!context->argument(1).isFunction()) {
-        context->throwError(QScriptContext::SyntaxError, i18nc("KWin Scripting error thrown due to incorrect argument",
-                                                               "Second argument to registerScreenEdge needs to be a callback"));
+        context->throwError(QScriptContext::SyntaxError,
+                            i18nc("KWin Scripting error thrown due to incorrect argument", "Second argument to registerScreenEdge needs to be a callback"));
     }
 
     const int edge = context->argument(0).toVariant().toInt();
-    QHash<int, QList<QScriptValue> >::iterator it = script->screenEdgeCallbacks().find(edge);
+    QHash<int, QList<QScriptValue>>::iterator it = script->screenEdgeCallbacks().find(edge);
     if (it == script->screenEdgeCallbacks().end()) {
         // not yet registered
         ScreenEdges::self()->reserve(static_cast<KWin::ElectricBorder>(edge), script, "borderActivated");
@@ -159,8 +150,7 @@ QScriptValue registerScreenEdge(QScriptContext *context, QScriptEngine *engine)
     return engine->newVariant(true);
 }
 
-template<class T>
-QScriptValue unregisterScreenEdge(QScriptContext *context, QScriptEngine *engine)
+template<class T> QScriptValue unregisterScreenEdge(QScriptContext *context, QScriptEngine *engine)
 {
     T script = qobject_cast<T>(context->callee().data().toQObject());
     if (!script) {
@@ -174,9 +164,9 @@ QScriptValue unregisterScreenEdge(QScriptContext *context, QScriptEngine *engine
     }
 
     const int edge = context->argument(0).toVariant().toInt();
-    QHash<int, QList<QScriptValue> >::iterator it = script->screenEdgeCallbacks().find(edge);
+    QHash<int, QList<QScriptValue>>::iterator it = script->screenEdgeCallbacks().find(edge);
     if (it == script->screenEdgeCallbacks().end()) {
-        //not previously registered
+        // not previously registered
         return engine->newVariant(false);
     }
     ScreenEdges::self()->unreserve(static_cast<KWin::ElectricBorder>(edge), script);
@@ -184,8 +174,7 @@ QScriptValue unregisterScreenEdge(QScriptContext *context, QScriptEngine *engine
     return engine->newVariant(true);
 }
 
-template<class T>
-QScriptValue registerTouchScreenEdge(QScriptContext *context, QScriptEngine *engine)
+template<class T> QScriptValue registerTouchScreenEdge(QScriptContext *context, QScriptEngine *engine)
 {
     auto script = qobject_cast<T>(context->callee().data().toQObject());
     if (!script) {
@@ -198,16 +187,16 @@ QScriptValue registerTouchScreenEdge(QScriptContext *context, QScriptEngine *eng
         return engine->undefinedValue();
     }
     if (!context->argument(1).isFunction()) {
-        context->throwError(QScriptContext::SyntaxError, i18nc("KWin Scripting error thrown due to incorrect argument",
-                                                               "Second argument to registerTouchScreenEdge needs to be a callback"));
+        context->throwError(
+            QScriptContext::SyntaxError,
+            i18nc("KWin Scripting error thrown due to incorrect argument", "Second argument to registerTouchScreenEdge needs to be a callback"));
     }
     const int edge = context->argument(0).toVariant().toInt();
     const auto ret = script->registerTouchScreenCallback(edge, context->argument(1));
     return engine->newVariant(ret);
 }
 
-template<class T>
-QScriptValue unregisterTouchScreenEdge(QScriptContext *context, QScriptEngine *engine)
+template<class T> QScriptValue unregisterTouchScreenEdge(QScriptContext *context, QScriptEngine *engine)
 {
     auto script = qobject_cast<T>(context->callee().data().toQObject());
     if (!script) {
@@ -224,8 +213,7 @@ QScriptValue unregisterTouchScreenEdge(QScriptContext *context, QScriptEngine *e
     return engine->newVariant(ret);
 }
 
-template<class T>
-QScriptValue registerUserActionsMenu(QScriptContext *context, QScriptEngine *engine)
+template<class T> QScriptValue registerUserActionsMenu(QScriptContext *context, QScriptEngine *engine)
 {
     T script = qobject_cast<T>(context->callee().data().toQObject());
     if (!script) {
@@ -235,18 +223,17 @@ QScriptValue registerUserActionsMenu(QScriptContext *context, QScriptEngine *eng
         return engine->undefinedValue();
     }
     if (!context->argument(0).isFunction()) {
-        context->throwError(QScriptContext::SyntaxError, i18nc("KWin Scripting error thrown due to incorrect argument",
-                                                               "Argument for registerUserActionsMenu needs to be a callback"));
+        context->throwError(QScriptContext::SyntaxError,
+                            i18nc("KWin Scripting error thrown due to incorrect argument", "Argument for registerUserActionsMenu needs to be a callback"));
         return engine->undefinedValue();
     }
     script->registerUseractionsMenuCallback(context->argument(0));
     return engine->newVariant(true);
 }
 
-template<class T>
-void screenEdgeActivated(T *script, int edge)
+template<class T> void screenEdgeActivated(T *script, int edge)
 {
-    QHash<int, QList<QScriptValue> >::iterator it = script->screenEdgeCallbacks().find(edge);
+    QHash<int, QList<QScriptValue>>::iterator it = script->screenEdgeCallbacks().find(edge);
     if (it != script->screenEdgeCallbacks().end()) {
         foreach (const QScriptValue &value, it.value()) {
             QScriptValue callback(value);
@@ -255,8 +242,7 @@ void screenEdgeActivated(T *script, int edge)
     }
 }
 
-template<class T>
-QScriptValue scriptingAssert(QScriptContext *context, QScriptEngine *engine, int min, int max, T defaultVal = T())
+template<class T> QScriptValue scriptingAssert(QScriptContext *context, QScriptEngine *engine, int min, int max, T defaultVal = T())
 {
     if (!validateParameters(context, min, max)) {
         return engine->undefinedValue();
@@ -290,8 +276,7 @@ QScriptValue scriptingAssert(QScriptContext *context, QScriptEngine *engine, int
                 context->throwError(QScriptContext::UnknownError, context->argument(max - 1).toString());
             } else {
                 context->throwError(QScriptContext::UnknownError,
-                                    i18nc("Assertion failed in KWin script with given value",
-                                          "Assertion failed: %1", context->argument(0).toString()));
+                                    i18nc("Assertion failed in KWin script with given value", "Assertion failed: %1", context->argument(0).toString()));
             }
             return engine->undefinedValue();
         }
@@ -303,7 +288,8 @@ QScriptValue scriptingAssert(QScriptContext *context, QScriptEngine *engine, int
                 context->throwError(QScriptContext::UnknownError,
                                     i18nc("Assertion failed in KWin script with expected value and actual value",
                                           "Assertion failed: Expected %1, got %2",
-                                          context->argument(0).toString(), context->argument(1).toString()));
+                                          context->argument(0).toString(),
+                                          context->argument(1).toString()));
             }
             return engine->undefinedValue();
         }

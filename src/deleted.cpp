@@ -9,20 +9,19 @@
 
 #include "deleted.h"
 
-#include "workspace.h"
-#include "x11client.h"
+#include "decorations/decoratedclient.h"
+#include "decorations/decorationrenderer.h"
 #include "group.h"
 #include "netinfo.h"
 #include "shadow.h"
 #include "waylandclient.h"
-#include "decorations/decoratedclient.h"
-#include "decorations/decorationrenderer.h"
+#include "workspace.h"
+#include "x11client.h"
 
 #include <QDebug>
 
 namespace KWin
 {
-
 Deleted::Deleted()
     : Toplevel()
     , delete_refcount(1)
@@ -64,9 +63,9 @@ Deleted::~Deleted()
     deleteEffectWindow();
 }
 
-Deleted* Deleted::create(Toplevel* c)
+Deleted *Deleted::create(Toplevel *c)
 {
-    Deleted* d = new Deleted();
+    Deleted *d = new Deleted();
     d->copyToDeleted(c);
     workspace()->addDeleted(d, c);
     return d;
@@ -79,9 +78,9 @@ void Deleted::discard()
     delete this;
 }
 
-void Deleted::copyToDeleted(Toplevel* c)
+void Deleted::copyToDeleted(Toplevel *c)
 {
-    Q_ASSERT(dynamic_cast< Deleted* >(c) == nullptr);
+    Q_ASSERT(dynamic_cast<Deleted *>(c) == nullptr);
     Toplevel::copyToDeleted(c);
     m_bufferGeometry = c->bufferGeometry();
     m_frameMargins = c->frameMargins();
@@ -96,15 +95,12 @@ void Deleted::copyToDeleted(Toplevel* c)
     m_frame = c->frameId();
     m_type = c->windowType();
     m_windowRole = c->windowRole();
-    if (WinInfo* cinfo = dynamic_cast< WinInfo* >(info))
+    if (WinInfo *cinfo = dynamic_cast<WinInfo *>(info))
         cinfo->disable();
-    if (AbstractClient *client = dynamic_cast<AbstractClient*>(c)) {
+    if (AbstractClient *client = dynamic_cast<AbstractClient *>(c)) {
         m_wasDecorated = client->isDecorated();
         if (m_wasDecorated) {
-            client->layoutDecorationRects(decoration_left,
-                                          decoration_top,
-                                          decoration_right,
-                                          decoration_bottom);
+            client->layoutDecorationRects(decoration_left, decoration_top, decoration_right, decoration_bottom);
             if (client->isDecorated()) {
                 if (Decoration::Renderer *renderer = client->decoratedClient()->renderer()) {
                     m_decorationRenderer = renderer;
@@ -193,7 +189,7 @@ bool Deleted::wasDecorated() const
     return m_wasDecorated;
 }
 
-void Deleted::layoutDecorationRects(QRect& left, QRect& top, QRect& right, QRect& bottom) const
+void Deleted::layoutDecorationRects(QRect &left, QRect &top, QRect &right, QRect &bottom) const
 {
     left = decoration_left;
     top = decoration_top;
@@ -220,7 +216,7 @@ NET::WindowType Deleted::windowType(bool direct, int supportedTypes) const
 
 void Deleted::mainClientClosed(Toplevel *client)
 {
-    if (AbstractClient *c = dynamic_cast<AbstractClient*>(client))
+    if (AbstractClient *c = dynamic_cast<AbstractClient *>(client))
         m_mainClients.removeAll(c);
 }
 
@@ -255,12 +251,9 @@ QVector<uint> Deleted::x11DesktopIds() const
     const auto desks = desktops();
     QVector<uint> x11Ids;
     x11Ids.reserve(desks.count());
-    std::transform(desks.constBegin(), desks.constEnd(),
-        std::back_inserter(x11Ids),
-        [] (const VirtualDesktop *vd) {
-            return vd->x11DesktopNumber();
-        }
-    );
+    std::transform(desks.constBegin(), desks.constEnd(), std::back_inserter(x11Ids), [](const VirtualDesktop *vd) {
+        return vd->x11DesktopNumber();
+    });
     return x11Ids;
 }
 
@@ -286,4 +279,3 @@ void Deleted::removeTransientFor(Deleted *parent)
 }
 
 } // namespace
-

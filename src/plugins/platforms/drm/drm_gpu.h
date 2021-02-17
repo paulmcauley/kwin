@@ -10,8 +10,8 @@
 #ifndef DRM_GPU_H
 #define DRM_GPU_H
 
-#include <qobject.h>
 #include <QVector>
+#include <qobject.h>
 
 #include <epoxy/egl.h>
 
@@ -22,7 +22,6 @@ struct gbm_device;
 
 namespace KWin
 {
-
 class DrmOutput;
 class DrmCrtc;
 class DrmConnector;
@@ -37,63 +36,78 @@ public:
     ~DrmGpu();
 
     // getters
-    QVector<DrmOutput*> outputs() const {
+    QVector<DrmOutput *> outputs() const
+    {
         return m_outputs;
     }
 
-    int fd() const {
+    int fd() const
+    {
         return m_fd;
     }
 
-    int drmId() const {
+    int drmId() const
+    {
         return m_drmId;
     }
 
-    bool atomicModeSetting() const {
+    bool atomicModeSetting() const
+    {
         return m_atomicModeSetting;
     }
 
-    bool useEglStreams() const {
+    bool useEglStreams() const
+    {
         return m_useEglStreams;
     }
 
-    bool deleteBufferAfterPageFlip() const {
+    bool deleteBufferAfterPageFlip() const
+    {
         return m_deleteBufferAfterPageFlip;
     }
 
-    QByteArray devNode() const {
+    QByteArray devNode() const
+    {
         return m_devNode;
     }
 
-    gbm_device *gbmDevice() const {
+    gbm_device *gbmDevice() const
+    {
         return m_gbmDevice;
     }
 
-    EGLDisplay eglDisplay() const {
+    EGLDisplay eglDisplay() const
+    {
         return m_eglDisplay;
     }
 
-    AbstractEglBackend *eglBackend() {
+    AbstractEglBackend *eglBackend()
+    {
         return m_eglBackend;
     }
 
-    void setGbmDevice(gbm_device *d) {
+    void setGbmDevice(gbm_device *d)
+    {
         m_gbmDevice = d;
     }
 
-    void setEglDisplay(EGLDisplay display) {
+    void setEglDisplay(EGLDisplay display)
+    {
         m_eglDisplay = display;
     }
 
-    void setDeleteBufferAfterPageFlip(bool deleteBuffer) {
+    void setDeleteBufferAfterPageFlip(bool deleteBuffer)
+    {
         m_deleteBufferAfterPageFlip = deleteBuffer;
     }
 
-    DrmDumbBuffer *createBuffer(const QSize &size) const {
+    DrmDumbBuffer *createBuffer(const QSize &size) const
+    {
         return new DrmDumbBuffer(m_fd, size);
     }
 
-    void setEglBackend(AbstractEglBackend *eglBackend) {
+    void setEglBackend(AbstractEglBackend *eglBackend)
+    {
         m_eglBackend = eglBackend;
     }
 
@@ -110,7 +124,6 @@ Q_SIGNALS:
     void outputDisabled(DrmOutput *output);
 
 protected:
-
     friend class DrmBackend;
     void tryAMS();
     bool updateOutputs();
@@ -119,7 +132,7 @@ private:
     DrmPlane *getCompatiblePlane(DrmPlane::TypeIndex typeIndex, DrmCrtc *crtc);
     DrmOutput *findOutput(quint32 connector);
 
-    DrmBackend* const m_backend;
+    DrmBackend *const m_backend;
     AbstractEglBackend *m_eglBackend;
 
     const QByteArray m_devNode;
@@ -129,19 +142,19 @@ private:
     bool m_atomicModeSetting;
     bool m_useEglStreams;
     bool m_deleteBufferAfterPageFlip;
-    gbm_device* m_gbmDevice;
+    gbm_device *m_gbmDevice;
     EGLDisplay m_eglDisplay = EGL_NO_DISPLAY;
     clockid_t m_presentationClock;
 
     // all planes: primarys, cursors and overlays
-    QVector<DrmPlane*> m_planes;
-    QVector<DrmPlane*> m_unusedPlanes;
+    QVector<DrmPlane *> m_planes;
+    QVector<DrmPlane *> m_unusedPlanes;
     // crtcs
-    QVector<DrmCrtc*> m_crtcs;
+    QVector<DrmCrtc *> m_crtcs;
     // connectors
-    QVector<DrmConnector*> m_connectors;
+    QVector<DrmConnector *> m_connectors;
     // active output pipelines (planes + crtc + encoder + connector)
-    QVector<DrmOutput*> m_outputs;
+    QVector<DrmOutput *> m_outputs;
 };
 
 }

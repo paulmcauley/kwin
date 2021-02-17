@@ -11,14 +11,13 @@
 
 namespace KWin
 {
-
 VirtualKeyboardDBus::VirtualKeyboardDBus(QObject *parent)
     : QObject(parent)
 {
-    QDBusConnection::sessionBus().registerObject(QStringLiteral("/VirtualKeyboard"), this,
-                                                 QDBusConnection::ExportAllInvokables |
-                                                 QDBusConnection::ExportScriptableSignals |
-                                                 QDBusConnection::ExportAllSlots);
+    QDBusConnection::sessionBus().registerObject(QStringLiteral("/VirtualKeyboard"),
+                                                 this,
+                                                 QDBusConnection::ExportAllInvokables | QDBusConnection::ExportScriptableSignals
+                                                     | QDBusConnection::ExportAllSlots);
 }
 
 VirtualKeyboardDBus::~VirtualKeyboardDBus() = default;

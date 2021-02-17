@@ -14,11 +14,7 @@
 
 namespace KWin
 {
-
-DmabufBuffer::DmabufBuffer(const QVector<Plane> &planes,
-                           uint32_t format,
-                           const QSize &size,
-                           Flags flags)
+DmabufBuffer::DmabufBuffer(const QVector<Plane> &planes, uint32_t format, const QSize &size, Flags flags)
     : KWaylandServer::LinuxDmabufUnstableV1Buffer(format, size)
     , m_planes(planes)
     , m_format(format)
@@ -56,10 +52,7 @@ LinuxDmabuf::~LinuxDmabuf()
 using Plane = KWaylandServer::LinuxDmabufUnstableV1Interface::Plane;
 using Flags = KWaylandServer::LinuxDmabufUnstableV1Interface::Flags;
 
-KWaylandServer::LinuxDmabufUnstableV1Buffer* LinuxDmabuf::importBuffer(const QVector<Plane> &planes,
-                                                                         uint32_t format,
-                                                                         const QSize &size,
-                                                                         Flags flags)
+KWaylandServer::LinuxDmabufUnstableV1Buffer *LinuxDmabuf::importBuffer(const QVector<Plane> &planes, uint32_t format, const QSize &size, Flags flags)
 {
     Q_UNUSED(planes)
     Q_UNUSED(format)
@@ -69,7 +62,7 @@ KWaylandServer::LinuxDmabufUnstableV1Buffer* LinuxDmabuf::importBuffer(const QVe
     return nullptr;
 }
 
-void LinuxDmabuf::setSupportedFormatsAndModifiers(QHash<uint32_t, QSet<uint64_t> > &set)
+void LinuxDmabuf::setSupportedFormatsAndModifiers(QHash<uint32_t, QSet<uint64_t>> &set)
 {
     waylandServer()->linuxDmabuf()->setSupportedFormatsWithModifiers(set);
 }

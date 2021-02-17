@@ -10,18 +10,17 @@
 #ifndef KWIN_SCREENSHOT_H
 #define KWIN_SCREENSHOT_H
 
-#include <kwineffects.h>
-#include <QDBusContext>
 #include <QDBusConnection>
+#include <QDBusContext>
 #include <QDBusMessage>
 #include <QDBusUnixFileDescriptor>
-#include <QObject>
 #include <QImage>
+#include <QObject>
+#include <kwineffects.h>
 
 class ComparableQPoint;
 namespace KWin
 {
-
 /**
  * The screenshot effet allows to takes screenshot, by window, area, screen, etc...
  *
@@ -32,10 +31,7 @@ class ScreenShotEffect : public Effect, protected QDBusContext
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.kde.kwin.Screenshot")
 public:
-    enum ScreenShotType {
-        INCLUDE_DECORATION = 1 << 0,
-        INCLUDE_CURSOR = 1 << 1
-    };
+    enum ScreenShotType { INCLUDE_DECORATION = 1 << 0, INCLUDE_CURSOR = 1 << 1 };
     ScreenShotEffect();
     ~ScreenShotEffect() override;
 
@@ -43,7 +39,8 @@ public:
     void postPaintScreen() override;
     bool isActive() const override;
 
-    int requestedEffectChainPosition() const override {
+    int requestedEffectChainPosition() const override
+    {
         return 50;
     }
 
@@ -103,7 +100,8 @@ public Q_SLOTS:
      * @param captureCursor
      * @param shouldReturnNativeSize
      */
-    Q_SCRIPTABLE void screenshotScreens(QDBusUnixFileDescriptor fd, const QStringList &screensNames, bool captureCursor = false, bool shouldReturnNativeSize = false);
+    Q_SCRIPTABLE void
+    screenshotScreens(QDBusUnixFileDescriptor fd, const QStringList &screensNames, bool captureCursor = false, bool shouldReturnNativeSize = false);
     /**
      * Saves a screenshot of the screen identified by @p screen into a file and returns the path to the file.
      * Functionality requires hardware support, if not available a null string is returned.
@@ -141,19 +139,16 @@ Q_SIGNALS:
     Q_SCRIPTABLE void screenshotCreated(qulonglong handle);
 
 private Q_SLOTS:
-    void windowClosed( KWin::EffectWindow* w );
+    void windowClosed(KWin::EffectWindow *w);
 
 private:
-    void grabPointerImage(QImage& snapshot, int offsetx, int offsety);
+    void grabPointerImage(QImage &snapshot, int offsetx, int offsety);
     QImage blitScreenshot(const QRect &geometry, const qreal scale = 1.0);
     QString saveTempImage(const QImage &img);
     void sendReplyImage(const QImage &img);
     void sendReplyImages();
     void clearState();
-    enum class InfoMessageMode {
-        Window,
-        Screen
-    };
+    enum class InfoMessageMode { Window, Screen };
     void showInfoMessage(InfoMessageMode mode);
     void hideInfoMessage();
     bool isTakingScreenshot() const;
@@ -170,12 +165,7 @@ private:
     QList<QPoint> m_orderImg;
     bool m_captureCursor = false;
     bool m_nativeSize = false;
-    enum class WindowMode {
-        NoCapture,
-        Xpixmap,
-        File,
-        FileDescriptor
-    };
+    enum class WindowMode { NoCapture, Xpixmap, File, FileDescriptor };
     WindowMode m_windowMode = WindowMode::NoCapture;
     int m_fd = -1;
     qreal m_cachedScale;

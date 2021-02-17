@@ -17,10 +17,8 @@ class QTimer;
 
 namespace KWin
 {
-
 namespace Decoration
 {
-
 class X11Renderer : public Renderer
 {
     Q_OBJECT

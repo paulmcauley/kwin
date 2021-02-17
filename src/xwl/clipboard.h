@@ -20,7 +20,6 @@ namespace KWin
 {
 namespace Xwl
 {
-
 /**
  * Represents the X clipboard, which is on Wayland side just called
  * @e selection.

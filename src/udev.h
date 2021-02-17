@@ -8,11 +8,11 @@
 */
 #ifndef KWIN_UDEV_H
 #define KWIN_UDEV_H
-#include <memory>
 #include <kwin_export.h>
+#include <memory>
 
-#include <vector>
 #include <QVector>
+#include <vector>
 
 struct udev;
 struct udev_device;
@@ -34,10 +34,12 @@ public:
     const char *property(const char *key);
     bool hasProperty(const char *key, const char *value);
 
-    operator udev_device*() const {
+    operator udev_device *() const
+    {
         return m_device;
     }
-    operator udev_device*() {
+    operator udev_device *()
+    {
         return m_device;
     }
     typedef std::unique_ptr<UdevDevice> Ptr;
@@ -53,7 +55,8 @@ public:
     ~UdevMonitor();
 
     int fd() const;
-    bool isValid() const {
+    bool isValid() const
+    {
         return m_monitor != nullptr;
     }
     void filterSubsystemDevType(const char *subSystem, const char *devType = nullptr);
@@ -70,19 +73,23 @@ public:
     Udev();
     ~Udev();
 
-    bool isValid() const {
+    bool isValid() const
+    {
         return m_udev != nullptr;
     }
     std::vector<UdevDevice::Ptr> listGPUs();
     std::vector<UdevDevice::Ptr> listFramebuffers();
     UdevDevice::Ptr deviceFromSyspath(const char *syspath);
     UdevMonitor *monitor();
-    operator udev*() const {
+    operator udev *() const
+    {
         return m_udev;
     }
-    operator udev*() {
+    operator udev *()
+    {
         return m_udev;
     }
+
 private:
     struct udev *m_udev;
 };

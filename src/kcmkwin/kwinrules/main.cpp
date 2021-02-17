@@ -4,15 +4,15 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 
-#include <QCommandLineParser>
-#include <QApplication>
-#include <kconfig.h>
 #include <KLocalizedString>
+#include <QApplication>
+#include <QCommandLineParser>
+#include <kconfig.h>
 #include <kwindowsystem.h>
 
+#include "../../rules.h"
 #include "rulebooksettings.h"
 #include "rulesdialog.h"
-#include "../../rules.h"
 #include <QByteArray>
 
 #include <QDBusConnection>
@@ -25,7 +25,6 @@ Q_DECLARE_METATYPE(NET::WindowType)
 
 namespace KWin
 {
-
 static Rules *findRule(const QVector<Rules *> &rules, const QVariantMap &data, bool whole_app)
 {
     QByteArray wmclass_class = data.value("resourceClass").toByteArray().toLower();
@@ -34,7 +33,7 @@ static Rules *findRule(const QVector<Rules *> &rules, const QVariantMap &data, b
     NET::WindowType type = data.value("type").value<NET::WindowType>();
     QString title = data.value("caption").toString();
     QByteArray machine = data.value("clientMachine").toByteArray();
-    Rules* best_match = nullptr;
+    Rules *best_match = nullptr;
     int match_quality = 0;
     for (const auto rule : rules) {
         // try to find an exact match, i.e. not a generic rule
@@ -47,7 +46,7 @@ static Rules *findRule(const QVector<Rules *> &rules, const QVariantMap &data, b
         // from now on, it matches the app - now try to match for a specific window
         if (rule->wmclasscomplete) {
             quality += 1;
-            generic = false;  // this can be considered specific enough (old X apps)
+            generic = false; // this can be considered specific enough (old X apps)
         }
         if (!whole_app) {
             if (rule->windowrolematch != Rules::UnimportantMatch) {
@@ -60,24 +59,20 @@ static Rules *findRule(const QVector<Rules *> &rules, const QVariantMap &data, b
             }
             if (rule->types != NET::AllTypesMask) {
                 int bits = 0;
-                for (unsigned int bit = 1;
-                        bit < 1U << 31;
-                        bit <<= 1)
+                for (unsigned int bit = 1; bit < 1U << 31; bit <<= 1)
                     if (rule->types & bit)
                         ++bits;
                 if (bits == 1)
                     quality += 2;
             }
-            if (generic)   // ignore generic rules, use only the ones that are for this window
+            if (generic) // ignore generic rules, use only the ones that are for this window
                 continue;
         } else {
             if (rule->types == NET::AllTypesMask)
                 quality += 2;
         }
-        if (!rule->matchType(type)
-                || !rule->matchRole(role)
-                || !rule->matchTitle(title)
-                || !rule->matchClientMachine(machine, data.value("localhost").toBool()))
+        if (!rule->matchType(type) || !rule->matchRole(role) || !rule->matchTitle(title)
+            || !rule->matchClientMachine(machine, data.value("localhost").toBool()))
             continue;
         if (quality > match_quality) {
             best_match = rule;
@@ -86,7 +81,7 @@ static Rules *findRule(const QVector<Rules *> &rules, const QVariantMap &data, b
     }
     if (best_match != nullptr)
         return best_match;
-    Rules* ret = new Rules;
+    Rules *ret = new Rules;
     if (whole_app) {
         ret->description = i18n("Application settings for %1", QString::fromLatin1(wmclass_class));
         // TODO maybe exclude some types? If yes, then also exclude them above
@@ -112,13 +107,12 @@ static Rules *findRule(const QVector<Rules *> &rules, const QVariantMap &data, b
     if (type == NET::Unknown)
         ret->types = NET::NormalMask;
     else
-        ret->types = NET::WindowTypeMask( 1 << type); // convert type to its mask
+        ret->types = NET::WindowTypeMask(1 << type); // convert type to its mask
     ret->title = title; // set, but make unimportant
     ret->titlematch = Rules::UnimportantMatch;
     ret->clientmachine = machine; // set, but make unimportant
     ret->clientmachinematch = Rules::UnimportantMatch;
-    if (!role.isEmpty()
-            && role != "unknown" && role != "unnamed") { // Qt sets this if not specified
+    if (!role.isEmpty() && role != "unknown" && role != "unnamed") { // Qt sets this if not specified
         ret->windowrole = role;
         ret->windowrolematch = Rules::ExactMatch;
         if (wmclass_name == wmclass_class) {
@@ -162,7 +156,7 @@ static void edit(const QVariantMap &data, bool whole_app)
     if (whole_app)
         dlg.setWindowTitle(i18nc("Window caption for the application wide rules dialog", "Edit Application-Specific Settings"));
     // dlg.edit() creates new Rules instance if edited
-    Rules* edited_rule = dlg.edit(orig_rule, data, true);
+    Rules *edited_rule = dlg.edit(orig_rule, data, true);
     if (edited_rule == nullptr || edited_rule->isEmpty()) {
         rules.removeAll(orig_rule);
         delete orig_rule;
@@ -171,7 +165,7 @@ static void edit(const QVariantMap &data, bool whole_app)
     } else if (edited_rule != orig_rule) {
         int pos = rules.indexOf(orig_rule);
         if (pos != -1)
-            rules[ pos ] = edited_rule;
+            rules[pos] = edited_rule;
         else
             rules.prepend(edited_rule);
         delete orig_rule;
@@ -179,15 +173,14 @@ static void edit(const QVariantMap &data, bool whole_app)
     settings.setRules(rules);
     settings.save();
     // Send signal to all kwin instances
-    QDBusMessage message =
-        QDBusMessage::createSignal("/KWin", "org.kde.KWin", "reloadConfig");
+    QDBusMessage message = QDBusMessage::createSignal("/KWin", "org.kde.KWin", "reloadConfig");
     QDBusConnection::sessionBus().send(message);
     qApp->quit();
 }
 
 } // namespace
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
@@ -210,7 +203,6 @@ int main(int argc, char* argv[])
         whole_app = parser.isSet("whole-app");
     }
 
-
     if (uuid.isNull()) {
         printf("%s\n", qPrintable(i18n("This helper utility is not supposed to be called directly.")));
         return 1;
@@ -223,19 +215,15 @@ int main(int argc, char* argv[])
     QDBusPendingReply<QVariantMap> async = QDBusConnection::sessionBus().asyncCall(message);
 
     QDBusPendingCallWatcher *callWatcher = new QDBusPendingCallWatcher(async, &app);
-    QObject::connect(callWatcher, &QDBusPendingCallWatcher::finished, &app,
-        [&whole_app] (QDBusPendingCallWatcher *self) {
-            QDBusPendingReply<QVariantMap> reply = *self;
-            self->deleteLater();
-            if (!reply.isValid() || reply.value().isEmpty()) {
-                qApp->quit();
-                return;
-            }
-            KWin::edit(reply.value(), whole_app);
+    QObject::connect(callWatcher, &QDBusPendingCallWatcher::finished, &app, [&whole_app](QDBusPendingCallWatcher *self) {
+        QDBusPendingReply<QVariantMap> reply = *self;
+        self->deleteLater();
+        if (!reply.isValid() || reply.value().isEmpty()) {
+            qApp->quit();
+            return;
         }
-    );
-
-
+        KWin::edit(reply.value(), whole_app);
+    });
 
     return app.exec();
 }

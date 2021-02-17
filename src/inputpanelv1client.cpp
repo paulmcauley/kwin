@@ -8,11 +8,11 @@
 */
 
 #include "inputpanelv1client.h"
+#include "abstract_wayland_output.h"
 #include "deleted.h"
+#include "platform.h"
 #include "wayland_server.h"
 #include "workspace.h"
-#include "abstract_wayland_output.h"
-#include "platform.h"
 #include <KWaylandServer/output_interface.h>
 #include <KWaylandServer/seat_interface.h>
 #include <KWaylandServer/surface_interface.h>
@@ -22,7 +22,6 @@ using namespace KWaylandServer;
 
 namespace KWin
 {
-
 InputPanelV1Client::InputPanelV1Client(InputPanelSurfaceV1Interface *panelSurface)
     : WaylandClient(panelSurface->surface())
     , m_panelSurface(panelSurface)
@@ -62,27 +61,27 @@ void InputPanelV1Client::showTopLevel(OutputInterface *output, InputPanelSurface
 void KWin::InputPanelV1Client::reposition()
 {
     switch (m_mode) {
-        case Toplevel: {
-            if (m_output) {
-                const QSize panelSize = surface()->size();
-                if (!panelSize.isValid() || panelSize.isEmpty()) {
-                    return;
-                }
+    case Toplevel: {
+        if (m_output) {
+            const QSize panelSize = surface()->size();
+            if (!panelSize.isValid() || panelSize.isEmpty()) {
+                return;
+            }
 
-                const auto outputGeometry = m_output->geometry();
-                QRect geo(outputGeometry.topLeft(), panelSize);
-                geo.translate((outputGeometry.width() - panelSize.width())/2, outputGeometry.height() - panelSize.height());
-                updateGeometry(geo);
-            }
-        }   break;
-        case Overlay: {
-            auto textClient = waylandServer()->findClient(waylandServer()->seat()->focusedTextInputSurface());
-            auto textInput = waylandServer()->seat()->textInputV2();
-            if (textClient && textInput) {
-                const auto cursorRectangle = textInput->cursorRectangle();
-                updateGeometry({textClient->pos() + textClient->clientPos() + cursorRectangle.bottomLeft(), surface()->size()});
-            }
-        }   break;
+            const auto outputGeometry = m_output->geometry();
+            QRect geo(outputGeometry.topLeft(), panelSize);
+            geo.translate((outputGeometry.width() - panelSize.width()) / 2, outputGeometry.height() - panelSize.height());
+            updateGeometry(geo);
+        }
+    } break;
+    case Overlay: {
+        auto textClient = waylandServer()->findClient(waylandServer()->seat()->focusedTextInputSurface());
+        auto textInput = waylandServer()->seat()->textInputV2();
+        if (textClient && textInput) {
+            const auto cursorRectangle = textInput->cursorRectangle();
+            updateGeometry({textClient->pos() + textClient->clientPos() + cursorRectangle.bottomLeft(), surface()->size()});
+        }
+    } break;
     }
 }
 

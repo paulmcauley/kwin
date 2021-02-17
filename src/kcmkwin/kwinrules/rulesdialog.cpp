@@ -8,18 +8,16 @@
 #include "rulesdialog.h"
 
 #include <QDialogButtonBox>
-#include <QQuickItem>
-#include <QQuickView>
 #include <QLayout>
 #include <QPushButton>
+#include <QQuickItem>
+#include <QQuickView>
 
 #include <KLocalizedString>
 
-
 namespace KWin
 {
-
-RulesDialog::RulesDialog(QWidget* parent, const char* name)
+RulesDialog::RulesDialog(QWidget *parent, const char *name)
     : QDialog(parent)
     , m_rulesModel(new RulesModel(this))
 {
@@ -31,9 +29,8 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
 
     // Init RuleEditor QML QuickView
     QQuickView *quickView = new QQuickView();
-    quickView->setSource(QUrl::fromLocalFile(QStandardPaths::locate(
-        QStandardPaths::GenericDataLocation,
-        QStringLiteral("kpackage/kcms/kcm_kwinrules/contents/ui/RulesEditor.qml"))));
+    quickView->setSource(QUrl::fromLocalFile(
+        QStandardPaths::locate(QStandardPaths::GenericDataLocation, QStringLiteral("kpackage/kcms/kcm_kwinrules/contents/ui/RulesEditor.qml"))));
     quickView->setResizeMode(QQuickView::SizeRootObjectToView);
     quickView->rootObject()->setProperty("rulesModel", QVariant::fromValue(m_rulesModel));
 
@@ -49,7 +46,7 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
 
 // window is set only for Alt+F3/Window-specific settings, because the dialog
 // is then related to one specific window
-Rules* RulesDialog::edit(Rules* r, const QVariantMap& info, bool show_hints)
+Rules *RulesDialog::edit(Rules *r, const QVariantMap &info, bool show_hints)
 {
     Q_UNUSED(show_hints);
 

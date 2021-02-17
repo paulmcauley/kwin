@@ -14,7 +14,6 @@
 
 namespace KWin
 {
-
 VirtualOutput::VirtualOutput(VirtualBackend *parent)
     : AbstractWaylandOutput(parent)
     , m_backend(parent)
@@ -56,7 +55,9 @@ void VirtualOutput::init(const QPoint &logicalPosition, const QSize &pixelSize)
     initInterfaces(QByteArray("model_").append(QString::number(m_identifier)),
                    QByteArray("manufacturer_").append(QString::number(m_identifier)),
                    QByteArray("UUID_").append(QString::number(m_identifier)),
-                   pixelSize, { mode }, QByteArray("EDID_").append(QString::number(m_identifier)));
+                   pixelSize,
+                   {mode},
+                   QByteArray("EDID_").append(QString::number(m_identifier)));
     setGeometry(QRect(logicalPosition, pixelSize));
 }
 

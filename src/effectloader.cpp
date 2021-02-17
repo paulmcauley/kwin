@@ -9,25 +9,24 @@
 // own
 #include "effectloader.h"
 // KWin
-#include <config-kwin.h>
-#include <kwineffects.h>
 #include "effects/effect_builtins.h"
 #include "scripting/scriptedeffect.h"
 #include "utils.h"
+#include <config-kwin.h>
+#include <kwineffects.h>
 // KDE
 #include <KConfigGroup>
-#include <KPluginLoader>
 #include <KPackage/Package>
 #include <KPackage/PackageLoader>
+#include <KPluginLoader>
 // Qt
-#include <QtConcurrentRun>
 #include <QDebug>
 #include <QFutureWatcher>
 #include <QStringList>
+#include <QtConcurrentRun>
 
 namespace KWin
 {
-
 AbstractEffectLoader::AbstractEffectLoader(QObject *parent)
     : QObject(parent)
 {
@@ -151,17 +150,15 @@ bool BuiltInEffectLoader::loadEffect(const QString &name, BuiltInEffect effect, 
     }
     // insert in our loaded effects
     m_loadedEffects.insert(effect, e);
-    connect(e, &Effect::destroyed, this,
-        [this, effect]() {
-            m_loadedEffects.remove(effect);
-        }
-    );
+    connect(e, &Effect::destroyed, this, [this, effect]() {
+        m_loadedEffects.remove(effect);
+    });
     qCDebug(KWIN_CORE) << "Successfully loaded built-in effect: " << name;
     emit effectLoaded(e, name);
     return true;
 }
 
-QString BuiltInEffectLoader::internalName(const QString& name) const
+QString BuiltInEffectLoader::internalName(const QString &name) const
 {
     return name.toLower();
 }
@@ -240,11 +237,9 @@ bool ScriptedEffectLoader::loadEffect(const KPluginMetaData &effect, LoadEffectF
         qCDebug(KWIN_CORE) << "Could not initialize scripted effect: " << name;
         return false;
     }
-    connect(e, &ScriptedEffect::destroyed, this,
-        [this, name]() {
-            m_loadedEffects.removeAll(name);
-        }
-    );
+    connect(e, &ScriptedEffect::destroyed, this, [this, name]() {
+        m_loadedEffects.removeAll(name);
+    });
 
     qCDebug(KWIN_CORE) << "Successfully loaded scripted effect: " << name;
     emit effectLoaded(e, name);
@@ -259,19 +254,22 @@ void ScriptedEffectLoader::queryAndLoadAll()
     }
     // perform querying for the services in a thread
     QFutureWatcher<QList<KPluginMetaData>> *watcher = new QFutureWatcher<QList<KPluginMetaData>>(this);
-    m_queryConnection = connect(watcher, &QFutureWatcher<QList<KPluginMetaData>>::finished, this,
-        [this, watcher]() {
-            const auto effects = watcher->result();
-            for (auto effect : effects) {
-                const LoadEffectFlags flags = readConfig(effect.pluginId(), effect.isEnabledByDefault());
-                if (flags.testFlag(LoadEffectFlag::Load)) {
-                    m_queue->enqueue(qMakePair(effect, flags));
-                }
+
+    // TODO(janet): potentially bump up clang-format to 120? maybe if enough other sections look better at 120cols
+    // clang-format off
+    m_queryConnection = connect(watcher, &QFutureWatcher<QList<KPluginMetaData>>::finished, this, [this, watcher]() {
+        const auto effects = watcher->result();
+        for (auto effect : effects) {
+            const LoadEffectFlags flags = readConfig(effect.pluginId(), effect.isEnabledByDefault());
+            if (flags.testFlag(LoadEffectFlag::Load)) {
+                m_queue->enqueue(qMakePair(effect, flags));
             }
-            watcher->deleteLater();
-            m_queryConnection = QMetaObject::Connection();
-        },
-        Qt::QueuedConnection);
+        }
+        watcher->deleteLater();
+        m_queryConnection = QMetaObject::Connection();
+    }, Qt::QueuedConnection);
+    // clang-format on
+
     watcher->setFuture(QtConcurrent::run(this, &ScriptedEffectLoader::findAllEffects));
 }
 
@@ -282,17 +280,14 @@ QList<KPluginMetaData> ScriptedEffectLoader::findAllEffects() const
 
 KPluginMetaData ScriptedEffectLoader::findEffect(const QString &name) const
 {
-    const auto plugins = KPackage::PackageLoader::self()->findPackages(s_serviceType, QStringLiteral("kwin/effects"),
-        [name] (const KPluginMetaData &metadata) {
-            return metadata.pluginId().compare(name, Qt::CaseInsensitive) == 0;
-        }
-    );
+    const auto plugins = KPackage::PackageLoader::self()->findPackages(s_serviceType, QStringLiteral("kwin/effects"), [name](const KPluginMetaData &metadata) {
+        return metadata.pluginId().compare(name, Qt::CaseInsensitive) == 0;
+    });
     if (!plugins.isEmpty()) {
         return plugins.first();
     }
     return KPluginMetaData();
 }
-
 
 void ScriptedEffectLoader::clear()
 {
@@ -303,7 +298,7 @@ void ScriptedEffectLoader::clear()
 
 PluginEffectLoader::PluginEffectLoader(QObject *parent)
     : AbstractEffectLoader(parent)
-    , m_queue(new EffectLoadQueue< PluginEffectLoader, KPluginMetaData>(this))
+    , m_queue(new EffectLoadQueue<PluginEffectLoader, KPluginMetaData>(this))
     , m_pluginSubDirectory(QStringLiteral("kwin/effects/plugins/"))
 {
 }
@@ -320,11 +315,9 @@ bool PluginEffectLoader::hasEffect(const QString &name) const
 
 KPluginMetaData PluginEffectLoader::findEffect(const QString &name) const
 {
-    const auto plugins = KPluginLoader::findPlugins(m_pluginSubDirectory,
-        [name] (const KPluginMetaData &data) {
-            return data.pluginId().compare(name, Qt::CaseInsensitive) == 0 && data.serviceTypes().contains(s_serviceType);
-        }
-    );
+    const auto plugins = KPluginLoader::findPlugins(m_pluginSubDirectory, [name](const KPluginMetaData &data) {
+        return data.pluginId().compare(name, Qt::CaseInsensitive) == 0 && data.serviceTypes().contains(s_serviceType);
+    });
     if (plugins.isEmpty()) {
         return KPluginMetaData();
     }
@@ -354,7 +347,7 @@ EffectPluginFactory *PluginEffectLoader::factory(const KPluginMetaData &info) co
         qCDebug(KWIN_CORE) << "Did not get KPluginFactory for " << info.pluginId();
         return nullptr;
     }
-    return dynamic_cast< EffectPluginFactory* >(factory);
+    return dynamic_cast<EffectPluginFactory *>(factory);
 }
 
 QStringList PluginEffectLoader::listOfKnownEffects() const
@@ -421,11 +414,9 @@ bool PluginEffectLoader::loadEffect(const KPluginMetaData &info, LoadEffectFlags
     }
     // insert in our loaded effects
     m_loadedEffects << name;
-    connect(e, &Effect::destroyed, this,
-        [this, name]() {
-            m_loadedEffects.removeAll(name);
-        }
-    );
+    connect(e, &Effect::destroyed, this, [this, name]() {
+        m_loadedEffects.removeAll(name);
+    });
     qCDebug(KWIN_CORE) << "Successfully loaded plugin effect: " << name;
     emit effectLoaded(e, name);
     return true;
@@ -438,7 +429,10 @@ void PluginEffectLoader::queryAndLoadAll()
     }
     // perform querying for the services in a thread
     QFutureWatcher<QVector<KPluginMetaData>> *watcher = new QFutureWatcher<QVector<KPluginMetaData>>(this);
-    m_queryConnection = connect(watcher, &QFutureWatcher<QVector<KPluginMetaData>>::finished, this,
+    m_queryConnection = connect(
+        watcher,
+        &QFutureWatcher<QVector<KPluginMetaData>>::finished,
+        this,
         [this, watcher]() {
             const auto effects = watcher->result();
             for (const auto &effect : effects) {
@@ -456,7 +450,9 @@ void PluginEffectLoader::queryAndLoadAll()
 
 QVector<KPluginMetaData> PluginEffectLoader::findAllEffects() const
 {
-    return KPluginLoader::findPlugins(m_pluginSubDirectory, [] (const KPluginMetaData &data) { return data.serviceTypes().contains(s_serviceType); });
+    return KPluginLoader::findPlugins(m_pluginSubDirectory, [](const KPluginMetaData &data) {
+        return data.serviceTypes().contains(s_serviceType);
+    });
 }
 
 void PluginEffectLoader::setPluginSubDirectory(const QString &directory)
@@ -474,9 +470,7 @@ void PluginEffectLoader::clear()
 EffectLoader::EffectLoader(QObject *parent)
     : AbstractEffectLoader(parent)
 {
-    m_loaders << new BuiltInEffectLoader(this)
-              << new ScriptedEffectLoader(this)
-              << new PluginEffectLoader(this);
+    m_loaders << new BuiltInEffectLoader(this) << new ScriptedEffectLoader(this) << new PluginEffectLoader(this);
     for (auto it = m_loaders.constBegin(); it != m_loaders.constEnd(); ++it) {
         connect(*it, &AbstractEffectLoader::effectLoaded, this, &AbstractEffectLoader::effectLoaded);
     }
@@ -486,15 +480,15 @@ EffectLoader::~EffectLoader()
 {
 }
 
-#define BOOL_MERGE( method ) \
-    bool EffectLoader::method(const QString &name) const \
-    { \
-        for (auto it = m_loaders.constBegin(); it != m_loaders.constEnd(); ++it) { \
-            if ((*it)->method(name)) { \
-                return true; \
-            } \
-        } \
-        return false; \
+#define BOOL_MERGE(method)                                                                                                                                     \
+    bool EffectLoader::method(const QString &name) const                                                                                                       \
+    {                                                                                                                                                          \
+        for (auto it = m_loaders.constBegin(); it != m_loaders.constEnd(); ++it) {                                                                             \
+            if ((*it)->method(name)) {                                                                                                                         \
+                return true;                                                                                                                                   \
+            }                                                                                                                                                  \
+        }                                                                                                                                                      \
+        return false;                                                                                                                                          \
     }
 
 BOOL_MERGE(hasEffect)

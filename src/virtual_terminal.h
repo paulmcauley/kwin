@@ -16,7 +16,6 @@ class QSocketNotifier;
 
 namespace KWin
 {
-
 class KWIN_EXPORT VirtualTerminal : public QObject
 {
     Q_OBJECT
@@ -25,7 +24,8 @@ public:
 
     void init();
     void activate(int vt);
-    bool isActive() const {
+    bool isActive() const
+    {
         return m_active;
     }
 

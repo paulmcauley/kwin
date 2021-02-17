@@ -16,12 +16,10 @@
 
 namespace KWin
 {
-
 class Deleted;
 
 namespace Decoration
 {
-
 class DecoratedClientImpl;
 
 class KWIN_EXPORT Renderer : public QObject
@@ -51,14 +49,17 @@ protected:
 
     virtual void render() = 0;
 
-    DecoratedClientImpl *client() {
+    DecoratedClientImpl *client()
+    {
         return m_client;
     }
 
-    bool areImageSizesDirty() const {
+    bool areImageSizesDirty() const
+    {
         return m_imageSizesDirty;
     }
-    void resetImageSizesDirty() {
+    void resetImageSizesDirty()
+    {
         m_imageSizesDirty = false;
     }
     QImage renderToImage(const QRect &geo);

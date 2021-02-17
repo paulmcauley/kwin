@@ -17,7 +17,6 @@ struct gbm_surface;
 
 namespace KWin
 {
-
 class GbmSurface
 {
 public:
@@ -27,11 +26,13 @@ public:
     gbm_bo *lockFrontBuffer();
     void releaseBuffer(gbm_bo *bo);
 
-    operator bool() const {
+    operator bool() const
+    {
         return m_surface != nullptr;
     }
 
-    gbm_surface* surface() const {
+    gbm_surface *surface() const
+    {
         return m_surface;
     }
 

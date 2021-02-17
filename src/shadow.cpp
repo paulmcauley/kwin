@@ -9,8 +9,8 @@
 */
 #include "shadow.h"
 // kwin
-#include "atoms.h"
 #include "abstract_client.h"
+#include "atoms.h"
 #include "composite.h"
 #include "effects.h"
 #include "internal_client.h"
@@ -30,7 +30,6 @@ Q_DECLARE_METATYPE(QMargins)
 
 namespace KWin
 {
-
 Shadow::Shadow(Toplevel *toplevel)
     : m_topLevel(toplevel)
     , m_cachedSize(toplevel->size())
@@ -86,7 +85,7 @@ Shadow *Shadow::createShadowFromX11(Toplevel *toplevel)
 
 Shadow *Shadow::createShadowFromDecoration(Toplevel *toplevel)
 {
-    AbstractClient *c = qobject_cast<AbstractClient*>(toplevel);
+    AbstractClient *c = qobject_cast<AbstractClient *>(toplevel);
     if (!c) {
         return nullptr;
     }
@@ -137,15 +136,15 @@ Shadow *Shadow::createShadowFromInternalWindow(Toplevel *toplevel)
     return shadow;
 }
 
-QVector< uint32_t > Shadow::readX11ShadowProperty(xcb_window_t id)
+QVector<uint32_t> Shadow::readX11ShadowProperty(xcb_window_t id)
 {
     QVector<uint32_t> ret;
     if (id != XCB_WINDOW_NONE) {
         Xcb::Property property(false, id, atoms->kde_net_wm_shadow, XCB_ATOM_CARDINAL, 0, 12);
-        uint32_t *shadow = property.value<uint32_t*>();
+        uint32_t *shadow = property.value<uint32_t *>();
         if (shadow) {
             ret.reserve(12);
-            for (int i=0; i<12; ++i) {
+            for (int i = 0; i < 12; ++i) {
                 ret << shadow[i];
             }
         }
@@ -153,7 +152,7 @@ QVector< uint32_t > Shadow::readX11ShadowProperty(xcb_window_t id)
     return ret;
 }
 
-bool Shadow::init(const QVector< uint32_t > &data)
+bool Shadow::init(const QVector<uint32_t> &data)
 {
     QVector<Xcb::WindowGeometry> pixmapGeometries(ShadowElementsCount);
     QVector<xcb_get_image_cookie_t> getImageCookies(ShadowElementsCount);
@@ -172,13 +171,12 @@ bool Shadow::init(const QVector< uint32_t > &data)
             discardReplies(0);
             return false;
         }
-        getImageCookies[i] = xcb_get_image_unchecked(c, XCB_IMAGE_FORMAT_Z_PIXMAP, data[i],
-                                                     0, 0, geo->width, geo->height, ~0);
+        getImageCookies[i] = xcb_get_image_unchecked(c, XCB_IMAGE_FORMAT_Z_PIXMAP, data[i], 0, 0, geo->width, geo->height, ~0);
     }
     for (int i = 0; i < ShadowElementsCount; ++i) {
         auto *reply = xcb_get_image_reply(c, getImageCookies.at(i), nullptr);
         if (!reply) {
-            discardReplies(i+1);
+            discardReplies(i + 1);
             return false;
         }
         auto &geo = pixmapGeometries[i];
@@ -187,9 +185,9 @@ bool Shadow::init(const QVector< uint32_t > &data)
         free(reply);
     }
     m_topOffset = data[ShadowElementsCount];
-    m_rightOffset = data[ShadowElementsCount+1];
-    m_bottomOffset = data[ShadowElementsCount+2];
-    m_leftOffset = data[ShadowElementsCount+3];
+    m_rightOffset = data[ShadowElementsCount + 1];
+    m_bottomOffset = data[ShadowElementsCount + 2];
+    m_leftOffset = data[ShadowElementsCount + 3];
     updateShadowRegion();
     if (!prepareBackend()) {
         return false;
@@ -203,8 +201,8 @@ bool Shadow::init(KDecoration2::Decoration *decoration)
     if (m_decorationShadow) {
         // disconnect previous connections
         disconnect(m_decorationShadow.data(), &KDecoration2::DecorationShadow::innerShadowRectChanged, m_topLevel, &Toplevel::updateShadow);
-        disconnect(m_decorationShadow.data(), &KDecoration2::DecorationShadow::shadowChanged,        m_topLevel, &Toplevel::updateShadow);
-        disconnect(m_decorationShadow.data(), &KDecoration2::DecorationShadow::paddingChanged,       m_topLevel, &Toplevel::updateShadow);
+        disconnect(m_decorationShadow.data(), &KDecoration2::DecorationShadow::shadowChanged, m_topLevel, &Toplevel::updateShadow);
+        disconnect(m_decorationShadow.data(), &KDecoration2::DecorationShadow::paddingChanged, m_topLevel, &Toplevel::updateShadow);
     }
     m_decorationShadow = decoration->shadow();
     if (!m_decorationShadow) {
@@ -212,14 +210,14 @@ bool Shadow::init(KDecoration2::Decoration *decoration)
     }
     // setup connections - all just mapped to recreate
     connect(m_decorationShadow.data(), &KDecoration2::DecorationShadow::innerShadowRectChanged, m_topLevel, &Toplevel::updateShadow);
-    connect(m_decorationShadow.data(), &KDecoration2::DecorationShadow::shadowChanged,        m_topLevel, &Toplevel::updateShadow);
-    connect(m_decorationShadow.data(), &KDecoration2::DecorationShadow::paddingChanged,       m_topLevel, &Toplevel::updateShadow);
+    connect(m_decorationShadow.data(), &KDecoration2::DecorationShadow::shadowChanged, m_topLevel, &Toplevel::updateShadow);
+    connect(m_decorationShadow.data(), &KDecoration2::DecorationShadow::paddingChanged, m_topLevel, &Toplevel::updateShadow);
 
     const QMargins &p = m_decorationShadow->padding();
-    m_topOffset    = p.top();
-    m_rightOffset  = p.right();
+    m_topOffset = p.top();
+    m_rightOffset = p.right();
     m_bottomOffset = p.bottom();
-    m_leftOffset   = p.left();
+    m_leftOffset = p.left();
     updateShadowRegion();
     if (!prepareBackend()) {
         return false;
@@ -228,7 +226,7 @@ bool Shadow::init(KDecoration2::Decoration *decoration)
     return true;
 }
 
-bool Shadow::init(const QPointer< KWaylandServer::ShadowInterface > &shadow)
+bool Shadow::init(const QPointer<KWaylandServer::ShadowInterface> &shadow)
 {
     if (!shadow) {
         return false;
@@ -244,10 +242,10 @@ bool Shadow::init(const QPointer< KWaylandServer::ShadowInterface > &shadow)
     m_shadowElements[ShadowElementTopLeft] = shadow->topLeft() ? QPixmap::fromImage(shadow->topLeft()->data().copy()) : QPixmap();
 
     const QMarginsF &p = shadow->offset();
-    m_topOffset    = p.top();
-    m_rightOffset  = p.right();
+    m_topOffset = p.top();
+    m_rightOffset = p.right();
     m_bottomOffset = p.bottom();
-    m_leftOffset   = p.left();
+    m_leftOffset = p.left();
     updateShadowRegion();
     if (!prepareBackend()) {
         return false;
@@ -301,10 +299,10 @@ bool Shadow::init(const QWindow *window)
 
 void Shadow::updateShadowRegion()
 {
-    const QRect top(0, - m_topOffset, m_topLevel->width(), m_topOffset);
-    const QRect right(m_topLevel->width(), - m_topOffset, m_rightOffset, m_topLevel->height() + m_topOffset + m_bottomOffset);
+    const QRect top(0, -m_topOffset, m_topLevel->width(), m_topOffset);
+    const QRect right(m_topLevel->width(), -m_topOffset, m_rightOffset, m_topLevel->height() + m_topOffset + m_bottomOffset);
     const QRect bottom(0, m_topLevel->height(), m_topLevel->width(), m_bottomOffset);
-    const QRect left(- m_leftOffset, - m_topOffset, m_leftOffset, m_topLevel->height() + m_topOffset + m_bottomOffset);
+    const QRect left(-m_leftOffset, -m_topOffset, m_leftOffset, m_topLevel->height() + m_topOffset + m_bottomOffset);
     m_shadowRegion = QRegion(top).united(right).united(bottom).united(left);
 }
 
@@ -320,10 +318,8 @@ void Shadow::buildQuads()
     const QSize bottomLeft(m_shadowElements[ShadowElementBottomLeft].size());
     const QSize left(m_shadowElements[ShadowElementLeft].size());
     const QSize topLeft(m_shadowElements[ShadowElementTopLeft].size());
-    if ((left.width() - m_leftOffset > m_topLevel->width()) ||
-        (right.width() - m_rightOffset > m_topLevel->width()) ||
-        (top.height() - m_topOffset > m_topLevel->height()) ||
-        (bottom.height() - m_bottomOffset > m_topLevel->height())) {
+    if ((left.width() - m_leftOffset > m_topLevel->width()) || (right.width() - m_rightOffset > m_topLevel->width())
+        || (top.height() - m_topOffset > m_topLevel->height()) || (bottom.height() - m_bottomOffset > m_topLevel->height())) {
         // if our shadow is bigger than the window, we don't render the shadow
         m_shadowRegion = QRegion();
         return;
@@ -332,59 +328,59 @@ void Shadow::buildQuads()
     const QRect outerRect(QPoint(-m_leftOffset, -m_topOffset), QPoint(m_topLevel->width() + m_rightOffset, m_topLevel->height() + m_bottomOffset));
 
     WindowQuad topLeftQuad(WindowQuadShadowTopLeft);
-    topLeftQuad[ 0 ] = WindowVertex(outerRect.x(),                      outerRect.y(), 0.0, 0.0);
-    topLeftQuad[ 1 ] = WindowVertex(outerRect.x() + topLeft.width(),    outerRect.y(), 1.0, 0.0);
-    topLeftQuad[ 2 ] = WindowVertex(outerRect.x() + topLeft.width(),    outerRect.y() + topLeft.height(), 1.0, 1.0);
-    topLeftQuad[ 3 ] = WindowVertex(outerRect.x(),                      outerRect.y() + topLeft.height(), 0.0, 1.0);
+    topLeftQuad[0] = WindowVertex(outerRect.x(), outerRect.y(), 0.0, 0.0);
+    topLeftQuad[1] = WindowVertex(outerRect.x() + topLeft.width(), outerRect.y(), 1.0, 0.0);
+    topLeftQuad[2] = WindowVertex(outerRect.x() + topLeft.width(), outerRect.y() + topLeft.height(), 1.0, 1.0);
+    topLeftQuad[3] = WindowVertex(outerRect.x(), outerRect.y() + topLeft.height(), 0.0, 1.0);
     m_shadowQuads.append(topLeftQuad);
 
     WindowQuad topQuad(WindowQuadShadowTop);
-    topQuad[ 0 ] = WindowVertex(outerRect.x() + topLeft.width(),        outerRect.y(), 0.0, 0.0);
-    topQuad[ 1 ] = WindowVertex(outerRect.right() - topRight.width(),   outerRect.y(), 1.0, 0.0);
-    topQuad[ 2 ] = WindowVertex(outerRect.right() - topRight.width(),   outerRect.y() + top.height(), 1.0, 1.0);
-    topQuad[ 3 ] = WindowVertex(outerRect.x() + topLeft.width(),        outerRect.y() + top.height(), 0.0, 1.0);
+    topQuad[0] = WindowVertex(outerRect.x() + topLeft.width(), outerRect.y(), 0.0, 0.0);
+    topQuad[1] = WindowVertex(outerRect.right() - topRight.width(), outerRect.y(), 1.0, 0.0);
+    topQuad[2] = WindowVertex(outerRect.right() - topRight.width(), outerRect.y() + top.height(), 1.0, 1.0);
+    topQuad[3] = WindowVertex(outerRect.x() + topLeft.width(), outerRect.y() + top.height(), 0.0, 1.0);
     m_shadowQuads.append(topQuad);
 
     WindowQuad topRightQuad(WindowQuadShadowTopRight);
-    topRightQuad[ 0 ] = WindowVertex(outerRect.right() - topRight.width(),  outerRect.y(), 0.0, 0.0);
-    topRightQuad[ 1 ] = WindowVertex(outerRect.right(),                     outerRect.y(), 1.0, 0.0);
-    topRightQuad[ 2 ] = WindowVertex(outerRect.right(),                     outerRect.y() + topRight.height(), 1.0, 1.0);
-    topRightQuad[ 3 ] = WindowVertex(outerRect.right() - topRight.width(),  outerRect.y() + topRight.height(), 0.0, 1.0);
+    topRightQuad[0] = WindowVertex(outerRect.right() - topRight.width(), outerRect.y(), 0.0, 0.0);
+    topRightQuad[1] = WindowVertex(outerRect.right(), outerRect.y(), 1.0, 0.0);
+    topRightQuad[2] = WindowVertex(outerRect.right(), outerRect.y() + topRight.height(), 1.0, 1.0);
+    topRightQuad[3] = WindowVertex(outerRect.right() - topRight.width(), outerRect.y() + topRight.height(), 0.0, 1.0);
     m_shadowQuads.append(topRightQuad);
 
     WindowQuad rightQuad(WindowQuadShadowRight);
-    rightQuad[ 0 ] = WindowVertex(outerRect.right() - right.width(),    outerRect.y() + topRight.height(), 0.0, 0.0);
-    rightQuad[ 1 ] = WindowVertex(outerRect.right(),                    outerRect.y() + topRight.height(), 1.0, 0.0);
-    rightQuad[ 2 ] = WindowVertex(outerRect.right(),                    outerRect.bottom() - bottomRight.height(), 1.0, 1.0);
-    rightQuad[ 3 ] = WindowVertex(outerRect.right() - right.width(),    outerRect.bottom() - bottomRight.height(), 0.0, 1.0);
+    rightQuad[0] = WindowVertex(outerRect.right() - right.width(), outerRect.y() + topRight.height(), 0.0, 0.0);
+    rightQuad[1] = WindowVertex(outerRect.right(), outerRect.y() + topRight.height(), 1.0, 0.0);
+    rightQuad[2] = WindowVertex(outerRect.right(), outerRect.bottom() - bottomRight.height(), 1.0, 1.0);
+    rightQuad[3] = WindowVertex(outerRect.right() - right.width(), outerRect.bottom() - bottomRight.height(), 0.0, 1.0);
     m_shadowQuads.append(rightQuad);
 
     WindowQuad bottomRightQuad(WindowQuadShadowBottomRight);
-    bottomRightQuad[ 0 ] = WindowVertex(outerRect.right() - bottomRight.width(),    outerRect.bottom() - bottomRight.height(), 0.0, 0.0);
-    bottomRightQuad[ 1 ] = WindowVertex(outerRect.right(),                          outerRect.bottom() - bottomRight.height(), 1.0, 0.0);
-    bottomRightQuad[ 2 ] = WindowVertex(outerRect.right(),                          outerRect.bottom(), 1.0, 1.0);
-    bottomRightQuad[ 3 ] = WindowVertex(outerRect.right() - bottomRight.width(),    outerRect.bottom(), 0.0, 1.0);
+    bottomRightQuad[0] = WindowVertex(outerRect.right() - bottomRight.width(), outerRect.bottom() - bottomRight.height(), 0.0, 0.0);
+    bottomRightQuad[1] = WindowVertex(outerRect.right(), outerRect.bottom() - bottomRight.height(), 1.0, 0.0);
+    bottomRightQuad[2] = WindowVertex(outerRect.right(), outerRect.bottom(), 1.0, 1.0);
+    bottomRightQuad[3] = WindowVertex(outerRect.right() - bottomRight.width(), outerRect.bottom(), 0.0, 1.0);
     m_shadowQuads.append(bottomRightQuad);
 
     WindowQuad bottomQuad(WindowQuadShadowBottom);
-    bottomQuad[ 0 ] = WindowVertex(outerRect.x() + bottomLeft.width(),      outerRect.bottom() - bottom.height(), 0.0, 0.0);
-    bottomQuad[ 1 ] = WindowVertex(outerRect.right() - bottomRight.width(), outerRect.bottom() - bottom.height(), 1.0, 0.0);
-    bottomQuad[ 2 ] = WindowVertex(outerRect.right() - bottomRight.width(), outerRect.bottom(), 1.0, 1.0);
-    bottomQuad[ 3 ] = WindowVertex(outerRect.x() + bottomLeft.width(),      outerRect.bottom(), 0.0, 1.0);
+    bottomQuad[0] = WindowVertex(outerRect.x() + bottomLeft.width(), outerRect.bottom() - bottom.height(), 0.0, 0.0);
+    bottomQuad[1] = WindowVertex(outerRect.right() - bottomRight.width(), outerRect.bottom() - bottom.height(), 1.0, 0.0);
+    bottomQuad[2] = WindowVertex(outerRect.right() - bottomRight.width(), outerRect.bottom(), 1.0, 1.0);
+    bottomQuad[3] = WindowVertex(outerRect.x() + bottomLeft.width(), outerRect.bottom(), 0.0, 1.0);
     m_shadowQuads.append(bottomQuad);
 
     WindowQuad bottomLeftQuad(WindowQuadShadowBottomLeft);
-    bottomLeftQuad[ 0 ] = WindowVertex(outerRect.x(),                       outerRect.bottom() - bottomLeft.height(), 0.0, 0.0);
-    bottomLeftQuad[ 1 ] = WindowVertex(outerRect.x() + bottomLeft.width(),  outerRect.bottom() - bottomLeft.height(), 1.0, 0.0);
-    bottomLeftQuad[ 2 ] = WindowVertex(outerRect.x() + bottomLeft.width(),  outerRect.bottom(), 1.0, 1.0);
-    bottomLeftQuad[ 3 ] = WindowVertex(outerRect.x(),                       outerRect.bottom(), 0.0, 1.0);
+    bottomLeftQuad[0] = WindowVertex(outerRect.x(), outerRect.bottom() - bottomLeft.height(), 0.0, 0.0);
+    bottomLeftQuad[1] = WindowVertex(outerRect.x() + bottomLeft.width(), outerRect.bottom() - bottomLeft.height(), 1.0, 0.0);
+    bottomLeftQuad[2] = WindowVertex(outerRect.x() + bottomLeft.width(), outerRect.bottom(), 1.0, 1.0);
+    bottomLeftQuad[3] = WindowVertex(outerRect.x(), outerRect.bottom(), 0.0, 1.0);
     m_shadowQuads.append(bottomLeftQuad);
 
     WindowQuad leftQuad(WindowQuadShadowLeft);
-    leftQuad[ 0 ] = WindowVertex(outerRect.x(),                 outerRect.y() + topLeft.height(), 0.0, 0.0);
-    leftQuad[ 1 ] = WindowVertex(outerRect.x() + left.width(),  outerRect.y() + topLeft.height(), 1.0, 0.0);
-    leftQuad[ 2 ] = WindowVertex(outerRect.x() + left.width(),  outerRect.bottom() - bottomLeft.height(), 1.0, 1.0);
-    leftQuad[ 3 ] = WindowVertex(outerRect.x(),                 outerRect.bottom() - bottomLeft.height(), 0.0, 1.0);
+    leftQuad[0] = WindowVertex(outerRect.x(), outerRect.y() + topLeft.height(), 0.0, 0.0);
+    leftQuad[1] = WindowVertex(outerRect.x() + left.width(), outerRect.y() + topLeft.height(), 1.0, 0.0);
+    leftQuad[2] = WindowVertex(outerRect.x() + left.width(), outerRect.bottom() - bottomLeft.height(), 1.0, 1.0);
+    leftQuad[3] = WindowVertex(outerRect.x(), outerRect.bottom() - bottomLeft.height(), 0.0, 1.0);
     m_shadowQuads.append(leftQuad);
 }
 
@@ -395,7 +391,7 @@ bool Shadow::updateShadow()
     }
 
     if (m_decorationShadow) {
-        if (AbstractClient *c = qobject_cast<AbstractClient*>(m_topLevel)) {
+        if (AbstractClient *c = qobject_cast<AbstractClient *>(m_topLevel)) {
             if (c->decoration()) {
                 if (init(c->decoration())) {
                     return true;

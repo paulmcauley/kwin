@@ -19,7 +19,6 @@
 
 namespace KWin
 {
-
 CubeSlideEffect::CubeSlideEffect()
     : stickyPainting(false)
     , lastPresentTime(std::chrono::milliseconds::zero())
@@ -28,18 +27,12 @@ CubeSlideEffect::CubeSlideEffect()
     , progressRestriction(0.0f)
 {
     initConfig<CubeSlideConfig>();
-    connect(effects, &EffectsHandler::windowAdded,
-            this, &CubeSlideEffect::slotWindowAdded);
-    connect(effects, &EffectsHandler::windowDeleted,
-            this, &CubeSlideEffect::slotWindowDeleted);
-    connect(effects, QOverload<int,int,EffectWindow *>::of(&EffectsHandler::desktopChanged),
-            this, &CubeSlideEffect::slotDesktopChanged);
-    connect(effects, &EffectsHandler::windowStepUserMovedResized,
-            this, &CubeSlideEffect::slotWindowStepUserMovedResized);
-    connect(effects, &EffectsHandler::windowFinishUserMovedResized,
-            this, &CubeSlideEffect::slotWindowFinishUserMovedResized);
-    connect(effects, &EffectsHandler::numberDesktopsChanged,
-            this, &CubeSlideEffect::slotNumberDesktopsChanged);
+    connect(effects, &EffectsHandler::windowAdded, this, &CubeSlideEffect::slotWindowAdded);
+    connect(effects, &EffectsHandler::windowDeleted, this, &CubeSlideEffect::slotWindowDeleted);
+    connect(effects, QOverload<int, int, EffectWindow *>::of(&EffectsHandler::desktopChanged), this, &CubeSlideEffect::slotDesktopChanged);
+    connect(effects, &EffectsHandler::windowStepUserMovedResized, this, &CubeSlideEffect::slotWindowStepUserMovedResized);
+    connect(effects, &EffectsHandler::windowFinishUserMovedResized, this, &CubeSlideEffect::slotWindowFinishUserMovedResized);
+    connect(effects, &EffectsHandler::numberDesktopsChanged, this, &CubeSlideEffect::slotNumberDesktopsChanged);
     reconfigure(ReconfigureAll);
 }
 
@@ -65,7 +58,7 @@ void CubeSlideEffect::reconfigure(ReconfigureFlags)
     useWindowMoving = CubeSlideConfig::useWindowMoving();
 }
 
-void CubeSlideEffect::prePaintScreen(ScreenPrePaintData& data, std::chrono::milliseconds presentTime)
+void CubeSlideEffect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime)
 {
     std::chrono::milliseconds delta = std::chrono::milliseconds::zero();
     if (lastPresentTime.count()) {
@@ -82,7 +75,7 @@ void CubeSlideEffect::prePaintScreen(ScreenPrePaintData& data, std::chrono::mill
     effects->prePaintScreen(data, presentTime);
 }
 
-void CubeSlideEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData& data)
+void CubeSlideEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData &data)
 {
     if (isActive()) {
         glEnable(GL_CULL_FACE);
@@ -101,7 +94,7 @@ void CubeSlideEffect::paintScreen(int mask, const QRegion &region, ScreenPaintDa
         effects->paintScreen(mask, region, data);
 }
 
-void CubeSlideEffect::paintSlideCube(int mask, QRegion region, ScreenPaintData& data)
+void CubeSlideEffect::paintSlideCube(int mask, QRegion region, ScreenPaintData &data)
 {
     // slide cube only paints to desktops at a time
     // first the horizontal rotations followed by vertical rotations
@@ -114,7 +107,7 @@ void CubeSlideEffect::paintSlideCube(int mask, QRegion region, ScreenPaintData& 
     ScreenPaintData secondFaceData = data;
     RotationDirection direction = slideRotations.head();
     int secondDesktop;
-    switch(direction) {
+    switch (direction) {
     case Left:
         firstFaceData.setRotationAxis(Qt::YAxis);
         secondFaceData.setRotationAxis(Qt::YAxis);
@@ -176,7 +169,7 @@ void CubeSlideEffect::paintSlideCube(int mask, QRegion region, ScreenPaintData& 
     painting_desktop = effects->currentDesktop();
 }
 
-void CubeSlideEffect::prePaintWindow(EffectWindow* w,  WindowPrePaintData& data, std::chrono::milliseconds presentTime)
+void CubeSlideEffect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::chrono::milliseconds presentTime)
 {
     if (stickyPainting) {
         if (staticWindows.contains(w)) {
@@ -208,23 +201,19 @@ void CubeSlideEffect::prePaintWindow(EffectWindow* w,  WindowPrePaintData& data,
         } else if (w->isOnDesktop(other_desktop)) {
             RotationDirection direction = slideRotations.head();
             bool enable = false;
-            if (w->x() < rect.x() &&
-                    (direction == Left || direction == Right)) {
+            if (w->x() < rect.x() && (direction == Left || direction == Right)) {
                 data.quads = data.quads.splitAtX(-w->x());
                 enable = true;
             }
-            if (w->x() + w->width() > rect.x() + rect.width() &&
-                    (direction == Left || direction == Right)) {
+            if (w->x() + w->width() > rect.x() + rect.width() && (direction == Left || direction == Right)) {
                 data.quads = data.quads.splitAtX(rect.width() - w->x());
                 enable = true;
             }
-            if (w->y() < rect.y() &&
-                    (direction == Upwards || direction == Downwards)) {
+            if (w->y() < rect.y() && (direction == Upwards || direction == Downwards)) {
                 data.quads = data.quads.splitAtY(-w->y());
                 enable = true;
             }
-            if (w->y() + w->height() > rect.y() + rect.height() &&
-                    (direction == Upwards || direction == Downwards)) {
+            if (w->y() + w->height() > rect.y() + rect.height() && (direction == Upwards || direction == Downwards)) {
                 data.quads = data.quads.splitAtY(rect.height() - w->y());
                 enable = true;
             }
@@ -240,7 +229,7 @@ void CubeSlideEffect::prePaintWindow(EffectWindow* w,  WindowPrePaintData& data,
     effects->prePaintWindow(w, data, presentTime);
 }
 
-void CubeSlideEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPaintData& data)
+void CubeSlideEffect::paintWindow(EffectWindow *w, int mask, QRegion region, WindowPaintData &data)
 {
     if (isActive() && cube_painting && !staticWindows.contains(w)) {
         // filter out quads overlapping the edges
@@ -248,7 +237,7 @@ void CubeSlideEffect::paintWindow(EffectWindow* w, int mask, QRegion region, Win
         if (w->isOnDesktop(painting_desktop)) {
             if (w->x() < rect.x()) {
                 WindowQuadList new_quads;
-                foreach (const WindowQuad & quad, data.quads) {
+                foreach (const WindowQuad &quad, data.quads) {
                     if (quad.right() > -w->x()) {
                         new_quads.append(quad);
                     }
@@ -257,7 +246,7 @@ void CubeSlideEffect::paintWindow(EffectWindow* w, int mask, QRegion region, Win
             }
             if (w->x() + w->width() > rect.x() + rect.width()) {
                 WindowQuadList new_quads;
-                foreach (const WindowQuad & quad, data.quads) {
+                foreach (const WindowQuad &quad, data.quads) {
                     if (quad.right() <= rect.width() - w->x()) {
                         new_quads.append(quad);
                     }
@@ -266,7 +255,7 @@ void CubeSlideEffect::paintWindow(EffectWindow* w, int mask, QRegion region, Win
             }
             if (w->y() < rect.y()) {
                 WindowQuadList new_quads;
-                foreach (const WindowQuad & quad, data.quads) {
+                foreach (const WindowQuad &quad, data.quads) {
                     if (quad.bottom() > -w->y()) {
                         new_quads.append(quad);
                     }
@@ -275,7 +264,7 @@ void CubeSlideEffect::paintWindow(EffectWindow* w, int mask, QRegion region, Win
             }
             if (w->y() + w->height() > rect.y() + rect.height()) {
                 WindowQuadList new_quads;
-                foreach (const WindowQuad & quad, data.quads) {
+                foreach (const WindowQuad &quad, data.quads) {
                     if (quad.bottom() <= rect.height() - w->y()) {
                         new_quads.append(quad);
                     }
@@ -286,44 +275,40 @@ void CubeSlideEffect::paintWindow(EffectWindow* w, int mask, QRegion region, Win
         // paint windows overlapping edges from other desktop
         if (w->isOnDesktop(other_desktop) && (mask & PAINT_WINDOW_TRANSFORMED)) {
             RotationDirection direction = slideRotations.head();
-            if (w->x() < rect.x() &&
-                    (direction == Left || direction == Right)) {
+            if (w->x() < rect.x() && (direction == Left || direction == Right)) {
                 WindowQuadList new_quads;
                 data.setXTranslation(rect.width());
-                foreach (const WindowQuad & quad, data.quads) {
+                foreach (const WindowQuad &quad, data.quads) {
                     if (quad.right() <= -w->x()) {
                         new_quads.append(quad);
                     }
                 }
                 data.quads = new_quads;
             }
-            if (w->x() + w->width() > rect.x() + rect.width() &&
-                    (direction == Left || direction == Right)) {
+            if (w->x() + w->width() > rect.x() + rect.width() && (direction == Left || direction == Right)) {
                 WindowQuadList new_quads;
                 data.setXTranslation(-rect.width());
-                foreach (const WindowQuad & quad, data.quads) {
+                foreach (const WindowQuad &quad, data.quads) {
                     if (quad.right() > rect.width() - w->x()) {
                         new_quads.append(quad);
                     }
                 }
                 data.quads = new_quads;
             }
-            if (w->y() < rect.y() &&
-                    (direction == Upwards || direction == Downwards)) {
+            if (w->y() < rect.y() && (direction == Upwards || direction == Downwards)) {
                 WindowQuadList new_quads;
                 data.setYTranslation(rect.height());
-                foreach (const WindowQuad & quad, data.quads) {
+                foreach (const WindowQuad &quad, data.quads) {
                     if (quad.bottom() <= -w->y()) {
                         new_quads.append(quad);
                     }
                 }
                 data.quads = new_quads;
             }
-            if (w->y() + w->height() > rect.y() + rect.height() &&
-                    (direction == Upwards || direction == Downwards)) {
+            if (w->y() + w->height() > rect.y() + rect.height() && (direction == Upwards || direction == Downwards)) {
                 WindowQuadList new_quads;
                 data.setYTranslation(-rect.height());
-                foreach (const WindowQuad & quad, data.quads) {
+                foreach (const WindowQuad &quad, data.quads) {
                     if (quad.bottom() > rect.height() - w->y()) {
                         new_quads.append(quad);
                     }
@@ -345,7 +330,7 @@ void CubeSlideEffect::postPaintScreen()
     if (isActive()) {
         if (timeLine.currentValue() == 1.0) {
             RotationDirection direction = slideRotations.dequeue();
-            switch(direction) {
+            switch (direction) {
             case Left:
                 if (usePagerLayout)
                     front_desktop = effects->desktopToLeft(front_desktop, true);
@@ -377,7 +362,7 @@ void CubeSlideEffect::postPaintScreen()
             else
                 timeLine.setEasingCurve(QEasingCurve::Linear);
             if (slideRotations.empty()) {
-                for (EffectWindow* w : staticWindows) {
+                for (EffectWindow *w : staticWindows) {
                     w->setData(WindowForceBlurRole, QVariant());
                     w->setData(WindowForceBackgroundContrastRole, QVariant());
                 }
@@ -390,7 +375,7 @@ void CubeSlideEffect::postPaintScreen()
     }
 }
 
-void CubeSlideEffect::slotDesktopChanged(int old, int current, EffectWindow* w)
+void CubeSlideEffect::slotDesktopChanged(int old, int current, EffectWindow *w)
 {
     Q_UNUSED(w)
     if (effects->activeFullScreenEffect() && effects->activeFullScreenEffect() != this)
@@ -412,7 +397,7 @@ void CubeSlideEffect::slotDesktopChanged(int old, int current, EffectWindow* w)
         RotationDirection direction = slideRotations.dequeue();
         slideRotations.clear();
         slideRotations.enqueue(direction);
-        switch(direction) {
+        switch (direction) {
         case Left:
             if (usePagerLayout)
                 old = effects->desktopToLeft(front_desktop, true);
@@ -444,7 +429,7 @@ void CubeSlideEffect::slotDesktopChanged(int old, int current, EffectWindow* w)
         QPoint diff = effects->desktopGridCoords(effects->currentDesktop()) - effects->desktopGridCoords(old);
         if (qAbs(diff.x()) > effects->desktopGridWidth() / 2) {
             int sign = -1 * (diff.x() / qAbs(diff.x()));
-            diff.setX(sign *(effects->desktopGridWidth() - qAbs(diff.x())));
+            diff.setX(sign * (effects->desktopGridWidth() - qAbs(diff.x())));
         }
         if (diff.x() > 0) {
             for (int i = 0; i < diff.x(); i++) {
@@ -458,7 +443,7 @@ void CubeSlideEffect::slotDesktopChanged(int old, int current, EffectWindow* w)
         }
         if (qAbs(diff.y()) > effects->desktopGridHeight() / 2) {
             int sign = -1 * (diff.y() / qAbs(diff.y()));
-            diff.setY(sign *(effects->desktopGridHeight() - qAbs(diff.y())));
+            diff.setY(sign * (effects->desktopGridHeight() - qAbs(diff.y())));
         }
         if (diff.y() > 0) {
             for (int i = 0; i < diff.y(); i++) {
@@ -497,9 +482,10 @@ void CubeSlideEffect::slotDesktopChanged(int old, int current, EffectWindow* w)
     }
 }
 
-void CubeSlideEffect::startAnimation() {
+void CubeSlideEffect::startAnimation()
+{
     const EffectWindowList windows = effects->stackingOrder();
-    for (EffectWindow* w : windows) {
+    for (EffectWindow *w : windows) {
         if (!shouldAnimate(w)) {
             w->setData(WindowForceBlurRole, QVariant(true));
             w->setData(WindowForceBackgroundContrastRole, QVariant(true));
@@ -515,7 +501,8 @@ void CubeSlideEffect::startAnimation() {
     timeLine.setCurrentTime(0);
 }
 
-void CubeSlideEffect::slotWindowAdded(EffectWindow* w) {
+void CubeSlideEffect::slotWindowAdded(EffectWindow *w)
+{
     if (!isActive()) {
         return;
     }
@@ -526,11 +513,12 @@ void CubeSlideEffect::slotWindowAdded(EffectWindow* w) {
     }
 }
 
-void CubeSlideEffect::slotWindowDeleted(EffectWindow* w) {
+void CubeSlideEffect::slotWindowDeleted(EffectWindow *w)
+{
     staticWindows.remove(w);
 }
 
-bool CubeSlideEffect::shouldAnimate(const EffectWindow* w) const
+bool CubeSlideEffect::shouldAnimate(const EffectWindow *w) const
 {
     if (w->isDock()) {
         return !dontSlidePanels;
@@ -547,7 +535,7 @@ bool CubeSlideEffect::shouldAnimate(const EffectWindow* w) const
     return true;
 }
 
-void CubeSlideEffect::slotWindowStepUserMovedResized(EffectWindow* w)
+void CubeSlideEffect::slotWindowStepUserMovedResized(EffectWindow *w)
 {
     if (!useWindowMoving)
         return;
@@ -565,16 +553,16 @@ void CubeSlideEffect::slotWindowStepUserMovedResized(EffectWindow* w)
     const QRect bottomRect(horizontal, screenSize.height() - vertical, screenSize.width() - horizontal * 2, vertical);
     if (leftRect.contains(cursor)) {
         if (effects->desktopToLeft(effects->currentDesktop()) != effects->currentDesktop())
-            windowMovingChanged(0.3 *(float)(horizontal - cursor.x()) / (float)horizontal, Left);
+            windowMovingChanged(0.3 * (float)(horizontal - cursor.x()) / (float)horizontal, Left);
     } else if (rightRect.contains(cursor)) {
         if (effects->desktopToRight(effects->currentDesktop()) != effects->currentDesktop())
-            windowMovingChanged(0.3 *(float)(cursor.x() - screenSize.width() + horizontal) / (float)horizontal, Right);
+            windowMovingChanged(0.3 * (float)(cursor.x() - screenSize.width() + horizontal) / (float)horizontal, Right);
     } else if (topRect.contains(cursor)) {
         if (effects->desktopAbove(effects->currentDesktop()) != effects->currentDesktop())
-            windowMovingChanged(0.3 *(float)(vertical - cursor.y()) / (float)vertical, Upwards);
+            windowMovingChanged(0.3 * (float)(vertical - cursor.y()) / (float)vertical, Upwards);
     } else if (bottomRect.contains(cursor)) {
         if (effects->desktopBelow(effects->currentDesktop()) != effects->currentDesktop())
-            windowMovingChanged(0.3 *(float)(cursor.y() - screenSize.height() + vertical) / (float)vertical, Downwards);
+            windowMovingChanged(0.3 * (float)(cursor.y() - screenSize.height() + vertical) / (float)vertical, Downwards);
     } else {
         // not in one of the areas
         windowMoving = false;
@@ -588,7 +576,7 @@ void CubeSlideEffect::slotWindowStepUserMovedResized(EffectWindow* w)
     }
 }
 
-void CubeSlideEffect::slotWindowFinishUserMovedResized(EffectWindow* w)
+void CubeSlideEffect::slotWindowFinishUserMovedResized(EffectWindow *w)
 {
     if (!useWindowMoving)
         return;
@@ -600,7 +588,7 @@ void CubeSlideEffect::slotWindowFinishUserMovedResized(EffectWindow* w)
         if (slideRotations.isEmpty())
             return;
         const RotationDirection direction = slideRotations.dequeue();
-        switch(direction) {
+        switch (direction) {
         case Left:
             slideRotations.enqueue(Right);
             break;

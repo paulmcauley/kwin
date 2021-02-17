@@ -4,13 +4,13 @@
     SPDX-License-Identifier: LGPL-2.0-only
 */
 
-#include <QtScript/QScriptValue>
-#include <QtScript/QScriptEngine>
-#include <QtScript/QScriptContext>
-#include <QtScript/QScriptable>
 #include <QTimer>
+#include <QtScript/QScriptContext>
+#include <QtScript/QScriptEngine>
+#include <QtScript/QScriptValue>
+#include <QtScript/QScriptable>
 
-Q_DECLARE_METATYPE(QTimer*)
+Q_DECLARE_METATYPE(QTimer *)
 
 static QScriptValue newTimer(QScriptEngine *eng, QTimer *timer)
 {
@@ -19,13 +19,13 @@ static QScriptValue newTimer(QScriptEngine *eng, QTimer *timer)
 
 static QScriptValue ctor(QScriptContext *ctx, QScriptEngine *eng)
 {
-    return newTimer(eng, new QTimer(qscriptvalue_cast<QObject*>(ctx->argument(0))));
+    return newTimer(eng, new QTimer(qscriptvalue_cast<QObject *>(ctx->argument(0))));
 }
 
 QScriptValue constructTimerClass(QScriptEngine *eng)
 {
     QScriptValue proto = newTimer(eng, new QTimer());
-    eng->setDefaultPrototype(qMetaTypeId<QTimer*>(), proto);
+    eng->setDefaultPrototype(qMetaTypeId<QTimer *>(), proto);
 
     return eng->newFunction(ctor, proto);
 }

@@ -62,7 +62,8 @@ void VirtualQPainterBackend::endFrame(int screenId, int mask, const QRegion &dam
     output->vsyncMonitor()->arm();
 
     if (m_backend->saveFrames()) {
-        m_backBuffers[screenId].save(QStringLiteral("%1/screen%2-%3.png").arg(m_backend->screenshotDirPath(), QString::number(screenId), QString::number(m_frameCounter++)));
+        m_backBuffers[screenId].save(
+            QStringLiteral("%1/screen%2-%3.png").arg(m_backend->screenshotDirPath(), QString::number(screenId), QString::number(m_frameCounter++)));
     }
 }
 

@@ -21,18 +21,12 @@
 
 namespace KWin
 {
-
 static const int s_lineWidth = 4;
 static const QColor s_lineColor = QColor(128, 128, 128, 128);
 
 static QRegion computeDirtyRegion(const QRect &windowRect)
 {
-    const QMargins outlineMargins(
-        s_lineWidth / 2,
-        s_lineWidth / 2,
-        s_lineWidth / 2,
-        s_lineWidth / 2
-    );
+    const QMargins outlineMargins(s_lineWidth / 2, s_lineWidth / 2, s_lineWidth / 2, s_lineWidth / 2);
 
     QRegion dirtyRegion;
     for (int i = 0; i < effects->numScreens(); ++i) {
@@ -51,12 +45,8 @@ static QRegion computeDirtyRegion(const QRect &windowRect)
         horizontalBarRect.adjust(-1, -1, 1, 1);
         dirtyRegion += horizontalBarRect;
 
-        const QRect outlineOuterRect = screenWindowRect
-            .marginsAdded(outlineMargins)
-            .adjusted(-1, -1, 1, 1);
-        const QRect outlineInnerRect = screenWindowRect
-            .marginsRemoved(outlineMargins)
-            .adjusted(1, 1, -1, -1);
+        const QRect outlineOuterRect = screenWindowRect.marginsAdded(outlineMargins).adjusted(-1, -1, 1, 1);
+        const QRect outlineInnerRect = screenWindowRect.marginsRemoved(outlineMargins).adjusted(1, 1, -1, -1);
         dirtyRegion += QRegion(outlineOuterRect) - QRegion(outlineInnerRect);
     }
 
@@ -81,8 +71,7 @@ void SnapHelperEffect::reconfigure(ReconfigureFlags flags)
 {
     Q_UNUSED(flags)
 
-    m_animation.timeLine.setDuration(
-        std::chrono::milliseconds(static_cast<int>(animationTime(250))));
+    m_animation.timeLine.setDuration(std::chrono::milliseconds(static_cast<int>(animationTime(250))));
 }
 
 void SnapHelperEffect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime)
@@ -104,9 +93,7 @@ void SnapHelperEffect::paintScreen(int mask, const QRegion &region, ScreenPaintD
 {
     effects->paintScreen(mask, region, data);
 
-    const qreal opacityFactor = m_animation.active
-        ? m_animation.timeLine.value()
-        : 1.0;
+    const qreal opacityFactor = m_animation.active ? m_animation.timeLine.value() : 1.0;
 
     // Display the guide
     if (effects->isOpenGLCompositing()) {
@@ -128,7 +115,7 @@ void SnapHelperEffect::paintScreen(int mask, const QRegion &region, ScreenPaintD
         for (int i = 0; i < effects->numScreens(); ++i) {
             const QRect rect = effects->clientArea(ScreenArea, i, 0);
             const int midX = rect.x() + rect.width() / 2;
-            const int midY = rect.y() + rect.height() / 2 ;
+            const int midY = rect.y() + rect.height() / 2;
             const int halfWidth = m_geometry.width() / 2;
             const int halfHeight = m_geometry.height() / 2;
 
@@ -167,7 +154,7 @@ void SnapHelperEffect::paintScreen(int mask, const QRegion &region, ScreenPaintD
         for (int i = 0; i < effects->numScreens(); ++i) {
             const QRect rect = effects->clientArea(ScreenArea, i, 0);
             const int midX = rect.x() + rect.width() / 2;
-            const int midY = rect.y() + rect.height() / 2 ;
+            const int midY = rect.y() + rect.height() / 2;
             const int halfWidth = m_geometry.width() / 2;
             const int halfHeight = m_geometry.height() / 2;
 
@@ -212,8 +199,7 @@ void SnapHelperEffect::paintScreen(int mask, const QRegion &region, ScreenPaintD
             QColor color = s_lineColor;
             color.setAlphaF(color.alphaF() * opacityFactor);
 
-            xcb_render_fill_rectangles(xcbConnection(), XCB_RENDER_PICT_OP_OVER, effects->xrenderBufferPicture(),
-                                       preMultiply(color), 6, rects);
+            xcb_render_fill_rectangles(xcbConnection(), XCB_RENDER_PICT_OP_OVER, effects->xrenderBufferPicture(), preMultiply(color), 6, rects);
         }
 #endif
     }

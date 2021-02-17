@@ -11,15 +11,14 @@
 
 #include "qpainterbackend.h"
 
-#include <QObject>
 #include <QImage>
+#include <QObject>
 #include <QVector>
 
 #include <xcb/xcb.h>
 
 namespace KWin
 {
-
 class X11WindowedBackend;
 
 class X11WindowedQPainterBackend : public QObject, public QPainterBackend
@@ -43,7 +42,7 @@ private:
         QImage buffer;
         bool needsFullRepaint = true;
     };
-    QVector<Output*> m_outputs;
+    QVector<Output *> m_outputs;
 };
 
 }

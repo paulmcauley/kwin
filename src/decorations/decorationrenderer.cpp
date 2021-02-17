@@ -7,14 +7,14 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "decorationrenderer.h"
+#include "abstract_client.h"
 #include "decoratedclient.h"
 #include "decorations/decorations_logging.h"
 #include "deleted.h"
-#include "abstract_client.h"
 #include "screens.h"
 
-#include <KDecoration2/Decoration>
 #include <KDecoration2/DecoratedClient>
+#include <KDecoration2/Decoration>
 
 #include <QDebug>
 #include <QPainter>
@@ -23,13 +23,12 @@ namespace KWin
 {
 namespace Decoration
 {
-
 Renderer::Renderer(DecoratedClientImpl *client)
     : QObject(client)
     , m_client(client)
     , m_imageSizesDirty(true)
 {
-    auto markImageSizesDirty = [this]{
+    auto markImageSizesDirty = [this] {
         schedule(m_client->client()->rect());
         m_imageSizesDirty = true;
     };

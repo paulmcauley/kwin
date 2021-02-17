@@ -8,16 +8,16 @@
 */
 #include "drm_output.h"
 #include "drm_backend.h"
-#include "drm_object_crtc.h"
 #include "drm_object_connector.h"
+#include "drm_object_crtc.h"
 
 #include "composite.h"
 #include "cursor.h"
-#include "logind.h"
 #include "logging.h"
+#include "logind.h"
 #include "main.h"
-#include "screens.h"
 #include "renderloop.h"
+#include "screens.h"
 #include "wayland_server.h"
 // KWayland
 #include <KWaylandServer/output_interface.h>
@@ -26,20 +26,19 @@
 #include <KLocalizedString>
 #include <KSharedConfig>
 // Qt
-#include <QMatrix4x4>
 #include <QCryptographicHash>
+#include <QMatrix4x4>
 #include <QPainter>
 // c++
 #include <cerrno>
 // drm
-#include <xf86drm.h>
 #include <libdrm/drm_mode.h>
+#include <xf86drm.h>
 
 #include "drm_gpu.h"
 
 namespace KWin
 {
-
 DrmOutput::DrmOutput(DrmBackend *backend, DrmGpu *gpu)
     : AbstractWaylandOutput(backend)
     , m_backend(backend)
@@ -80,8 +79,8 @@ void DrmOutput::teardown()
     m_cursor[1].reset(nullptr);
     if (!m_pageFlipPending) {
         deleteLater();
-    } //else will be deleted in the page flip handler
-    //this is needed so that the pageflipcallback handle isn't deleted
+    } // else will be deleted in the page flip handler
+    // this is needed so that the pageflipcallback handle isn't deleted
 }
 
 void DrmOutput::releaseGbm()
@@ -201,7 +200,8 @@ static QHash<int, QByteArray> s_connectorNames = {
 #endif
 };
 
-namespace {
+namespace
+{
 quint64 refreshRateForMode(_drmModeModeInfo *m)
 {
     // Calculate higher precision (mHz) refresh rate
@@ -262,7 +262,8 @@ void DrmOutput::initOutputDevice(drmModeConnector *connector)
         manufacturer = QString::fromLatin1(m_edid.eisaId());
     }
 
-    QString connectorName = s_connectorNames.value(connector->connector_type, QByteArrayLiteral("Unknown")) + QStringLiteral("-") + QString::number(connector->connector_type_id);
+    QString connectorName =
+        s_connectorNames.value(connector->connector_type, QByteArrayLiteral("Unknown")) + QStringLiteral("-") + QString::number(connector->connector_type_id);
     QString modelName;
 
     if (!m_edid.monitorName().isEmpty()) {
@@ -306,12 +307,16 @@ void DrmOutput::initOutputDevice(drmModeConnector *connector)
     // the size might be completely borked. E.g. Samsung SyncMaster 2494HS reports 160x90 while in truth it's 520x292
     // as this information is used to calculate DPI info, it's going to result in everything being huge
     const QByteArray unknown = QByteArrayLiteral("unknown");
-    KConfigGroup group = kwinApp()->config()->group("EdidOverwrite").group(m_edid.eisaId().isEmpty() ? unknown : m_edid.eisaId())
-                                                       .group(m_edid.monitorName().isEmpty() ? unknown : m_edid.monitorName())
-                                                       .group(m_edid.serialNumber().isEmpty() ? unknown : m_edid.serialNumber());
+    KConfigGroup group = kwinApp()
+                             ->config()
+                             ->group("EdidOverwrite")
+                             .group(m_edid.eisaId().isEmpty() ? unknown : m_edid.eisaId())
+                             .group(m_edid.monitorName().isEmpty() ? unknown : m_edid.monitorName())
+                             .group(m_edid.serialNumber().isEmpty() ? unknown : m_edid.serialNumber());
     if (group.hasKey("PhysicalSize")) {
         const QSize overwriteSize = group.readEntry("PhysicalSize", physicalSize);
-        qCWarning(KWIN_DRM) << "Overwriting monitor physical size for" << m_edid.eisaId() << "/" << m_edid.monitorName() << "/" << m_edid.serialNumber() << " from " << physicalSize << "to " << overwriteSize;
+        qCWarning(KWIN_DRM) << "Overwriting monitor physical size for" << m_edid.eisaId() << "/" << m_edid.monitorName() << "/" << m_edid.serialNumber()
+                            << " from " << physicalSize << "to " << overwriteSize;
         physicalSize = overwriteSize;
     }
     setName(connectorName);
@@ -320,21 +325,10 @@ void DrmOutput::initOutputDevice(drmModeConnector *connector)
 
 bool DrmOutput::isCurrentMode(const drmModeModeInfo *mode) const
 {
-    return mode->clock       == m_mode.clock
-        && mode->hdisplay    == m_mode.hdisplay
-        && mode->hsync_start == m_mode.hsync_start
-        && mode->hsync_end   == m_mode.hsync_end
-        && mode->htotal      == m_mode.htotal
-        && mode->hskew       == m_mode.hskew
-        && mode->vdisplay    == m_mode.vdisplay
-        && mode->vsync_start == m_mode.vsync_start
-        && mode->vsync_end   == m_mode.vsync_end
-        && mode->vtotal      == m_mode.vtotal
-        && mode->vscan       == m_mode.vscan
-        && mode->vrefresh    == m_mode.vrefresh
-        && mode->flags       == m_mode.flags
-        && mode->type        == m_mode.type
-        && qstrcmp(mode->name, m_mode.name) == 0;
+    return mode->clock == m_mode.clock && mode->hdisplay == m_mode.hdisplay && mode->hsync_start == m_mode.hsync_start && mode->hsync_end == m_mode.hsync_end
+        && mode->htotal == m_mode.htotal && mode->hskew == m_mode.hskew && mode->vdisplay == m_mode.vdisplay && mode->vsync_start == m_mode.vsync_start
+        && mode->vsync_end == m_mode.vsync_end && mode->vtotal == m_mode.vtotal && mode->vscan == m_mode.vscan && mode->vrefresh == m_mode.vrefresh
+        && mode->flags == m_mode.flags && mode->type == m_mode.type && qstrcmp(mode->name, m_mode.name) == 0;
 }
 void DrmOutput::initEdid(drmModeConnector *connector)
 {
@@ -361,7 +355,7 @@ void DrmOutput::initEdid(drmModeConnector *connector)
 
 bool DrmOutput::initCursor(const QSize &cursorSize)
 {
-    auto createCursor = [this, cursorSize] (int index) {
+    auto createCursor = [this, cursorSize](int index) {
         m_cursor[index].reset(m_gpu->createBuffer(cursorSize));
         if (!m_cursor[index]->map(QImage::Format_ARGB32_Premultiplied)) {
             return false;
@@ -503,7 +497,7 @@ void DrmOutput::updateDpms(KWaylandServer::OutputInterface::DpmsMode mode)
             }
         }
     } else {
-       dpmsLegacyApply();
+        dpmsLegacyApply();
     }
 }
 
@@ -534,8 +528,7 @@ void DrmOutput::dpmsFinishOff()
 
 bool DrmOutput::dpmsLegacyApply()
 {
-    if (drmModeConnectorSetProperty(m_gpu->fd(), m_conn->id(),
-                                    m_dpms->prop_id, uint64_t(m_dpmsModePending)) < 0) {
+    if (drmModeConnectorSetProperty(m_gpu->fd(), m_conn->id(), m_dpms->prop_id, uint64_t(m_dpmsModePending)) < 0) {
         m_dpmsModePending = m_dpmsMode;
         qCWarning(KWIN_DRM) << "Setting DPMS failed";
         return false;
@@ -550,13 +543,13 @@ bool DrmOutput::dpmsLegacyApply()
 }
 
 DrmPlane::Transformations outputToPlaneTransform(DrmOutput::Transform transform)
- {
+{
     using OutTrans = DrmOutput::Transform;
     using PlaneTrans = DrmPlane::Transformation;
 
-     // TODO: Do we want to support reflections (flips)?
+    // TODO: Do we want to support reflections (flips)?
 
-     switch (transform) {
+    switch (transform) {
     case OutTrans::Normal:
     case OutTrans::Flipped:
         return PlaneTrans::Rotate0;
@@ -569,9 +562,9 @@ DrmPlane::Transformations outputToPlaneTransform(DrmOutput::Transform transform)
     case OutTrans::Rotated270:
     case OutTrans::Flipped270:
         return PlaneTrans::Rotate270;
-     default:
-         Q_UNREACHABLE();
-     }
+    default:
+        Q_UNREACHABLE();
+    }
 }
 
 bool DrmOutput::hardwareTransforms() const
@@ -586,18 +579,14 @@ void DrmOutput::updateTransform(Transform transform)
 {
     const auto planeTransform = outputToPlaneTransform(transform);
 
-     if (m_primaryPlane) {
+    if (m_primaryPlane) {
         // At the moment we have to exclude hardware transforms for vertical buffers.
         // For that we need to support other buffers and graceful fallback from atomic tests.
         // Reason is that standard linear buffers are not suitable.
-        const bool isPortrait = transform == Transform::Rotated90
-                                || transform == Transform::Flipped90
-                                || transform == Transform::Rotated270
-                                || transform == Transform::Flipped270;
+        const bool isPortrait =
+            transform == Transform::Rotated90 || transform == Transform::Flipped90 || transform == Transform::Rotated270 || transform == Transform::Flipped270;
 
-        if (!qEnvironmentVariableIsSet("KWIN_DRM_SW_ROTATIONS_ONLY") &&
-                (m_primaryPlane->supportedTransformations() & planeTransform) &&
-                !isPortrait) {
+        if (!qEnvironmentVariableIsSet("KWIN_DRM_SW_ROTATIONS_ONLY") && (m_primaryPlane->supportedTransformations() & planeTransform) && !isPortrait) {
             m_primaryPlane->setTransformation(planeTransform);
         } else {
             m_primaryPlane->setTransformation(DrmPlane::Transformation::Rotate0);
@@ -627,8 +616,7 @@ void DrmOutput::updateMode(uint32_t width, uint32_t height, uint32_t refreshRate
             return;
         }
     }
-    qCWarning(KWIN_DRM, "Could not find a fitting mode with size=%dx%d and refresh rate %d for output %s",
-              width, height, refreshRate, uuid().constData());
+    qCWarning(KWIN_DRM, "Could not find a fitting mode with size=%dx%d and refresh rate %d for output %s", width, height, refreshRate, uuid().constData());
 }
 
 void DrmOutput::updateMode(int modeIndex)
@@ -650,8 +638,7 @@ void DrmOutput::updateMode(int modeIndex)
 
 void DrmOutput::setWaylandMode()
 {
-    AbstractWaylandOutput::setWaylandMode(QSize(m_mode.hdisplay, m_mode.vdisplay),
-                                          refreshRateForMode(&m_mode));
+    AbstractWaylandOutput::setWaylandMode(QSize(m_mode.hdisplay, m_mode.vdisplay), refreshRateForMode(&m_mode));
 }
 
 void DrmOutput::pageFlipped()
@@ -696,7 +683,7 @@ void DrmOutput::pageFlipped()
             m_crtc->flipBuffer();
         }
     } else {
-        if (m_gpu->atomicModeSetting()){
+        if (m_gpu->atomicModeSetting()) {
             for (DrmPlane *p : m_nextPlanesFlipList) {
                 p->flipBuffer();
             }
@@ -772,8 +759,8 @@ bool DrmOutput::presentAtomically(DrmBuffer *buffer)
     m_nextPlanesFlipList << m_primaryPlane;
 
     if (!doAtomicCommit(AtomicCommitMode::Test)) {
-        //TODO: When we use planes for layered rendering, fallback to renderer instead. Also for direct scanout?
-        //TODO: Probably should undo setNext and reset the flip list
+        // TODO: When we use planes for layered rendering, fallback to renderer instead. Also for direct scanout?
+        // TODO: Probably should undo setNext and reset the flip list
         qCDebug(KWIN_DRM) << "Atomic test commit failed. Aborting present.";
         // go back to previous state
         if (m_lastWorkingState.valid) {
@@ -797,7 +784,7 @@ bool DrmOutput::presentAtomically(DrmBuffer *buffer)
     const bool wasModeset = m_modesetRequested;
     if (!doAtomicCommit(AtomicCommitMode::Real)) {
         qCDebug(KWIN_DRM) << "Atomic commit failed. This should have never happened! Aborting present.";
-        //TODO: Probably should undo setNext and reset the flip list
+        // TODO: Probably should undo setNext and reset the flip list
         return false;
     }
     if (wasModeset) {
@@ -855,7 +842,7 @@ bool DrmOutput::doAtomicCommit(AtomicCommitMode mode)
 {
     drmModeAtomicReq *req = drmModeAtomicAlloc();
 
-    auto errorHandler = [this, mode, req] () {
+    auto errorHandler = [this, mode, req]() {
         if (mode == AtomicCommitMode::Test) {
             // TODO: when we later test overlay planes, make sure we change only the right stuff back
         }
@@ -876,7 +863,6 @@ bool DrmOutput::doAtomicCommit(AtomicCommitMode mode)
             p->setNext(nullptr);
         }
         m_nextPlanesFlipList.clear();
-
     };
 
     if (!req) {
@@ -895,7 +881,7 @@ bool DrmOutput::doAtomicCommit(AtomicCommitMode mode)
                 return false;
             }
         }
-        if (!atomicReqModesetPopulate(req, m_dpmsModePending == DpmsMode::On)){
+        if (!atomicReqModesetPopulate(req, m_dpmsModePending == DpmsMode::On)) {
             qCWarning(KWIN_DRM) << "Failed to populate Atomic Modeset";
             errorHandler();
             return false;
@@ -912,8 +898,8 @@ bool DrmOutput::doAtomicCommit(AtomicCommitMode mode)
 
 #if HAVE_EGL_STREAMS
             if (!m_gpu->useEglStreams())
-                // EglStreamBackend uses the NV_output_drm_flip_event EGL extension
-                // to register the flip event through eglStreamConsumerAcquireAttribNV
+            // EglStreamBackend uses the NV_output_drm_flip_event EGL extension
+            // to register the flip event through eglStreamConsumerAcquireAttribNV
 #endif
                 flags |= DRM_MODE_PAGE_FLIP_EVENT;
         }
@@ -923,7 +909,7 @@ bool DrmOutput::doAtomicCommit(AtomicCommitMode mode)
 
     bool ret = true;
     // TODO: Make sure when we use more than one plane at a time, that we go through this list in the right order.
-    for (int i = m_nextPlanesFlipList.size() - 1; 0 <= i; i-- ) {
+    for (int i = m_nextPlanesFlipList.size() - 1; 0 <= i; i--) {
         DrmPlane *p = m_nextPlanesFlipList[i];
         ret &= p->atomicPopulate(req);
     }
@@ -1002,9 +988,10 @@ bool DrmOutput::setGammaRamp(const GammaRamp &gamma)
 
 }
 
-QDebug& operator<<(QDebug& s, const KWin::DrmOutput *output)
+QDebug &operator<<(QDebug &s, const KWin::DrmOutput *output)
 {
     if (!output)
         return s.nospace() << "DrmOutput()";
-    return s.nospace() << "DrmOutput(" << output->name() << ", crtc:" << output->crtc() << ", connector:" << output->connector() << ", geometry:" << output->geometry() << ')';
+    return s.nospace() << "DrmOutput(" << output->name() << ", crtc:" << output->crtc() << ", connector:" << output->connector()
+                       << ", geometry:" << output->geometry() << ')';
 }

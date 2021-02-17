@@ -11,9 +11,8 @@
 
 namespace KWin
 {
-
-GeometryTip::GeometryTip(const Xcb::GeometryHints* xSizeHints):
-    QLabel(nullptr)
+GeometryTip::GeometryTip(const Xcb::GeometryHints *xSizeHints)
+    : QLabel(nullptr)
 {
     setObjectName(QLatin1String("kwingeometry"));
     setMargin(1);
@@ -36,7 +35,7 @@ static QString numberWithSign(int n)
     return sign + QString::number(std::abs(n));
 }
 
-void GeometryTip::setGeometry(const QRect& geom)
+void GeometryTip::setGeometry(const QRect &geom)
 {
     int w = geom.width();
     int h = geom.height();
@@ -48,17 +47,11 @@ void GeometryTip::setGeometry(const QRect& geom)
         }
     }
 
-    h = qMax(h, 0);   // in case of isShade() and PBaseSize
-    const QString pos = QStringLiteral("%1,%2<br>(<b>%3&nbsp;x&nbsp;%4</b>)")
-        .arg(numberWithSign(geom.x()))
-        .arg(numberWithSign(geom.y()))
-        .arg(w)
-        .arg(h);
+    h = qMax(h, 0); // in case of isShade() and PBaseSize
+    const QString pos = QStringLiteral("%1,%2<br>(<b>%3&nbsp;x&nbsp;%4</b>)").arg(numberWithSign(geom.x())).arg(numberWithSign(geom.y())).arg(w).arg(h);
     setText(pos);
     adjustSize();
-    move(geom.x() + ((geom.width()  - width())  / 2),
-         geom.y() + ((geom.height() - height()) / 2));
+    move(geom.x() + ((geom.width() - width()) / 2), geom.y() + ((geom.height() - height()) / 2));
 }
 
 } // namespace
-

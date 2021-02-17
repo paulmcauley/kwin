@@ -11,15 +11,15 @@
 #pragma once
 
 // kwin
+#include "abstract_client.h"
 #include "options.h"
 #include "rules.h"
-#include "abstract_client.h"
 #include "xcbutils.h"
 // Qt
 #include <QElapsedTimer>
 #include <QFlags>
-#include <QPointer>
 #include <QPixmap>
+#include <QPointer>
 #include <QWindow>
 // X
 #include <xcb/sync.h>
@@ -32,19 +32,12 @@ class KStartupInfoId;
 
 namespace KWin
 {
-
-
 /**
  * @brief Defines Predicates on how to search for a Client.
  *
  * Used by Workspace::findClient.
  */
-enum class Predicate {
-    WindowMatch,
-    WrapperIdMatch,
-    FrameIdMatch,
-    InputIdMatch
-};
+enum class Predicate { WindowMatch, WrapperIdMatch, FrameIdMatch, InputIdMatch };
 
 class KWIN_EXPORT X11Client : public AbstractClient
 {
@@ -77,7 +70,10 @@ public:
     ~X11Client() override; ///< Use destroyClient() or releaseWindow()
 
     xcb_window_t wrapperId() const;
-    xcb_window_t inputId() const { return m_decoInputExtent; }
+    xcb_window_t inputId() const
+    {
+        return m_decoInputExtent;
+    }
     xcb_window_t frameId() const override;
 
     QRect inputGeometry() const override;
@@ -94,14 +90,14 @@ public:
     bool isTransient() const override;
     bool groupTransient() const override;
     bool wasOriginallyGroupTransient() const;
-    QList<AbstractClient*> mainClients() const override; // Call once before loop , is not indirect
-    bool hasTransient(const AbstractClient* c, bool indirect) const override;
+    QList<AbstractClient *> mainClients() const override; // Call once before loop , is not indirect
+    bool hasTransient(const AbstractClient *c, bool indirect) const override;
     void checkTransient(xcb_window_t w);
-    AbstractClient* findModal(bool allow_itself = false) override;
-    const Group* group() const override;
-    Group* group() override;
-    void checkGroup(Group* gr = nullptr, bool force = false);
-    void changeClientLeaderGroup(Group* gr);
+    AbstractClient *findModal(bool allow_itself = false) override;
+    const Group *group() const override;
+    Group *group() override;
+    void checkGroup(Group *gr = nullptr, bool force = false);
+    void changeClientLeaderGroup(Group *gr);
     bool supportsWindowRules() const override;
     void updateWindowRules(Rules::Types selection) override;
     void applyWindowRules() override;
@@ -112,7 +108,10 @@ public:
     QSize minSize() const override;
     QSize maxSize() const override;
     QSize basicUnit() const;
-    QPoint inputPos() const { return input_offset; } // Inside of geometry()
+    QPoint inputPos() const
+    {
+        return input_offset;
+    } // Inside of geometry()
 
     bool windowEvent(xcb_generic_event_t *e);
     NET::WindowType windowType(bool direct = false, int supported_types = 0) const override;
@@ -143,8 +142,9 @@ public:
     void setFullScreen(bool set, bool user = true) override;
     bool isFullScreen() const override;
     bool userCanSetFullScreen() const override;
-    int fullScreenMode() const {
-        return m_fullscreenMode;    // only for session saving
+    int fullScreenMode() const
+    {
+        return m_fullscreenMode; // only for session saving
     }
 
     bool userNoBorder() const;
@@ -174,11 +174,11 @@ public:
     void setFrameGeometry(const QRect &rect, ForceGeometry_t force = NormalGeometrySet) override;
     /// plainResize() simply resizes
     void plainResize(int w, int h, ForceGeometry_t force = NormalGeometrySet);
-    void plainResize(const QSize& s, ForceGeometry_t force = NormalGeometrySet);
+    void plainResize(const QSize &s, ForceGeometry_t force = NormalGeometrySet);
     /// resizeWithChecks() resizes according to gravity, and checks workarea position
     void resizeWithChecks(const QSize &size, ForceGeometry_t force = NormalGeometrySet) override;
     void resizeWithChecks(int w, int h, xcb_gravity_t gravity, ForceGeometry_t force = NormalGeometrySet);
-    void resizeWithChecks(const QSize& s, xcb_gravity_t gravity, ForceGeometry_t force = NormalGeometrySet);
+    void resizeWithChecks(const QSize &s, xcb_gravity_t gravity, ForceGeometry_t force = NormalGeometrySet);
     QSize constrainClientSize(const QSize &size, SizeMode mode = SizeModeAny) const override;
 
     bool providesContextHelp() const override;
@@ -194,17 +194,22 @@ public:
     bool setupCompositing() override;
     void finishCompositing(ReleaseReason releaseReason = ReleaseReason::Release) override;
     void setBlockingCompositing(bool block);
-    inline bool isBlockingCompositing() { return blocks_compositing; }
+    inline bool isBlockingCompositing()
+    {
+        return blocks_compositing;
+    }
 
-    QString captionNormal() const override {
+    QString captionNormal() const override
+    {
         return cap_normal;
     }
-    QString captionSuffix() const override {
+    QString captionSuffix() const override
+    {
         return cap_suffix;
     }
 
     using AbstractClient::keyPressEvent;
-    void keyPressEvent(uint key_code, xcb_timestamp_t time);   // FRAME ??
+    void keyPressEvent(uint key_code, xcb_timestamp_t time); // FRAME ??
     void updateMouseGrab() override;
     xcb_window_t moveResizeGrabWindow() const;
 
@@ -213,8 +218,7 @@ public:
 
     void NETMoveResize(int x_root, int y_root, NET::Direction direction);
     void NETMoveResizeWindow(int flags, int x, int y, int width, int height);
-    void restackWindow(xcb_window_t above, int detail, NET::RequestSource source, xcb_timestamp_t timestamp,
-                       bool send_event = false);
+    void restackWindow(xcb_window_t above, int detail, NET::RequestSource source, xcb_timestamp_t timestamp, bool send_event = false);
 
     void gotPing(xcb_timestamp_t timestamp);
 
@@ -257,7 +261,7 @@ public:
     QString readPreferredColorScheme(Xcb::StringProperty &property) const;
     QString preferredColorScheme() const override;
 
-    //sets whether the client should be faked as being on all activities (and be shown during session save)
+    // sets whether the client should be faked as being on all activities (and be shown during session save)
     void setSessionActivityOverride(bool needed);
     bool isClient() const override;
 
@@ -285,7 +289,8 @@ public:
         QTimer *timeout, *failsafeTimeout;
         bool isPending;
     };
-    const SyncRequest &syncRequest() const {
+    const SyncRequest &syncRequest() const
+    {
         return m_syncRequest;
     }
     virtual bool wantsSyncCounter() const;
@@ -336,10 +341,10 @@ protected:
     QSize resizeIncrements() const override;
     bool acceptsFocus() const override;
 
-    //Signals for the scripting interface
-    //Signals make an excellent way for communication
-    //in between objects as compared to simple function
-    //calls
+    // Signals for the scripting interface
+    // Signals make an excellent way for communication
+    // in between objects as compared to simple function
+    // calls
 Q_SIGNALS:
     void clientManaging(KWin::X11Client *);
     void clientFullScreenSet(KWin::X11Client *, bool, bool);
@@ -368,7 +373,7 @@ Q_SIGNALS:
     void clientSideDecoratedChanged();
 
 private:
-    void exportMappingState(int s);   // ICCCM 4.1.3.1, 4.1.4, NETWM 2.5.1
+    void exportMappingState(int s); // ICCCM 4.1.3.1, 4.1.4, NETWM 2.5.1
     bool isManaged() const; ///< Returns false if this client is not yet managed
     void updateAllowedActions(bool force = false);
     QRect fullscreenMonitorsArea(NETFullscreenMonitors topology) const;
@@ -379,7 +384,7 @@ private:
     void fetchName();
     void fetchIconicName();
     QString readName() const;
-    void setCaption(const QString& s, bool force = false);
+    void setCaption(const QString &s, bool force = false);
     bool hasTransientInternal(const X11Client *c, bool indirect, QList<const X11Client *> &set) const;
     void setShortcutInternal() override;
 
@@ -398,8 +403,7 @@ private:
     void pingWindow();
     void killProcess(bool ask, xcb_timestamp_t timestamp = XCB_TIME_CURRENT_TIME);
     void updateUrgency();
-    static void sendClientMessage(xcb_window_t w, xcb_atom_t a, xcb_atom_t protocol,
-                                  uint32_t data1 = 0, uint32_t data2 = 0, uint32_t data3 = 0);
+    static void sendClientMessage(xcb_window_t w, xcb_atom_t a, xcb_atom_t protocol, uint32_t data1 = 0, uint32_t data2 = 0, uint32_t data3 = 0);
 
     void embedClient(xcb_window_t w, xcb_visualid_t visualid, xcb_colormap_t colormap, uint8_t depth);
     void detectNoBorder();
@@ -418,8 +422,7 @@ private:
     void updateServerGeometry();
     void updateWindowPixmap();
 
-    xcb_timestamp_t readUserTimeMapTimestamp(const KStartupInfoId* asn_id, const KStartupInfoData* asn_data,
-                                  bool session) const;
+    xcb_timestamp_t readUserTimeMapTimestamp(const KStartupInfoId *asn_id, const KStartupInfoData *asn_data, bool session) const;
     xcb_timestamp_t readUserCreationTime() const;
     void startupIdChanged();
 
@@ -457,8 +460,8 @@ private:
     void readTransientProperty(Xcb::TransientFor &transientFor);
     void readTransient();
     xcb_window_t verifyTransientFor(xcb_window_t transient_for, bool set);
-    void addTransient(AbstractClient* cl) override;
-    void removeTransient(AbstractClient* cl) override;
+    void addTransient(AbstractClient *cl) override;
+    void removeTransient(AbstractClient *cl) override;
     void removeFromMainClients();
     void cleanGrouping();
     void checkGroupTransients();
@@ -473,17 +476,14 @@ private:
     uint ignore_focus_stealing : 1; ///< Don't apply focus stealing prevention to this client
     bool blocks_compositing;
 
-    enum FullScreenMode {
-        FullScreenNone,
-        FullScreenNormal
-    } m_fullscreenMode;
+    enum FullScreenMode { FullScreenNone, FullScreenNormal } m_fullscreenMode;
 
     MaximizeMode max_mode;
     QRect m_bufferGeometry = QRect(0, 0, 100, 100);
     xcb_colormap_t m_colormap;
     QString cap_normal, cap_iconic, cap_suffix;
-    Group* in_group;
-    QTimer* ping_timer;
+    Group *in_group;
+    QTimer *ping_timer;
     qint64 m_killHelperPID;
     xcb_timestamp_t m_pingTimestamp;
     xcb_timestamp_t m_userTime;
@@ -499,7 +499,7 @@ private:
     Xcb::StringProperty fetchActivities() const;
     void readActivities(Xcb::StringProperty &property);
     void checkActivities();
-    bool activitiesDefined; //whether the x property was actually set
+    bool activitiesDefined; // whether the x property was actually set
 
     bool sessionActivityOverride;
     bool needsXWindowMove;
@@ -542,12 +542,12 @@ inline bool X11Client::isTransient() const
     return m_transientForId != XCB_WINDOW_NONE;
 }
 
-inline const Group* X11Client::group() const
+inline const Group *X11Client::group() const
 {
     return in_group;
 }
 
-inline Group* X11Client::group()
+inline Group *X11Client::group()
 {
     return in_group;
 }
@@ -592,7 +592,7 @@ inline bool X11Client::isManaged() const
     return m_managed;
 }
 
-inline void X11Client::plainResize(const QSize& s, ForceGeometry_t force)
+inline void X11Client::plainResize(const QSize &s, ForceGeometry_t force)
 {
     plainResize(s.width(), s.height(), force);
 }
@@ -602,7 +602,7 @@ inline void X11Client::resizeWithChecks(const QSize &s, AbstractClient::ForceGeo
     resizeWithChecks(s.width(), s.height(), XCB_GRAVITY_BIT_FORGET, force);
 }
 
-inline void X11Client::resizeWithChecks(const QSize& s, xcb_gravity_t gravity, ForceGeometry_t force)
+inline void X11Client::resizeWithChecks(const QSize &s, xcb_gravity_t gravity, ForceGeometry_t force)
 {
     resizeWithChecks(s.width(), s.height(), gravity, force);
 }

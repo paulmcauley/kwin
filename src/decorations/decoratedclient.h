@@ -18,12 +18,10 @@
 
 namespace KWin
 {
-
 class AbstractClient;
 
 namespace Decoration
 {
-
 class Renderer;
 
 class DecoratedClientImpl : public QObject, public KDecoration2::ApplicationMenuEnabledDecoratedClientPrivate
@@ -79,13 +77,16 @@ public:
 
     void showApplicationMenu(int actionId) override;
 
-    AbstractClient *client() {
+    AbstractClient *client()
+    {
         return m_client;
     }
-    Renderer *renderer() {
+    Renderer *renderer()
+    {
         return m_renderer;
     }
-    KDecoration2::DecoratedClient *decoratedClient() {
+    KDecoration2::DecoratedClient *decoratedClient()
+    {
         return KDecoration2::DecoratedClientPrivate::client();
     }
 

@@ -14,35 +14,33 @@
 
 #include <QAction>
 
-#include <kconfiggroup.h>
-#include <kcolorscheme.h>
-#include <KActionCollection>
 #include <KAboutData>
+#include <KActionCollection>
 #include <KGlobalAccel>
 #include <KLocalizedString>
 #include <KPluginFactory>
+#include <kcolorscheme.h>
+#include <kconfiggroup.h>
 
-#include <QVBoxLayout>
 #include <QColor>
+#include <QVBoxLayout>
 
-K_PLUGIN_FACTORY_WITH_JSON(CubeEffectConfigFactory,
-                           "cube_config.json",
-                           registerPlugin<KWin::CubeEffectConfig>();)
+K_PLUGIN_FACTORY_WITH_JSON(CubeEffectConfigFactory, "cube_config.json", registerPlugin<KWin::CubeEffectConfig>();)
 
 namespace KWin
 {
-
-CubeEffectConfigForm::CubeEffectConfigForm(QWidget* parent) : QWidget(parent)
+CubeEffectConfigForm::CubeEffectConfigForm(QWidget *parent)
+    : QWidget(parent)
 {
     setupUi(this);
 }
 
-CubeEffectConfig::CubeEffectConfig(QWidget* parent, const QVariantList& args) :
-    KCModule(parent, args)
+CubeEffectConfig::CubeEffectConfig(QWidget *parent, const QVariantList &args)
+    : KCModule(parent, args)
 {
     m_ui = new CubeEffectConfigForm(this);
 
-    QVBoxLayout* layout = new QVBoxLayout(this);
+    QVBoxLayout *layout = new QVBoxLayout(this);
 
     layout->addWidget(m_ui);
 
@@ -56,16 +54,16 @@ CubeEffectConfig::CubeEffectConfig(QWidget* parent, const QVariantList& args) :
     m_actionCollection->setConfigGroup(QStringLiteral("Cube"));
     m_actionCollection->setConfigGlobal(true);
 
-    QAction* cubeAction = m_actionCollection->addAction(QStringLiteral("Cube"));
+    QAction *cubeAction = m_actionCollection->addAction(QStringLiteral("Cube"));
     cubeAction->setText(i18n("Desktop Cube"));
     cubeAction->setProperty("isConfigurationAction", true);
     KGlobalAccel::self()->setDefaultShortcut(cubeAction, QList<QKeySequence>() << Qt::CTRL + Qt::Key_F11);
     KGlobalAccel::self()->setShortcut(cubeAction, QList<QKeySequence>() << Qt::CTRL + Qt::Key_F11);
-    QAction* cylinderAction = m_actionCollection->addAction(QStringLiteral("Cylinder"));
+    QAction *cylinderAction = m_actionCollection->addAction(QStringLiteral("Cylinder"));
     cylinderAction->setText(i18n("Desktop Cylinder"));
     cylinderAction->setProperty("isConfigurationAction", true);
     KGlobalAccel::self()->setShortcut(cylinderAction, QList<QKeySequence>());
-    QAction* sphereAction = m_actionCollection->addAction(QStringLiteral("Sphere"));
+    QAction *sphereAction = m_actionCollection->addAction(QStringLiteral("Sphere"));
     sphereAction->setText(i18n("Desktop Sphere"));
     sphereAction->setProperty("isConfigurationAction", true);
     KGlobalAccel::self()->setShortcut(sphereAction, QList<QKeySequence>());
@@ -84,9 +82,7 @@ void CubeEffectConfig::save()
 {
     KCModule::save();
     m_ui->editor->save();
-    OrgKdeKwinEffectsInterface interface(QStringLiteral("org.kde.KWin"),
-                                         QStringLiteral("/Effects"),
-                                         QDBusConnection::sessionBus());
+    OrgKdeKwinEffectsInterface interface(QStringLiteral("org.kde.KWin"), QStringLiteral("/Effects"), QDBusConnection::sessionBus());
     interface.reconfigureEffect(QStringLiteral("cube"));
 }
 

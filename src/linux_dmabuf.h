@@ -16,24 +16,32 @@
 
 namespace KWin
 {
-
 class KWIN_EXPORT DmabufBuffer : public KWaylandServer::LinuxDmabufUnstableV1Buffer
 {
 public:
     using Plane = KWaylandServer::LinuxDmabufUnstableV1Interface::Plane;
     using Flags = KWaylandServer::LinuxDmabufUnstableV1Interface::Flags;
 
-    DmabufBuffer(const QVector<Plane> &planes,
-                 uint32_t format,
-                 const QSize &size,
-                 Flags flags);
+    DmabufBuffer(const QVector<Plane> &planes, uint32_t format, const QSize &size, Flags flags);
 
     ~DmabufBuffer() override;
 
-    const QVector<Plane> &planes() const { return m_planes; }
-    uint32_t format() const { return m_format; }
-    QSize size() const { return m_size; }
-    Flags flags() const { return m_flags; }
+    const QVector<Plane> &planes() const
+    {
+        return m_planes;
+    }
+    uint32_t format() const
+    {
+        return m_format;
+    }
+    QSize size() const
+    {
+        return m_size;
+    }
+    Flags flags() const
+    {
+        return m_flags;
+    }
 
 private:
     QVector<Plane> m_planes;
@@ -51,13 +59,10 @@ public:
     explicit LinuxDmabuf();
     ~LinuxDmabuf() override;
 
-    KWaylandServer::LinuxDmabufUnstableV1Buffer *importBuffer(const QVector<Plane> &planes,
-                                                                uint32_t format,
-                                                                const QSize &size,
-                                                                Flags flags) override;
+    KWaylandServer::LinuxDmabufUnstableV1Buffer *importBuffer(const QVector<Plane> &planes, uint32_t format, const QSize &size, Flags flags) override;
 
 protected:
-    void setSupportedFormatsAndModifiers(QHash<uint32_t, QSet<uint64_t> > &set);
+    void setSupportedFormatsAndModifiers(QHash<uint32_t, QSet<uint64_t>> &set);
 };
 
 }

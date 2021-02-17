@@ -20,16 +20,16 @@
 #include <config-kwin.h>
 
 // KDecoration
-#include <KDecoration2/Decoration>
 #include <KDecoration2/DecoratedClient>
+#include <KDecoration2/Decoration>
 #include <KDecoration2/DecorationSettings>
 
 // KWayland
 #include <KWaylandServer/server_decoration_interface.h>
 
 // Frameworks
-#include <KPluginMetaData>
 #include <KPluginLoader>
+#include <KPluginMetaData>
 
 // Qt
 #include <QMetaProperty>
@@ -39,7 +39,6 @@ namespace KWin
 {
 namespace Decoration
 {
-
 static const QString s_aurorae = QStringLiteral("org.kde.kwin.aurorae");
 static const QString s_pluginName = QStringLiteral("org.kde.kdecoration2");
 #if HAVE_BREEZE_DECO
@@ -62,7 +61,8 @@ DecorationBridge::DecorationBridge(QObject *parent)
 
     // try to extract the proper defaults file from a lookandfeel package
     const QString looknfeel = cg.readEntry(QStringLiteral("LookAndFeelPackage"), "org.kde.breeze.desktop");
-    m_lnfConfig = KSharedConfig::openConfig(QStandardPaths::locate(QStandardPaths::GenericDataLocation, QStringLiteral("plasma/look-and-feel/") + looknfeel + QStringLiteral("/contents/defaults")));
+    m_lnfConfig = KSharedConfig::openConfig(QStandardPaths::locate(QStandardPaths::GenericDataLocation,
+                                                                   QStringLiteral("plasma/look-and-feel/") + looknfeel + QStringLiteral("/contents/defaults")));
 
     readDecorationOptions();
 }
@@ -74,7 +74,7 @@ DecorationBridge::~DecorationBridge()
 
 QString DecorationBridge::readPlugin()
 {
-    //Try to get a default from look and feel
+    // Try to get a default from look and feel
     KConfigGroup cg(m_lnfConfig, "kwinrc");
     cg = KConfigGroup(&cg, "org.kde.kdecoration2");
     return kwinApp()->config()->group(s_pluginName).readEntry("library", cg.readEntry("library", s_defaultPlugin));
@@ -87,7 +87,7 @@ static bool readNoPlugin()
 
 QString DecorationBridge::readTheme() const
 {
-    //Try to get a default from look and feel
+    // Try to get a default from look and feel
     KConfigGroup cg(m_lnfConfig, "kwinrc");
     cg = KConfigGroup(&cg, "org.kde.kdecoration2");
     return kwinApp()->config()->group(s_pluginName).readEntry("theme", cg.readEntry("theme", m_defaultTheme));
@@ -124,7 +124,8 @@ void DecorationBridge::init()
         }
     }
     if (waylandServer()) {
-        waylandServer()->decorationManager()->setDefaultMode(m_factory ? ServerSideDecorationManagerInterface::Mode::Server : ServerSideDecorationManagerInterface::Mode::None);
+        waylandServer()->decorationManager()->setDefaultMode(m_factory ? ServerSideDecorationManagerInterface::Mode::Server
+                                                                       : ServerSideDecorationManagerInterface::Mode::None);
     }
 }
 
@@ -148,7 +149,9 @@ void DecorationBridge::initPlugin()
 
 static void recreateDecorations()
 {
-    Workspace::self()->forEachAbstractClient([](AbstractClient *c) { c->updateDecoration(true, true); });
+    Workspace::self()->forEachAbstractClient([](AbstractClient *c) {
+        c->updateDecoration(true, true);
+    });
 }
 
 void DecorationBridge::reconfigure()
@@ -239,9 +242,10 @@ void DecorationBridge::findTheme(const QVariantMap &map)
     m_theme = readTheme();
 }
 
-std::unique_ptr<KDecoration2::DecoratedClientPrivate> DecorationBridge::createClient(KDecoration2::DecoratedClient *client, KDecoration2::Decoration *decoration)
+std::unique_ptr<KDecoration2::DecoratedClientPrivate> DecorationBridge::createClient(KDecoration2::DecoratedClient *client,
+                                                                                     KDecoration2::Decoration *decoration)
 {
-    return std::unique_ptr<DecoratedClientImpl>(new DecoratedClientImpl(static_cast<AbstractClient*>(decoration->parent()), client, decoration));
+    return std::unique_ptr<DecoratedClientImpl>(new DecoratedClientImpl(static_cast<AbstractClient *>(decoration->parent()), client, decoration));
 }
 
 std::unique_ptr<KDecoration2::DecorationSettingsPrivate> DecorationBridge::settings(KDecoration2::DecorationSettings *parent)
@@ -252,7 +256,9 @@ std::unique_ptr<KDecoration2::DecorationSettingsPrivate> DecorationBridge::setti
 void DecorationBridge::update(KDecoration2::Decoration *decoration, const QRect &geometry)
 {
     // TODO: remove check once all compositors implement it
-    if (AbstractClient *c = Workspace::self()->findAbstractClient([decoration] (const AbstractClient *client) { return client->decoration() == decoration; })) {
+    if (AbstractClient *c = Workspace::self()->findAbstractClient([decoration](const AbstractClient *client) {
+            return client->decoration() == decoration;
+        })) {
         if (Renderer *renderer = c->decoratedClient()->renderer()) {
             renderer->schedule(geometry);
         }
@@ -267,7 +273,7 @@ KDecoration2::Decoration *DecorationBridge::createDecoration(AbstractClient *cli
     if (!m_factory) {
         return nullptr;
     }
-    QVariantMap args({ {QStringLiteral("bridge"), QVariant::fromValue(this)} });
+    QVariantMap args({{QStringLiteral("bridge"), QVariant::fromValue(this)}});
 
     if (!m_theme.isEmpty()) {
         args.insert(QStringLiteral("theme"), m_theme);
@@ -278,8 +284,7 @@ KDecoration2::Decoration *DecorationBridge::createDecoration(AbstractClient *cli
     return deco;
 }
 
-static
-QString settingsProperty(const QVariant &variant)
+static QString settingsProperty(const QVariant &variant)
 {
     if (QLatin1String(variant.typeName()) == QLatin1String("KDecoration2::BorderSize")) {
         return QString::number(variant.toInt());
@@ -308,7 +313,7 @@ QString DecorationBridge::supportInformation() const
         b.append(QStringLiteral("Plugin recommends border size: %1\n").arg(m_recommendedBorderSize.isNull() ? "No" : m_recommendedBorderSize));
         b.append(QStringLiteral("Blur: %1\n").arg(m_blur));
         const QMetaObject *metaOptions = m_settings->metaObject();
-        for (int i=0; i<metaOptions->propertyCount(); ++i) {
+        for (int i = 0; i < metaOptions->propertyCount(); ++i) {
             const QMetaProperty property = metaOptions->property(i);
             if (QLatin1String(property.name()) == QLatin1String("objectName")) {
                 continue;

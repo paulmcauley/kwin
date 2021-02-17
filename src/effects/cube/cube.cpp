@@ -10,22 +10,21 @@
 // KConfigSkeleton
 #include "cubeconfig.h"
 
-
-#include <QAction>
 #include <KGlobalAccel>
 #include <KLocalizedString>
+#include <QAction>
 #include <kwinconfig.h>
 
 #include <QApplication>
 #include <QColor>
 #include <QElapsedTimer>
-#include <QRect>
 #include <QEvent>
 #include <QFutureWatcher>
 #include <QKeyEvent>
-#include <QtConcurrentRun>
+#include <QRect>
 #include <QVector2D>
 #include <QVector3D>
+#include <QtConcurrentRun>
 
 #include <cmath>
 
@@ -33,7 +32,6 @@
 
 namespace KWin
 {
-
 CubeEffect::CubeEffect()
     : activated(false)
     , cube_painting(false)
@@ -151,9 +149,7 @@ void CubeEffect::reconfigure(ReconfigureFlags)
     reflection = CubeConfig::reflection();
     // TODO: Rename rotationDuration to duration so we
     // can use animationTime<CubeConfig>(500).
-    const int d = CubeConfig::rotationDuration() != 0
-        ? CubeConfig::rotationDuration()
-        : 500;
+    const int d = CubeConfig::rotationDuration() != 0 ? CubeConfig::rotationDuration() : 500;
     rotationDuration = std::chrono::milliseconds(static_cast<int>(animationTime(d)));
     backgroundColor = CubeConfig::backgroundColor();
     capColor = CubeConfig::capColor();
@@ -180,7 +176,7 @@ void CubeEffect::reconfigure(ReconfigureFlags)
 
     // do not connect the shortcut if we use cylinder or sphere
     if (!shortcutsRegistered) {
-        QAction* cubeAction = m_cubeAction;
+        QAction *cubeAction = m_cubeAction;
         cubeAction->setObjectName(QStringLiteral("Cube"));
         cubeAction->setText(i18n("Desktop Cube"));
         KGlobalAccel::self()->setDefaultShortcut(cubeAction, QList<QKeySequence>() << Qt::CTRL + Qt::Key_F11);
@@ -188,13 +184,13 @@ void CubeEffect::reconfigure(ReconfigureFlags)
         effects->registerGlobalShortcut(Qt::CTRL + Qt::Key_F11, cubeAction);
         effects->registerPointerShortcut(Qt::ControlModifier | Qt::AltModifier, Qt::LeftButton, cubeAction);
         cubeShortcut = KGlobalAccel::self()->shortcut(cubeAction);
-        QAction* cylinderAction = m_cylinderAction;
+        QAction *cylinderAction = m_cylinderAction;
         cylinderAction->setObjectName(QStringLiteral("Cylinder"));
         cylinderAction->setText(i18n("Desktop Cylinder"));
         KGlobalAccel::self()->setShortcut(cylinderAction, QList<QKeySequence>());
         effects->registerGlobalShortcut(QKeySequence(), cylinderAction);
         cylinderShortcut = KGlobalAccel::self()->shortcut(cylinderAction);
-        QAction* sphereAction = m_sphereAction;
+        QAction *sphereAction = m_sphereAction;
         sphereAction->setObjectName(QStringLiteral("Sphere"));
         sphereAction->setText(i18n("Desktop Sphere"));
         KGlobalAccel::self()->setShortcut(sphereAction, QList<QKeySequence>());
@@ -220,7 +216,7 @@ void CubeEffect::reconfigure(ReconfigureFlags)
         effects->unregisterTouchBorder(e, m_sphereAction);
         effects->unregisterTouchBorder(e, m_cylinderAction);
     }
-    auto touchEdge = [&relevantBorders] (const QList<int> touchBorders, QAction *action) {
+    auto touchEdge = [&relevantBorders](const QList<int> touchBorders, QAction *action) {
         for (int i : touchBorders) {
             if (!relevantBorders.contains(ElectricBorder(i))) {
                 continue;
@@ -255,7 +251,7 @@ QImage CubeEffect::loadCubeCap(const QString &capPath)
 
 void CubeEffect::slotCubeCapLoaded()
 {
-    QFutureWatcher<QImage> *watcher = dynamic_cast<QFutureWatcher<QImage>*>(sender());
+    QFutureWatcher<QImage> *watcher = dynamic_cast<QFutureWatcher<QImage> *>(sender());
     if (!watcher) {
         // not invoked from future watcher
         return;
@@ -283,7 +279,7 @@ QImage CubeEffect::loadWallPaper(const QString &file)
 
 void CubeEffect::slotWallPaperLoaded()
 {
-    QFutureWatcher<QImage> *watcher = dynamic_cast<QFutureWatcher<QImage>*>(sender());
+    QFutureWatcher<QImage> *watcher = dynamic_cast<QFutureWatcher<QImage> *>(sender());
     if (!watcher) {
         // not invoked from future watcher
         return;
@@ -300,11 +296,12 @@ void CubeEffect::slotWallPaperLoaded()
 bool CubeEffect::loadShader()
 {
     effects->makeOpenGLContextCurrent();
-    if (!(GLPlatform::instance()->supports(GLSL) &&
-            (effects->compositingType() == OpenGL2Compositing)))
+    if (!(GLPlatform::instance()->supports(GLSL) && (effects->compositingType() == OpenGL2Compositing)))
         return false;
 
-    cylinderShader = ShaderManager::instance()->generateShaderFromResources(ShaderTrait::MapTexture | ShaderTrait::AdjustSaturation | ShaderTrait::Modulate, QStringLiteral("cylinder.vert"), QString());
+    cylinderShader = ShaderManager::instance()->generateShaderFromResources(ShaderTrait::MapTexture | ShaderTrait::AdjustSaturation | ShaderTrait::Modulate,
+                                                                            QStringLiteral("cylinder.vert"),
+                                                                            QString());
     if (!cylinderShader->isValid()) {
         qCCritical(KWINEFFECTS) << "The cylinder shader failed to load!";
         return false;
@@ -315,7 +312,9 @@ bool CubeEffect::loadShader()
         cylinderShader->setUniform("width", (float)rect.width() * 0.5f);
     }
 
-    sphereShader = ShaderManager::instance()->generateShaderFromResources(ShaderTrait::MapTexture | ShaderTrait::AdjustSaturation | ShaderTrait::Modulate, QStringLiteral("sphere.vert"), QString());
+    sphereShader = ShaderManager::instance()->generateShaderFromResources(ShaderTrait::MapTexture | ShaderTrait::AdjustSaturation | ShaderTrait::Modulate,
+                                                                          QStringLiteral("sphere.vert"),
+                                                                          QString());
     if (!sphereShader->isValid()) {
         qCCritical(KWINEFFECTS) << "The sphere shader failed to load!";
         return false;
@@ -352,8 +351,8 @@ void CubeEffect::startAnimation(AnimationState state)
 void CubeEffect::startVerticalAnimation(VerticalAnimationState state)
 {
     /* Ignore if there is nowhere to rotate */
-    if ((qFuzzyIsNull(verticalCurrentAngle - 90.0f) && state == VerticalAnimationState::Upwards) ||
-        (qFuzzyIsNull(verticalCurrentAngle + 90.0f) && state == VerticalAnimationState::Downwards)) {
+    if ((qFuzzyIsNull(verticalCurrentAngle - 90.0f) && state == VerticalAnimationState::Upwards)
+        || (qFuzzyIsNull(verticalCurrentAngle + 90.0f) && state == VerticalAnimationState::Downwards)) {
         return;
     }
     verticalTimeLine.reset();
@@ -361,7 +360,7 @@ void CubeEffect::startVerticalAnimation(VerticalAnimationState state)
     verticalAnimationState = state;
 }
 
-void CubeEffect::prePaintScreen(ScreenPrePaintData& data, std::chrono::milliseconds presentTime)
+void CubeEffect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime)
 {
     std::chrono::milliseconds delta = std::chrono::milliseconds::zero();
     if (lastPresentTime.count()) {
@@ -391,7 +390,7 @@ void CubeEffect::prePaintScreen(ScreenPrePaintData& data, std::chrono::milliseco
     effects->prePaintScreen(data, presentTime);
 }
 
-void CubeEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData& data)
+void CubeEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData &data)
 {
     if (activated) {
         QRect rect = effects->clientArea(FullArea, activeScreen, effects->currentDesktop());
@@ -433,18 +432,20 @@ void CubeEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData& d
 
             double translate = 0.0;
             if (mode == Cube) {
-                double addedHeight1 = -rect.height() * cos(verticalCurrentAngle*M_PI/180.0f) - rect.width() * sin(fabs(verticalCurrentAngle)*M_PI/180.0f)/tan(M_PI/effects->numberOfDesktops());
-                double addedHeight2 = -rect.width() * sin(fabs(verticalCurrentAngle)*M_PI/180.0f)*tan(M_PI*0.5f/effects->numberOfDesktops());
+                double addedHeight1 = -rect.height() * cos(verticalCurrentAngle * M_PI / 180.0f)
+                    - rect.width() * sin(fabs(verticalCurrentAngle) * M_PI / 180.0f) / tan(M_PI / effects->numberOfDesktops());
+                double addedHeight2 = -rect.width() * sin(fabs(verticalCurrentAngle) * M_PI / 180.0f) * tan(M_PI * 0.5f / effects->numberOfDesktops());
                 if (verticalCurrentAngle > 0.0f && effects->numberOfDesktops() & 1)
-                    translate = cos(fabs(currentAngle)*effects->numberOfDesktops()*M_PI/360.0f) * addedHeight2 + addedHeight1 - float(rect.height());
+                    translate = cos(fabs(currentAngle) * effects->numberOfDesktops() * M_PI / 360.0f) * addedHeight2 + addedHeight1 - float(rect.height());
                 else
-                    translate = sin(fabs(currentAngle)*effects->numberOfDesktops()*M_PI/360.0f) * addedHeight2 + addedHeight1 - float(rect.height());
+                    translate = sin(fabs(currentAngle) * effects->numberOfDesktops() * M_PI / 360.0f) * addedHeight2 + addedHeight1 - float(rect.height());
             } else if (mode == Cylinder) {
-                double addedHeight1 = -rect.height() * cos(verticalCurrentAngle*M_PI/180.0f) - rect.width() * sin(fabs(verticalCurrentAngle)*M_PI/180.0f)/tan(M_PI/effects->numberOfDesktops());
+                double addedHeight1 = -rect.height() * cos(verticalCurrentAngle * M_PI / 180.0f)
+                    - rect.width() * sin(fabs(verticalCurrentAngle) * M_PI / 180.0f) / tan(M_PI / effects->numberOfDesktops());
                 translate = addedHeight1 - float(rect.height());
             } else {
                 float radius = (rect.width() * 0.5) / cos(cubeAngle * 0.5 * M_PI / 180.0);
-                translate = -rect.height()-2*radius;
+                translate = -rect.height() - 2 * radius;
             }
             m_reflectionMatrix.translate(0.0f, translate, 0.0f);
 
@@ -465,12 +466,7 @@ void CubeEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData& d
 
             const float width = rect.width();
             const float height = rect.height();
-            float vertices[] = {
-                -width * 0.5f, height, 0.0,
-                width * 0.5f, height, 0.0,
-                width * scaleFactor, height, -5000,
-                -width * scaleFactor, height, -5000
-            };
+            float vertices[] = {-width * 0.5f, height, 0.0, width * 0.5f, height, 0.0, width * scaleFactor, height, -5000, -width * scaleFactor, height, -5000};
             // foreground
             float alpha = 0.7;
             if (animationState == AnimationState::Start) {
@@ -536,8 +532,10 @@ void CubeEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData& d
                 opacity = 1.0 - timeLine.value();
             }
             QRect screenRect = effects->clientArea(ScreenArea, activeScreen, frontDesktop);
-            QRect frameRect = QRect(screenRect.width() * 0.33f + screenRect.x(), screenRect.height() * 0.95f + screenRect.y(),
-                                    screenRect.width() * 0.34f, QFontMetrics(desktopNameFont).height());
+            QRect frameRect = QRect(screenRect.width() * 0.33f + screenRect.x(),
+                                    screenRect.height() * 0.95f + screenRect.y(),
+                                    screenRect.width() * 0.34f,
+                                    QFontMetrics(desktopNameFont).height());
             if (!desktopNameFrame) {
                 desktopNameFrame = effects->effectFrame(EffectFrameStyled);
                 desktopNameFrame->setFont(desktopNameFont);
@@ -611,7 +609,7 @@ void CubeEffect::rotateCube()
     }
 }
 
-void CubeEffect::paintCube(int mask, QRegion region, ScreenPaintData& data)
+void CubeEffect::paintCube(int mask, QRegion region, ScreenPaintData &data)
 {
     QRect rect = effects->clientArea(FullArea, activeScreen, effects->currentDesktop());
     float internalCubeAngle = 360.0f / effects->numberOfDesktops();
@@ -656,7 +654,7 @@ void CubeEffect::paintCap(bool frontFirst, float zOffset, const QMatrix4x4 &proj
 
     // create the VBO if not yet created
     if (!m_cubeCapBuffer) {
-        switch(mode) {
+        switch (mode) {
         case Cube:
             paintCubeCap();
             break;
@@ -744,8 +742,8 @@ void CubeEffect::paintCubeCap()
         float zTriangleDistance = z / (float)triangleRows;
         float widthTriangle = tan(angle * 0.5 * M_PI / 180.0) * zTriangleDistance;
         float currentWidth = 0.0;
-        float cosValue = cos(i * angle  * M_PI / 180.0);
-        float sinValue = sin(i * angle  * M_PI / 180.0);
+        float cosValue = cos(i * angle * M_PI / 180.0);
+        float sinValue = sin(i * angle * M_PI / 180.0);
         for (int j = 0; j < triangleRows; j++) {
             float previousWidth = currentWidth;
             currentWidth = tan(angle * 0.5 * M_PI / 180.0) * zTriangleDistance * (j + 1);
@@ -854,7 +852,7 @@ void CubeEffect::paintCylinderCap()
     QVector<float> verts;
     QVector<float> texCoords;
     for (int i = 1; i <= 30; i++) {
-        int steps =  72;
+        int steps = 72;
         for (int j = 0; j <= steps; j++) {
             const float azimuthAngle = (j * (360.0f / steps)) * M_PI / 180.0f;
             const float azimuthAngle2 = ((j + 1) * (360.0f / steps)) * M_PI / 180.0f;
@@ -911,7 +909,7 @@ void CubeEffect::paintSphereCap()
         float topAngle = angle * i * M_PI / 180.0;
         float bottomAngle = angle * (i + 1) * M_PI / 180.0;
         float yTop = (rect.height() * 0.5 - radius * cos(topAngle));
-        yTop *= (1.0f-capDeformationFactor);
+        yTop *= (1.0f - capDeformationFactor);
         float yBottom = rect.height() * 0.5 - radius * cos(bottomAngle);
         yBottom *= (1.0f - capDeformationFactor);
         for (int j = 0; j < 36; j++) {
@@ -940,12 +938,12 @@ void CubeEffect::paintSphereCap()
                     texCoords << x4 / (rect.width()) + 0.5 << 0.5 - z4 / zTexture * 0.5;
                 }
             }
-            verts << x4 << yTop    << z4;
-            verts << x1 << yTop    << z1;
+            verts << x4 << yTop << z4;
+            verts << x1 << yTop << z1;
             verts << x2 << yBottom << z2;
             verts << x2 << yBottom << z2;
             verts << x3 << yBottom << z3;
-            verts << x4 << yTop    << z4;
+            verts << x4 << yTop << z4;
         }
     }
     delete m_cubeCapBuffer;
@@ -1004,7 +1002,7 @@ void CubeEffect::postPaintScreen()
     }
 }
 
-void CubeEffect::prePaintWindow(EffectWindow* w, WindowPrePaintData& data, std::chrono::milliseconds presentTime)
+void CubeEffect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::chrono::milliseconds presentTime)
 {
     if (activated) {
         if (cube_painting) {
@@ -1087,12 +1085,12 @@ void CubeEffect::prePaintWindow(EffectWindow* w, WindowPrePaintData& data, std::
     effects->prePaintWindow(w, data, presentTime);
 }
 
-void CubeEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPaintData& data)
+void CubeEffect::paintWindow(EffectWindow *w, int mask, QRegion region, WindowPaintData &data)
 {
     ShaderManager *shaderManager = ShaderManager::instance();
     if (activated && cube_painting) {
-        region= infiniteRegion(); // we need to explicitly prevent any clipping, bug #325432
-        //qCDebug(KWINEFFECTS) << w->caption();
+        region = infiniteRegion(); // we need to explicitly prevent any clipping, bug #325432
+        // qCDebug(KWINEFFECTS) << w->caption();
         float opacity = cubeOpacity;
         if (animationState == AnimationState::Start) {
             opacity = 1.0 - (1.0 - opacity) * timeLine.value();
@@ -1129,7 +1127,7 @@ void CubeEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPa
         if (w->isOnDesktop(prev_desktop) && (mask & PAINT_WINDOW_TRANSFORMED)) {
             QRect rect = effects->clientArea(FullArea, activeScreen, prev_desktop);
             WindowQuadList new_quads;
-            foreach (const WindowQuad & quad, data.quads) {
+            foreach (const WindowQuad &quad, data.quads) {
                 if (quad.right() > rect.width() - w->x()) {
                     new_quads.append(quad);
                 }
@@ -1140,7 +1138,7 @@ void CubeEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPa
         if (w->isOnDesktop(next_desktop) && (mask & PAINT_WINDOW_TRANSFORMED)) {
             QRect rect = effects->clientArea(FullArea, activeScreen, next_desktop);
             WindowQuadList new_quads;
-            foreach (const WindowQuad & quad, data.quads) {
+            foreach (const WindowQuad &quad, data.quads) {
                 if (w->x() + quad.right() <= rect.x()) {
                     new_quads.append(quad);
                 }
@@ -1177,7 +1175,7 @@ void CubeEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPa
 
         if (w->isOnDesktop(painting_desktop) && w->x() < rect.x()) {
             WindowQuadList new_quads;
-            foreach (const WindowQuad & quad, data.quads) {
+            foreach (const WindowQuad &quad, data.quads) {
                 if (quad.right() > -w->x()) {
                     new_quads.append(quad);
                 }
@@ -1186,7 +1184,7 @@ void CubeEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPa
         }
         if (w->isOnDesktop(painting_desktop) && w->x() + w->width() > rect.x() + rect.width()) {
             WindowQuadList new_quads;
-            foreach (const WindowQuad & quad, data.quads) {
+            foreach (const WindowQuad &quad, data.quads) {
                 if (quad.right() <= rect.width() - w->x()) {
                     new_quads.append(quad);
                 }
@@ -1195,7 +1193,7 @@ void CubeEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPa
         }
         if (w->y() < rect.y()) {
             WindowQuadList new_quads;
-            foreach (const WindowQuad & quad, data.quads) {
+            foreach (const WindowQuad &quad, data.quads) {
                 if (quad.bottom() > -w->y()) {
                     new_quads.append(quad);
                 }
@@ -1204,7 +1202,7 @@ void CubeEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPa
         }
         if (w->y() + w->height() > rect.y() + rect.height()) {
             WindowQuadList new_quads;
-            foreach (const WindowQuad & quad, data.quads) {
+            foreach (const WindowQuad &quad, data.quads) {
                 if (quad.bottom() <= rect.height() - w->y()) {
                     new_quads.append(quad);
                 }
@@ -1283,12 +1281,13 @@ void CubeEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPa
                 for (const QRect &paintRect : paint) {
                     for (int i = 0; i <= (paintRect.height() / quadSize); i++) {
                         for (int j = 0; j <= (paintRect.width() / quadSize); j++) {
-                            verts << qMin(paintRect.x() + (j + 1)*quadSize, (float)paintRect.x() + paintRect.width()) << paintRect.y() + i*quadSize;
-                            verts << paintRect.x() + j*quadSize << paintRect.y() + i*quadSize;
-                            verts << paintRect.x() + j*quadSize << qMin(paintRect.y() + (i + 1)*quadSize, (float)paintRect.y() + paintRect.height());
-                            verts << paintRect.x() + j*quadSize << qMin(paintRect.y() + (i + 1)*quadSize, (float)paintRect.y() + paintRect.height());
-                            verts << qMin(paintRect.x() + (j + 1)*quadSize, (float)paintRect.x() + paintRect.width()) << qMin(paintRect.y() + (i + 1)*quadSize, (float)paintRect.y() + paintRect.height());
-                            verts << qMin(paintRect.x() + (j + 1)*quadSize, (float)paintRect.x() + paintRect.width()) << paintRect.y() + i*quadSize;
+                            verts << qMin(paintRect.x() + (j + 1) * quadSize, (float)paintRect.x() + paintRect.width()) << paintRect.y() + i * quadSize;
+                            verts << paintRect.x() + j * quadSize << paintRect.y() + i * quadSize;
+                            verts << paintRect.x() + j * quadSize << qMin(paintRect.y() + (i + 1) * quadSize, (float)paintRect.y() + paintRect.height());
+                            verts << paintRect.x() + j * quadSize << qMin(paintRect.y() + (i + 1) * quadSize, (float)paintRect.y() + paintRect.height());
+                            verts << qMin(paintRect.x() + (j + 1) * quadSize, (float)paintRect.x() + paintRect.width())
+                                  << qMin(paintRect.y() + (i + 1) * quadSize, (float)paintRect.y() + paintRect.height());
+                            verts << qMin(paintRect.x() + (j + 1) * quadSize, (float)paintRect.x() + paintRect.width()) << paintRect.y() + i * quadSize;
                         }
                     }
                 }
@@ -1327,9 +1326,7 @@ void CubeEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPa
 
 bool CubeEffect::borderActivated(ElectricBorder border)
 {
-    if (!borderActivate.contains(border) &&
-            !borderActivateCylinder.contains(border) &&
-            !borderActivateSphere.contains(border))
+    if (!borderActivate.contains(border) && !borderActivateCylinder.contains(border) && !borderActivateSphere.contains(border))
         return false;
     if (effects->activeFullScreenEffect() && effects->activeFullScreenEffect() != this)
         return false;
@@ -1380,8 +1377,7 @@ void CubeEffect::toggleSphere()
 
 void CubeEffect::toggle(CubeMode newMode)
 {
-    if ((effects->activeFullScreenEffect() && effects->activeFullScreenEffect() != this) ||
-            effects->numberOfDesktops() < 2)
+    if ((effects->activeFullScreenEffect() && effects->activeFullScreenEffect() != this) || effects->numberOfDesktops() < 2)
         return;
     if (!activated) {
         mode = newMode;
@@ -1391,7 +1387,7 @@ void CubeEffect::toggle(CubeMode newMode)
     }
 }
 
-void CubeEffect::grabbedKeyboardEvent(QKeyEvent* e)
+void CubeEffect::grabbedKeyboardEvent(QKeyEvent *e)
 {
     // If either stop is running or is scheduled - ignore all events
     if ((!animations.isEmpty() && animations.last() == AnimationState::Stop) || animationState == AnimationState::Stop) {
@@ -1442,7 +1438,7 @@ void CubeEffect::grabbedKeyboardEvent(QKeyEvent* e)
                 key = Qt::Key_Up;
         }
 
-        switch(key) {
+        switch (key) {
         // wrap only on autorepeat
         case Qt::Key_Left:
             qCDebug(KWINEFFECTS) << "left";
@@ -1461,7 +1457,7 @@ void CubeEffect::grabbedKeyboardEvent(QKeyEvent* e)
         case Qt::Key_Down:
             qCDebug(KWINEFFECTS) << "down";
             verticalAnimations.enqueue(VerticalAnimationState::Downwards);
-        break;
+            break;
         case Qt::Key_Escape:
             rotateToDesktop(effects->currentDesktop());
             setActive(false);
@@ -1537,7 +1533,7 @@ void CubeEffect::rotateToDesktop(int desktop)
 
 void CubeEffect::setActive(bool active)
 {
-    foreach (CubeInsideEffect * inside, m_cubeInsideEffects) {
+    foreach (CubeInsideEffect *inside, m_cubeInsideEffects) {
         inside->setActive(true);
     }
     if (active) {
@@ -1571,7 +1567,8 @@ void CubeEffect::setActive(bool active)
             QRect rect = effects->clientArea(FullArea, activeScreen, effects->currentDesktop());
             float temporaryCoeff = float(rect.width()) / tan(M_PI / float(effects->numberOfDesktops()));
             mAddedHeightCoeff1 = sqrt(float(rect.height()) * float(rect.height()) + temporaryCoeff * temporaryCoeff);
-            mAddedHeightCoeff2 = sqrt(float(rect.height()) * float(rect.height()) + float(rect.width()) * float(rect.width()) + temporaryCoeff * temporaryCoeff);
+            mAddedHeightCoeff2 =
+                sqrt(float(rect.height()) * float(rect.height()) + float(rect.width()) * float(rect.width()) + temporaryCoeff * temporaryCoeff);
         }
         m_rotationMatrix.setToIdentity();
     } else {
@@ -1580,7 +1577,7 @@ void CubeEffect::setActive(bool active)
     effects->addRepaintFull();
 }
 
-void CubeEffect::windowInputMouseEvent(QEvent* e)
+void CubeEffect::windowInputMouseEvent(QEvent *e)
 {
     if (!activated)
         return;
@@ -1589,7 +1586,7 @@ void CubeEffect::windowInputMouseEvent(QEvent* e)
     if ((!animations.isEmpty() && animations.last() == AnimationState::Stop) || animationState == AnimationState::Stop)
         return;
 
-    QMouseEvent *mouse = dynamic_cast< QMouseEvent* >(e);
+    QMouseEvent *mouse = dynamic_cast<QMouseEvent *>(e);
     if (!mouse)
         return;
 
@@ -1656,8 +1653,7 @@ void CubeEffect::windowInputMouseEvent(QEvent* e)
                 setActive(false);
                 return;
             }
-        }
-        else if (mouse->button() == Qt::XButton1) {
+        } else if (mouse->button() == Qt::XButton1) {
             if (animations.count() < effects->numberOfDesktops()) {
                 if (invertMouse)
                     animations.enqueue(AnimationState::Right);
@@ -1724,17 +1720,17 @@ void CubeEffect::globalShortcutChanged(QAction *action, const QKeySequence &seq)
     }
 }
 
-void* CubeEffect::proxy()
+void *CubeEffect::proxy()
 {
     return &m_proxy;
 }
 
-void CubeEffect::registerCubeInsideEffect(CubeInsideEffect* effect)
+void CubeEffect::registerCubeInsideEffect(CubeInsideEffect *effect)
 {
     m_cubeInsideEffects.append(effect);
 }
 
-void CubeEffect::unregisterCubeInsideEffect(CubeInsideEffect* effect)
+void CubeEffect::unregisterCubeInsideEffect(CubeInsideEffect *effect)
 {
     m_cubeInsideEffects.removeAll(effect);
 }

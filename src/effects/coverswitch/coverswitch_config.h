@@ -14,28 +14,26 @@
 
 #include "ui_coverswitch_config.h"
 
-
 namespace KWin
 {
-
 class CoverSwitchEffectConfigForm : public QWidget, public Ui::CoverSwitchEffectConfigForm
 {
     Q_OBJECT
 public:
-    explicit CoverSwitchEffectConfigForm(QWidget* parent);
+    explicit CoverSwitchEffectConfigForm(QWidget *parent);
 };
 
 class CoverSwitchEffectConfig : public KCModule
 {
     Q_OBJECT
 public:
-    explicit CoverSwitchEffectConfig(QWidget* parent = nullptr, const QVariantList& args = QVariantList());
+    explicit CoverSwitchEffectConfig(QWidget *parent = nullptr, const QVariantList &args = QVariantList());
 
 public Q_SLOTS:
     void save() override;
 
 private:
-    CoverSwitchEffectConfigForm* m_ui;
+    CoverSwitchEffectConfigForm *m_ui;
 };
 
 } // namespace

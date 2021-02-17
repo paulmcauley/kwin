@@ -7,12 +7,12 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "drm_backend.h"
-#include "drm_output.h"
+#include "composite.h"
+#include "cursor.h"
 #include "drm_object_connector.h"
 #include "drm_object_crtc.h"
 #include "drm_object_plane.h"
-#include "composite.h"
-#include "cursor.h"
+#include "drm_output.h"
 #include "logging.h"
 #include "logind.h"
 #include "main.h"
@@ -22,8 +22,8 @@
 #include "wayland_server.h"
 #if HAVE_GBM
 #include "egl_gbm_backend.h"
-#include <gbm.h>
 #include "gbm_dmabuf.h"
+#include <gbm.h>
 #endif
 #if HAVE_EGL_STREAMS
 #include "egl_stream_backend.h"
@@ -37,14 +37,14 @@
 #include <KSharedConfig>
 // Qt
 #include <QCryptographicHash>
-#include <QSocketNotifier>
 #include <QPainter>
+#include <QSocketNotifier>
 // system
 #include <algorithm>
 #include <unistd.h>
 // drm
-#include <xf86drm.h>
 #include <libdrm/drm_mode.h>
+#include <xf86drm.h>
 
 #include "drm_gpu.h"
 #include "egl_multi_backend.h"
@@ -61,7 +61,6 @@
 
 namespace KWin
 {
-
 DrmBackend::DrmBackend(QObject *parent)
     : Platform(parent)
     , m_udev(new Udev)
@@ -100,7 +99,7 @@ void DrmBackend::init()
     } else {
         connect(logind, &LogindIntegration::connectedChanged, this, takeControl);
     }
-    connect(logind, &LogindIntegration::prepareForSleep, this, [this] (bool active) {
+    connect(logind, &LogindIntegration::prepareForSleep, this, [this](bool active) {
         if (!active) {
             turnOutputsOn();
         }
@@ -217,8 +216,7 @@ static std::chrono::nanoseconds convertTimestamp(const timespec &timestamp)
     return std::chrono::seconds(timestamp.tv_sec) + std::chrono::nanoseconds(timestamp.tv_nsec);
 }
 
-static std::chrono::nanoseconds convertTimestamp(clockid_t sourceClock, clockid_t targetClock,
-                                                 const timespec &timestamp)
+static std::chrono::nanoseconds convertTimestamp(clockid_t sourceClock, clockid_t targetClock, const timespec &timestamp)
 {
     if (sourceClock == targetClock) {
         return convertTimestamp(timestamp);
@@ -244,12 +242,9 @@ void DrmBackend::pageFlipHandler(int fd, unsigned int frame, unsigned int sec, u
     DrmGpu *gpu = output->gpu();
     DrmBackend *backend = output->m_backend;
 
-    std::chrono::nanoseconds timestamp = convertTimestamp(gpu->presentationClock(),
-                                                          CLOCK_MONOTONIC,
-                                                          { sec, usec * 1000 });
+    std::chrono::nanoseconds timestamp = convertTimestamp(gpu->presentationClock(), CLOCK_MONOTONIC, {sec, usec * 1000});
     if (timestamp == std::chrono::nanoseconds::zero()) {
-        qCDebug(KWIN_DRM, "Got invalid timestamp (sec: %u, usec: %u) on output %s",
-                sec, usec, qPrintable(output->name()));
+        qCDebug(KWIN_DRM, "Got invalid timestamp (sec: %u, usec: %u) on output %s", sec, usec, qPrintable(output->name()));
         timestamp = std::chrono::steady_clock::now().time_since_epoch();
     }
 
@@ -289,18 +284,16 @@ void DrmBackend::openDrm()
 
         m_active = true;
         QSocketNotifier *notifier = new QSocketNotifier(fd, QSocketNotifier::Read, this);
-        connect(notifier, &QSocketNotifier::activated, this,
-            [fd] {
-                if (!LogindIntegration::self()->isActiveSession()) {
-                    return;
-                }
-                drmEventContext e;
-                memset(&e, 0, sizeof e);
-                e.version = KWIN_DRM_EVENT_CONTEXT_VERSION;
-                e.page_flip_handler = pageFlipHandler;
-                drmHandleEvent(fd, &e);
+        connect(notifier, &QSocketNotifier::activated, this, [fd] {
+            if (!LogindIntegration::self()->isActiveSession()) {
+                return;
             }
-        );
+            drmEventContext e;
+            memset(&e, 0, sizeof e);
+            e.version = KWIN_DRM_EVENT_CONTEXT_VERSION;
+            e.page_flip_handler = pageFlipHandler;
+            drmHandleEvent(fd, &e);
+        });
         DrmGpu *gpu = new DrmGpu(this, devNode, fd, device->sysNum());
         connect(gpu, &DrmGpu::outputAdded, this, &DrmBackend::addOutput);
         connect(gpu, &DrmGpu::outputRemoved, this, &DrmBackend::removeOutput);
@@ -335,29 +328,27 @@ void DrmBackend::openDrm()
         const int fd = m_udevMonitor->fd();
         if (fd != -1) {
             QSocketNotifier *notifier = new QSocketNotifier(fd, QSocketNotifier::Read, this);
-            connect(notifier, &QSocketNotifier::activated, this,
-                [this] {
-                    auto device = m_udevMonitor->getDevice();
-                    if (!device) {
-                        return;
-                    }
-                    bool drm = false;
-                    for (auto gpu : m_gpus) {
-                        if (gpu->drmId() == device->sysNum()) {
-                            drm = true;
-                            break;
-                        }
-                    }
-                    if (!drm) {
-                        return;
-                    }
-                    if (device->hasProperty("HOTPLUG", "1")) {
-                        qCDebug(KWIN_DRM) << "Received hot plug event for monitored drm device";
-                        updateOutputs();
-                        updateCursor();
+            connect(notifier, &QSocketNotifier::activated, this, [this] {
+                auto device = m_udevMonitor->getDevice();
+                if (!device) {
+                    return;
+                }
+                bool drm = false;
+                for (auto gpu : m_gpus) {
+                    if (gpu->drmId() == device->sysNum()) {
+                        drm = true;
+                        break;
                     }
                 }
-            );
+                if (!drm) {
+                    return;
+                }
+                if (device->hasProperty("HOTPLUG", "1")) {
+                    qCDebug(KWIN_DRM) << "Received hot plug event for monitored drm device";
+                    updateOutputs();
+                    updateCursor();
+                }
+            });
             m_udevMonitor->enable();
         }
     }
@@ -393,7 +384,9 @@ bool DrmBackend::updateOutputs()
         gpu->updateOutputs();
     }
 
-    std::sort(m_outputs.begin(), m_outputs.end(), [] (DrmOutput *a, DrmOutput *b) { return a->m_conn->id() < b->m_conn->id(); });
+    std::sort(m_outputs.begin(), m_outputs.end(), [](DrmOutput *a, DrmOutput *b) {
+        return a->m_conn->id() < b->m_conn->id();
+    });
     if (oldOutputs != m_outputs) {
         readOutputsConfiguration();
     }
@@ -430,16 +423,14 @@ static QString transformToString(DrmOutput::Transform transform)
 
 static DrmOutput::Transform stringToTransform(const QString &text)
 {
-    static const QHash<QString, DrmOutput::Transform> stringToTransform {
-        { QStringLiteral("normal"),     DrmOutput::Transform::Normal },
-        { QStringLiteral("rotate-90"),  DrmOutput::Transform::Rotated90 },
-        { QStringLiteral("rotate-180"), DrmOutput::Transform::Rotated180 },
-        { QStringLiteral("rotate-270"), DrmOutput::Transform::Rotated270 },
-        { QStringLiteral("flip"),       DrmOutput::Transform::Flipped },
-        { QStringLiteral("flip-90"),    DrmOutput::Transform::Flipped90 },
-        { QStringLiteral("flip-180"),   DrmOutput::Transform::Flipped180 },
-        { QStringLiteral("flip-270"),   DrmOutput::Transform::Flipped270 }
-    };
+    static const QHash<QString, DrmOutput::Transform> stringToTransform{{QStringLiteral("normal"), DrmOutput::Transform::Normal},
+                                                                        {QStringLiteral("rotate-90"), DrmOutput::Transform::Rotated90},
+                                                                        {QStringLiteral("rotate-180"), DrmOutput::Transform::Rotated180},
+                                                                        {QStringLiteral("rotate-270"), DrmOutput::Transform::Rotated270},
+                                                                        {QStringLiteral("flip"), DrmOutput::Transform::Flipped},
+                                                                        {QStringLiteral("flip-90"), DrmOutput::Transform::Flipped90},
+                                                                        {QStringLiteral("flip-180"), DrmOutput::Transform::Flipped180},
+                                                                        {QStringLiteral("flip-270"), DrmOutput::Transform::Flipped270}};
     return stringToTransform.value(text, DrmOutput::Transform::Normal);
 }
 
@@ -454,7 +445,7 @@ void DrmBackend::readOutputsConfiguration()
     // default position goes from left to right
     QPoint pos(0, 0);
     for (auto it = m_outputs.begin(); it != m_outputs.end(); ++it) {
-        qCDebug(KWIN_DRM) << "Reading output configuration for [" << uuid << "] ["<< (*it)->uuid() << "]";
+        qCDebug(KWIN_DRM) << "Reading output configuration for [" << uuid << "] [" << (*it)->uuid() << "]";
         const auto outputConfig = configGroup.group((*it)->uuid());
         (*it)->setGlobalPos(outputConfig.readEntry<QPoint>("Position", pos));
         if (outputConfig.hasKey("Scale"))
@@ -486,7 +477,7 @@ void DrmBackend::writeOutputsConfiguration()
     auto configGroup = KSharedConfig::openConfig()->group("DrmOutputs").group(uuid);
     // default position goes from left to right
     for (auto it = m_outputs.cbegin(); it != m_outputs.cend(); ++it) {
-        qCDebug(KWIN_DRM) << "Writing output configuration for [" << uuid << "] ["<< (*it)->uuid() << "]";
+        qCDebug(KWIN_DRM) << "Writing output configuration for [" << uuid << "] [" << (*it)->uuid() << "]";
         auto outputConfig = configGroup.group((*it)->uuid());
         outputConfig.writeEntry("Scale", (*it)->scale());
         outputConfig.writeEntry("Transform", transformToString((*it)->transform()));
@@ -535,7 +526,7 @@ void DrmBackend::enableOutput(DrmOutput *output, bool enable)
 
 DrmOutput *DrmBackend::findOutput(quint32 connector)
 {
-    auto it = std::find_if(m_outputs.constBegin(), m_outputs.constEnd(), [connector] (DrmOutput *o) {
+    auto it = std::find_if(m_outputs.constBegin(), m_outputs.constEnd(), [connector](DrmOutput *o) {
         return o->m_conn->id() == connector;
     });
     if (it != m_outputs.constEnd()) {
@@ -564,7 +555,6 @@ bool DrmBackend::present(DrmBuffer *buffer, DrmOutput *output)
 
 void DrmBackend::initCursor()
 {
-
 #if HAVE_EGL_STREAMS
     // Hardware cursors aren't currently supported with EGLStream backend,
     // possibly an NVIDIA driver bug
@@ -584,15 +574,13 @@ void DrmBackend::initCursor()
         hideCursor();
     }
 
-    connect(waylandServer()->seat(), &KWaylandServer::SeatInterface::hasPointerChanged, this,
-        [this] {
-            if (waylandServer()->seat()->hasPointer()) {
-                showCursor();
-            } else {
-                hideCursor();
-            }
+    connect(waylandServer()->seat(), &KWaylandServer::SeatInterface::hasPointerChanged, this, [this] {
+        if (waylandServer()->seat()->hasPointer()) {
+            showCursor();
+        } else {
+            hideCursor();
         }
-    );
+    });
     // now we have screens and can set cursors, so start tracking
     connect(Cursors::self(), &Cursors::currentCursorChanged, this, &DrmBackend::updateCursor);
     connect(Cursors::self(), &Cursors::positionChanged, this, &DrmBackend::moveCursor);
@@ -714,9 +702,7 @@ QVector<CompositingType> DrmBackend::supportedCompositors() const
 #if HAVE_GBM
     return QVector<CompositingType>{OpenGLCompositing, QPainterCompositing};
 #elif HAVE_EGL_STREAMS
-    return m_gpus.at(0)->useEglStreams() ?
-        QVector<CompositingType>{OpenGLCompositing, QPainterCompositing} :
-        QVector<CompositingType>{QPainterCompositing};
+    return m_gpus.at(0)->useEglStreams() ? QVector<CompositingType>{OpenGLCompositing, QPainterCompositing} : QVector<CompositingType>{QPainterCompositing};
 #else
     return QVector<CompositingType>{QPainterCompositing};
 #endif
@@ -727,7 +713,8 @@ QString DrmBackend::supportInformation() const
     QString supportInfo;
     QDebug s(&supportInfo);
     s.nospace();
-    s << "Name: " << "DRM" << Qt::endl;
+    s << "Name: "
+      << "DRM" << Qt::endl;
     s << "Active: " << m_active << Qt::endl;
     for (int g = 0; g < m_gpus.size(); g++) {
         s << "Atomic Mode Setting on GPU " << g << ": " << m_gpus.at(g)->atomicModeSetting() << Qt::endl;

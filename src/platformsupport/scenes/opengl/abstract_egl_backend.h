@@ -23,7 +23,6 @@ class BufferInterface;
 
 namespace KWin
 {
-
 class EglDmabuf;
 class AbstractOutput;
 
@@ -35,29 +34,36 @@ public:
     bool makeCurrent() override;
     void doneCurrent() override;
 
-    EGLDisplay eglDisplay() const {
+    EGLDisplay eglDisplay() const
+    {
         return m_display;
     }
-    EGLContext context() const {
+    EGLContext context() const
+    {
         return m_context;
     }
-    EGLSurface surface() const {
+    EGLSurface surface() const
+    {
         return m_surface;
     }
-    EGLConfig config() const {
+    EGLConfig config() const
+    {
         return m_config;
     }
 
     QSharedPointer<GLTexture> textureForOutput(AbstractOutput *output) const override;
 
-    static void setPrimaryBackend(AbstractEglBackend *primaryBackend) {
+    static void setPrimaryBackend(AbstractEglBackend *primaryBackend)
+    {
         s_primaryBackend = primaryBackend;
     }
-    static AbstractEglBackend *primaryBackend() {
+    static AbstractEglBackend *primaryBackend()
+    {
         return s_primaryBackend;
     }
 
-    bool isPrimary() const {
+    bool isPrimary() const
+    {
         return this == s_primaryBackend;
     }
 
@@ -88,7 +94,7 @@ private:
     EglDmabuf *m_dmaBuf = nullptr;
     QList<QByteArray> m_clientExtensions;
 
-    static AbstractEglBackend * s_primaryBackend;
+    static AbstractEglBackend *s_primaryBackend;
 };
 
 class KWIN_EXPORT AbstractEglTexture : public SceneOpenGLTexturePrivate
@@ -101,13 +107,16 @@ public:
 
 protected:
     AbstractEglTexture(SceneOpenGLTexture *texture, AbstractEglBackend *backend);
-    EGLImageKHR image() const {
+    EGLImageKHR image() const
+    {
         return m_image;
     }
-    void setImage(const EGLImageKHR &img) {
+    void setImage(const EGLImageKHR &img)
+    {
         m_image = img;
     }
-    SceneOpenGLTexture *texture() const {
+    SceneOpenGLTexture *texture() const
+    {
         return q;
     }
 
@@ -116,7 +125,7 @@ private:
     bool createTextureImage(const QImage &image);
     bool loadShmTexture(const QPointer<KWaylandServer::BufferInterface> &buffer);
     bool loadEglTexture(const QPointer<KWaylandServer::BufferInterface> &buffer);
-    bool loadDmabufTexture(const QPointer< KWaylandServer::BufferInterface > &buffer);
+    bool loadDmabufTexture(const QPointer<KWaylandServer::BufferInterface> &buffer);
     bool loadInternalImageObject(WindowPixmap *pixmap);
     EGLImageKHR attach(const QPointer<KWaylandServer::BufferInterface> &buffer);
     bool updateFromFBO(const QSharedPointer<QOpenGLFramebufferObject> &fbo);

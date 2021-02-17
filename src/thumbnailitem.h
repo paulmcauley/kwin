@@ -11,13 +11,12 @@
 #define KWIN_THUMBNAILITEM_H
 
 #include <QPointer>
+#include <QQuickPaintedItem>
 #include <QUuid>
 #include <QWeakPointer>
-#include <QQuickPaintedItem>
 
 namespace KWin
 {
-
 class AbstractClient;
 class EffectWindow;
 class EffectWindowImpl;
@@ -48,7 +47,7 @@ protected:
     explicit AbstractThumbnailItem(QQuickItem *parent = nullptr);
 
 protected Q_SLOTS:
-    virtual void repaint(KWin::EffectWindow* w) = 0;
+    virtual void repaint(KWin::EffectWindow *w) = 0;
 
 private Q_SLOTS:
     void init();
@@ -72,7 +71,8 @@ public:
     explicit WindowThumbnailItem(QQuickItem *parent = nullptr);
     ~WindowThumbnailItem() override;
 
-    QUuid wId() const {
+    QUuid wId() const
+    {
         return m_wId;
     }
     void setWId(const QUuid &wId);
@@ -83,7 +83,8 @@ Q_SIGNALS:
     void wIdChanged(const QUuid &wid);
     void clientChanged();
 protected Q_SLOTS:
-    void repaint(KWin::EffectWindow* w) override;
+    void repaint(KWin::EffectWindow *w) override;
+
 private:
     QUuid m_wId;
     AbstractClient *m_client;
@@ -97,7 +98,8 @@ public:
     DesktopThumbnailItem(QQuickItem *parent = nullptr);
     ~DesktopThumbnailItem() override;
 
-    int desktop() const {
+    int desktop() const
+    {
         return m_desktop;
     }
     void setDesktop(int desktop);
@@ -105,31 +107,28 @@ public:
 Q_SIGNALS:
     void desktopChanged(int desktop);
 protected Q_SLOTS:
-    void repaint(KWin::EffectWindow* w) override;
+    void repaint(KWin::EffectWindow *w) override;
+
 private:
     int m_desktop;
 };
 
-inline
-qreal AbstractThumbnailItem::brightness() const
+inline qreal AbstractThumbnailItem::brightness() const
 {
     return m_brightness;
 }
 
-inline
-qreal AbstractThumbnailItem::saturation() const
+inline qreal AbstractThumbnailItem::saturation() const
 {
     return m_saturation;
 }
 
-inline
-QQuickItem* AbstractThumbnailItem::clipTo() const
+inline QQuickItem *AbstractThumbnailItem::clipTo() const
 {
     return m_clipToItem.data();
 }
 
-inline
-AbstractClient *WindowThumbnailItem::client() const
+inline AbstractClient *WindowThumbnailItem::client() const
 {
     return m_client;
 }

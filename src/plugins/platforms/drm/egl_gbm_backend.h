@@ -45,7 +45,8 @@ public:
 
     QSharedPointer<GLTexture> textureForOutput(AbstractOutput *requestedOutput) const override;
 
-    int screenCount() const override {
+    int screenCount() const override
+    {
         return m_outputs.count();
     }
 

@@ -14,7 +14,6 @@
 
 namespace KWin
 {
-
 class OpenGLBackend;
 class SceneOpenGLTexturePrivate;
 class WindowPixmap;
@@ -25,12 +24,12 @@ public:
     explicit SceneOpenGLTexture(OpenGLBackend *backend);
     ~SceneOpenGLTexture() override;
 
-    SceneOpenGLTexture & operator = (const SceneOpenGLTexture& tex);
+    SceneOpenGLTexture &operator=(const SceneOpenGLTexture &tex);
 
     void discard() override final;
 
 private:
-    SceneOpenGLTexture(SceneOpenGLTexturePrivate& dd);
+    SceneOpenGLTexture(SceneOpenGLTexturePrivate &dd);
 
     bool load(WindowPixmap *pixmap);
     void updateFromPixmap(WindowPixmap *pixmap);

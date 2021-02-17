@@ -15,10 +15,10 @@
 #include "tabbox.h"
 #endif
 
-#include <KWaylandServer/display.h>
-#include <KWaylandServer/clientconnection.h>
-#include <KWaylandServer/surface_interface.h>
 #include <KWaylandServer/buffer_interface.h>
+#include <KWaylandServer/clientconnection.h>
+#include <KWaylandServer/display.h>
+#include <KWaylandServer/surface_interface.h>
 
 #include <QFileInfo>
 
@@ -31,7 +31,6 @@ using namespace KWaylandServer;
 
 namespace KWin
 {
-
 enum WaylandGeometryType {
     WaylandGeometryClient = 0x1,
     WaylandGeometryFrame = 0x2,
@@ -44,14 +43,10 @@ WaylandClient::WaylandClient(SurfaceInterface *surface)
     setSurface(surface);
     setupCompositing();
 
-    connect(surface, &SurfaceInterface::shadowChanged,
-            this, &WaylandClient::updateShadow);
-    connect(this, &WaylandClient::frameGeometryChanged,
-            this, &WaylandClient::updateClientOutputs);
-    connect(this, &WaylandClient::desktopFileNameChanged,
-            this, &WaylandClient::updateIcon);
-    connect(screens(), &Screens::changed, this,
-            &WaylandClient::updateClientOutputs);
+    connect(surface, &SurfaceInterface::shadowChanged, this, &WaylandClient::updateShadow);
+    connect(this, &WaylandClient::frameGeometryChanged, this, &WaylandClient::updateClientOutputs);
+    connect(this, &WaylandClient::desktopFileNameChanged, this, &WaylandClient::updateIcon);
+    connect(screens(), &Screens::changed, this, &WaylandClient::updateClientOutputs);
 
     updateResourceName();
     updateIcon();
@@ -167,14 +162,12 @@ bool WaylandClient::belongsToDesktop() const
 {
     const auto clients = waylandServer()->clients();
 
-    return std::any_of(clients.constBegin(), clients.constEnd(),
-        [this](const AbstractClient *client) {
-            if (belongsToSameApplication(client, SameApplicationChecks())) {
-                return client->isDesktop();
-            }
-            return false;
+    return std::any_of(clients.constBegin(), clients.constEnd(), [this](const AbstractClient *client) {
+        if (belongsToSameApplication(client, SameApplicationChecks())) {
+            return client->isDesktop();
         }
-    );
+        return false;
+    });
 }
 
 void WaylandClient::updateClientOutputs()

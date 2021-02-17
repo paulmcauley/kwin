@@ -10,14 +10,14 @@
 // KConfigSkeleton
 #include "coverswitchconfig.h"
 
-#include <kwinconfig.h>
+#include <KLocalizedString>
 #include <QFile>
+#include <QFontMetrics>
 #include <QIcon>
 #include <QMatrix4x4>
 #include <QMouseEvent>
-#include <QFontMetrics>
-#include <KLocalizedString>
 #include <kcolorscheme.h>
+#include <kwinconfig.h>
 
 #include <kwinglplatform.h>
 
@@ -25,7 +25,6 @@
 
 namespace KWin
 {
-
 CoverSwitchEffect::CoverSwitchEffect()
     : mActivated(0)
     , angle(60.0)
@@ -51,7 +50,8 @@ CoverSwitchEffect::CoverSwitchEffect()
     captionFont.setPointSize(captionFont.pointSize() * 2);
 
     if (effects->compositingType() == OpenGL2Compositing) {
-        m_reflectionShader = ShaderManager::instance()->generateShaderFromResources(ShaderTrait::MapTexture, QString(), QStringLiteral("coverswitch-reflection.glsl"));
+        m_reflectionShader =
+            ShaderManager::instance()->generateShaderFromResources(ShaderTrait::MapTexture, QString(), QStringLiteral("coverswitch-reflection.glsl"));
     } else {
         m_reflectionShader = nullptr;
     }
@@ -76,35 +76,33 @@ bool CoverSwitchEffect::supported()
 void CoverSwitchEffect::reconfigure(ReconfigureFlags)
 {
     CoverSwitchConfig::self()->read();
-    animationDuration = std::chrono::milliseconds(
-        animationTime<CoverSwitchConfig>(200));
-    animateSwitch     = CoverSwitchConfig::animateSwitch();
-    animateStart      = CoverSwitchConfig::animateStart();
-    animateStop       = CoverSwitchConfig::animateStop();
-    reflection        = CoverSwitchConfig::reflection();
-    windowTitle       = CoverSwitchConfig::windowTitle();
-    zPosition         = CoverSwitchConfig::zPosition();
+    animationDuration = std::chrono::milliseconds(animationTime<CoverSwitchConfig>(200));
+    animateSwitch = CoverSwitchConfig::animateSwitch();
+    animateStart = CoverSwitchConfig::animateStart();
+    animateStop = CoverSwitchConfig::animateStop();
+    reflection = CoverSwitchConfig::reflection();
+    windowTitle = CoverSwitchConfig::windowTitle();
+    zPosition = CoverSwitchConfig::zPosition();
     timeLine.setEasingCurve(QEasingCurve::InOutSine);
     timeLine.setDuration(animationDuration);
 
     // Defined outside the ui
-    primaryTabBox     = CoverSwitchConfig::tabBox();
-    secondaryTabBox   = CoverSwitchConfig::tabBoxAlternative();
+    primaryTabBox = CoverSwitchConfig::tabBox();
+    secondaryTabBox = CoverSwitchConfig::tabBoxAlternative();
 
-    QColor tmp        = CoverSwitchConfig::mirrorFrontColor();
+    QColor tmp = CoverSwitchConfig::mirrorFrontColor();
     mirrorColor[0][0] = tmp.redF();
     mirrorColor[0][1] = tmp.greenF();
     mirrorColor[0][2] = tmp.blueF();
     mirrorColor[0][3] = 1.0;
-    tmp               = CoverSwitchConfig::mirrorRearColor();
+    tmp = CoverSwitchConfig::mirrorRearColor();
     mirrorColor[1][0] = tmp.redF();
     mirrorColor[1][1] = tmp.greenF();
     mirrorColor[1][2] = tmp.blueF();
     mirrorColor[1][3] = -1.0;
-
 }
 
-void CoverSwitchEffect::prePaintScreen(ScreenPrePaintData& data, std::chrono::milliseconds presentTime)
+void CoverSwitchEffect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime)
 {
     std::chrono::milliseconds delta = std::chrono::milliseconds::zero();
     if (lastPresentTime.count()) {
@@ -123,13 +121,12 @@ void CoverSwitchEffect::prePaintScreen(ScreenPrePaintData& data, std::chrono::mi
     effects->prePaintScreen(data, presentTime);
 }
 
-void CoverSwitchEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData& data)
+void CoverSwitchEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData &data)
 {
     effects->paintScreen(mask, region, data);
 
     if (mActivated || stop || stopRequested) {
-
-        QList< EffectWindow* > tempList = currentWindowList;
+        QList<EffectWindow *> tempList = currentWindowList;
         int index = tempList.indexOf(selected_window);
         if (animation || start || stop) {
             if (!start && !stop) {
@@ -160,7 +157,7 @@ void CoverSwitchEffect::paintScreen(int mask, const QRegion &region, ScreenPaint
         if (rightIndex == tempList.count())
             rightIndex = 0;
 
-        EffectWindow* frontWindow = tempList[ index ];
+        EffectWindow *frontWindow = tempList[index];
         leftWindows.clear();
         rightWindows.clear();
 
@@ -174,7 +171,7 @@ void CoverSwitchEffect::paintScreen(int mask, const QRegion &region, ScreenPaint
             int tempIndex = (leftIndex - i);
             if (tempIndex < 0)
                 tempIndex = tempList.count() + tempIndex;
-            leftWindows.prepend(tempList[ tempIndex ]);
+            leftWindows.prepend(tempList[tempIndex]);
         }
         int rightWindowCount = 0;
         if (evenWindows)
@@ -183,7 +180,7 @@ void CoverSwitchEffect::paintScreen(int mask, const QRegion &region, ScreenPaint
             rightWindowCount = (tempList.count() - 1) / 2;
         for (int i = 0; i < rightWindowCount; i++) {
             int tempIndex = (rightIndex + i) % tempList.count();
-            rightWindows.prepend(tempList[ tempIndex ]);
+            rightWindows.prepend(tempList[tempIndex]);
         }
 
         if (reflection) {
@@ -198,12 +195,18 @@ void CoverSwitchEffect::paintScreen(int mask, const QRegion &region, ScreenPaint
             float reflectionScaleFactor = 100000 * tan(60.0 * M_PI / 360.0f) / area.width();
             const float width = area.width();
             const float height = area.height();
-            float vertices[] = {
-                -width * 0.5f, height, 0.0,
-                width * 0.5f, height, 0.0,
-                width*reflectionScaleFactor, height, -5000,
-                -width*reflectionScaleFactor, height, -5000
-            };
+            float vertices[] = {-width * 0.5f,
+                                height,
+                                0.0,
+                                width * 0.5f,
+                                height,
+                                0.0,
+                                width * reflectionScaleFactor,
+                                height,
+                                -5000,
+                                -width * reflectionScaleFactor,
+                                height,
+                                -5000};
             // foreground
             if (start) {
                 mirrorColor[0][3] = timeLine.value();
@@ -287,7 +290,7 @@ void CoverSwitchEffect::postPaintScreen()
             if (stop) {
                 stop = false;
                 effects->setActiveFullScreenEffect(nullptr);
-                foreach (EffectWindow * window, referrencedWindows) {
+                foreach (EffectWindow *window, referrencedWindows) {
                     window->unrefWindow();
                 }
                 referrencedWindows.clear();
@@ -322,8 +325,7 @@ void CoverSwitchEffect::postPaintScreen()
     effects->postPaintScreen();
 }
 
-void CoverSwitchEffect::paintScene(EffectWindow* frontWindow, const EffectWindowList& leftWindows,
-                                   const EffectWindowList& rightWindows, bool reflectedWindows)
+void CoverSwitchEffect::paintScene(EffectWindow *frontWindow, const EffectWindowList &leftWindows, const EffectWindowList &rightWindows, bool reflectedWindows)
 {
     // LAYOUT
     // one window in the front. Other windows left and right rotated
@@ -342,7 +344,6 @@ void CoverSwitchEffect::paintScene(EffectWindow* frontWindow, const EffectWindow
     int width = area.width();
     int leftWindowCount = leftWindows.count();
     int rightWindowCount = rightWindows.count();
-
 
     // Problem during animation: a window which is painted after another window
     // appears in front of the other
@@ -372,7 +373,7 @@ void CoverSwitchEffect::paintScene(EffectWindow* frontWindow, const EffectWindow
                 paintWindows(rightWindows, false, reflectedWindows);
                 paintFrontWindow(frontWindow, width, leftWindowCount, rightWindowCount, reflectedWindows);
             } else {
-                EffectWindow* leftWindow;
+                EffectWindow *leftWindow;
                 if (leftWindowCount > 0) {
                     leftWindow = leftWindows.at(0);
                     paintFrontWindow(frontWindow, width, leftWindowCount, rightWindowCount, reflectedWindows);
@@ -384,7 +385,7 @@ void CoverSwitchEffect::paintScene(EffectWindow* frontWindow, const EffectWindow
     }
 }
 
-void CoverSwitchEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPaintData& data)
+void CoverSwitchEffect::paintWindow(EffectWindow *w, int mask, QRegion region, WindowPaintData &data)
 {
     if (mActivated || stop || stopRequested) {
         if (!(mask & PAINT_WINDOW_TRANSFORMED) && !w->isDesktop()) {
@@ -397,7 +398,7 @@ void CoverSwitchEffect::paintWindow(EffectWindow* w, int mask, QRegion region, W
         }
     }
     if ((start || stop) && (!w->isOnCurrentDesktop() || w->isMinimized())) {
-        if (stop)  // Fade out windows not on the current desktop
+        if (stop) // Fade out windows not on the current desktop
             data.setOpacity(1.0 - timeLine.value());
         else // Fade in Windows from other desktops when animation is started
             data.setOpacity(timeLine.value());
@@ -412,11 +413,9 @@ void CoverSwitchEffect::slotTabBoxAdded(int mode)
     if (!mActivated) {
         effects->setShowingDesktop(false);
         // only for windows mode
-        if (((mode == TabBoxWindowsMode && primaryTabBox) ||
-                (mode == TabBoxWindowsAlternativeMode && secondaryTabBox) ||
-                (mode == TabBoxCurrentAppWindowsMode && primaryTabBox) ||
-                (mode == TabBoxCurrentAppWindowsAlternativeMode && secondaryTabBox))
-                && effects->currentTabBoxWindowList().count() > 0) {
+        if (((mode == TabBoxWindowsMode && primaryTabBox) || (mode == TabBoxWindowsAlternativeMode && secondaryTabBox)
+             || (mode == TabBoxCurrentAppWindowsMode && primaryTabBox) || (mode == TabBoxCurrentAppWindowsAlternativeMode && secondaryTabBox))
+            && effects->currentTabBoxWindowList().count() > 0) {
             effects->startMouseInterception(this, Qt::ArrowCursor);
             activeScreen = effects->activeScreen();
             if (!stop && !stopRequested) {
@@ -458,7 +457,7 @@ void CoverSwitchEffect::slotTabBoxAdded(int mode)
 
                     float ymax = zNear * std::tan(fovy * M_PI / 360.0f);
                     float ymin = -ymax;
-                    float xmin =  ymin * aspect;
+                    float xmin = ymin * aspect;
                     float xmax = ymax * aspect;
 
                     if (area.width() != fullRect.width()) {
@@ -493,9 +492,7 @@ void CoverSwitchEffect::slotTabBoxAdded(int mode)
                     // to world coordinates.
                     QMatrix4x4 matrix;
                     matrix.translate(xmin * scaleFactor, ymax * scaleFactor, -1.1);
-                    matrix.scale( (xmax - xmin) * scaleFactor / fullRect.width(),
-                                -(ymax - ymin) * scaleFactor / fullRect.height(),
-                                0.001);
+                    matrix.scale((xmax - xmin) * scaleFactor / fullRect.width(), -(ymax - ymin) * scaleFactor / fullRect.height(), 0.001);
                     // Combine the matrices
                     m_projectionMatrix *= matrix;
 
@@ -505,10 +502,8 @@ void CoverSwitchEffect::slotTabBoxAdded(int mode)
 
                 // Setup caption frame geometry
                 if (windowTitle) {
-                    QRect frameRect = QRect(area.width() * 0.25f + area.x(),
-                                            area.height() * 0.9f + area.y(),
-                                            area.width() * 0.5f,
-                                            QFontMetrics(captionFont).height());
+                    QRect frameRect =
+                        QRect(area.width() * 0.25f + area.x(), area.height() * 0.9f + area.y(), area.width() * 0.5f, QFontMetrics(captionFont).height());
                     if (!captionFrame) {
                         captionFrame = effects->effectFrame(EffectFrameStyled);
                         captionFrame->setFont(captionFont);
@@ -608,7 +603,7 @@ void CoverSwitchEffect::slotTabBoxUpdated()
     }
 }
 
-void CoverSwitchEffect::paintWindowCover(EffectWindow* w, bool reflectedWindow, WindowPaintData& data)
+void CoverSwitchEffect::paintWindowCover(EffectWindow *w, bool reflectedWindow, WindowPaintData &data)
 {
     QRect windowRect = w->geometry();
     data.setYTranslation(area.height() - windowRect.y() - windowRect.height());
@@ -626,17 +621,17 @@ void CoverSwitchEffect::paintWindowCover(EffectWindow* w, bool reflectedWindow, 
                 QRect fullRect = effects->clientArea(FullArea, activeScreen, effects->currentDesktop());
                 if (w->screen() == activeScreen) {
                     if (clientRect.width() != fullRect.width() && clientRect.x() != fullRect.x()) {
-                        data.translate(- clientRect.x() * (1.0f - timeLine.value()));
+                        data.translate(-clientRect.x() * (1.0f - timeLine.value()));
                     }
                     if (clientRect.height() != fullRect.height() && clientRect.y() != fullRect.y()) {
-                        data.translate(0.0, - clientRect.y() * (1.0f - timeLine.value()));
+                        data.translate(0.0, -clientRect.y() * (1.0f - timeLine.value()));
                     }
                 } else {
                     if (clientRect.width() != fullRect.width() && clientRect.x() < area.x()) {
-                        data.translate(- clientRect.width() * (1.0f - timeLine.value()));
+                        data.translate(-clientRect.width() * (1.0f - timeLine.value()));
                     }
                     if (clientRect.height() != fullRect.height() && clientRect.y() < area.y()) {
-                        data.translate(0.0, - clientRect.height() * (1.0f - timeLine.value()));
+                        data.translate(0.0, -clientRect.height() * (1.0f - timeLine.value()));
                     }
                 }
             }
@@ -657,17 +652,17 @@ void CoverSwitchEffect::paintWindowCover(EffectWindow* w, bool reflectedWindow, 
                 QRect fullRect = effects->clientArea(FullArea, activeScreen, effects->currentDesktop());
                 if (w->screen() == activeScreen) {
                     if (clientRect.width() != fullRect.width() && clientRect.x() != fullRect.x()) {
-                        data.translate(- clientRect.x() * timeLine.value());
+                        data.translate(-clientRect.x() * timeLine.value());
                     }
                     if (clientRect.height() != fullRect.height() && clientRect.y() != fullRect.y()) {
-                        data.translate(0.0, - clientRect.y() * timeLine.value());
+                        data.translate(0.0, -clientRect.y() * timeLine.value());
                     }
                 } else {
                     if (clientRect.width() != fullRect.width() && clientRect.x() < rect.x()) {
-                        data.translate(- clientRect.width() * timeLine.value());
+                        data.translate(-clientRect.width() * timeLine.value());
                     }
                     if (clientRect.height() != fullRect.height() && clientRect.y() < area.y()) {
-                        data.translate(0.0, - clientRect.height() * timeLine.value());
+                        data.translate(0.0, -clientRect.height() * timeLine.value());
                     }
                 }
             }
@@ -678,24 +673,20 @@ void CoverSwitchEffect::paintWindowCover(EffectWindow* w, bool reflectedWindow, 
     if (reflectedWindow) {
         QMatrix4x4 reflectionMatrix;
         reflectionMatrix.scale(1.0, -1.0, 1.0);
-        data.setModelViewMatrix(reflectionMatrix*data.modelViewMatrix());
-        data.setYTranslation(- area.height() - windowRect.y() - windowRect.height());
+        data.setModelViewMatrix(reflectionMatrix * data.modelViewMatrix());
+        data.setYTranslation(-area.height() - windowRect.y() - windowRect.height());
         if (start) {
             data.multiplyOpacity(timeLine.value());
         } else if (stop) {
             data.multiplyOpacity(1.0 - timeLine.value());
         }
-        effects->drawWindow(w,
-                                PAINT_WINDOW_TRANSFORMED,
-                                infiniteRegion(), data);
+        effects->drawWindow(w, PAINT_WINDOW_TRANSFORMED, infiniteRegion(), data);
     } else {
-        effects->paintWindow(w,
-                             PAINT_WINDOW_TRANSFORMED,
-                             infiniteRegion(), data);
+        effects->paintWindow(w, PAINT_WINDOW_TRANSFORMED, infiniteRegion(), data);
     }
 }
 
-void CoverSwitchEffect::paintFrontWindow(EffectWindow* frontWindow, int width, int leftWindows, int rightWindows, bool reflectedWindow)
+void CoverSwitchEffect::paintFrontWindow(EffectWindow *frontWindow, int width, int leftWindows, int rightWindows, bool reflectedWindow)
 {
     if (frontWindow == nullptr)
         return;
@@ -715,20 +706,20 @@ void CoverSwitchEffect::paintFrontWindow(EffectWindow* frontWindow, int width, i
         rightWindows = 1;
     }
     if (animation) {
-      float distance = 0.0;
-      const QSize screenSize = effects->virtualScreenSize();
-      if (direction == Right) {
+        float distance = 0.0;
+        const QSize screenSize = effects->virtualScreenSize();
+        if (direction == Right) {
             // move to right
-            distance = -frontWindow->geometry().width() * 0.5f + area.width() * 0.5f +
-                       (((float)screenSize.width() * 0.5 * scaleFactor) - (float)area.width() * 0.5f) / rightWindows;
+            distance = -frontWindow->geometry().width() * 0.5f + area.width() * 0.5f
+                + (((float)screenSize.width() * 0.5 * scaleFactor) - (float)area.width() * 0.5f) / rightWindows;
             data.translate(distance * timeLine.value());
             data.setRotationAxis(Qt::YAxis);
             data.setRotationAngle(-angle * timeLine.value());
             data.setRotationOrigin(QVector3D(frontWindow->geometry().width(), 0.0, 0.0));
         } else {
             // move to left
-            distance = frontWindow->geometry().width() * 0.5f - area.width() * 0.5f +
-                       ((float)width * 0.5f - ((float)screenSize.width() * 0.5 * scaleFactor)) / leftWindows;
+            distance = frontWindow->geometry().width() * 0.5f - area.width() * 0.5f
+                + ((float)width * 0.5f - ((float)screenSize.width() * 0.5 * scaleFactor)) / leftWindows;
             float factor = 1.0;
             if (specialHandlingForward)
                 factor = 2.0;
@@ -743,11 +734,11 @@ void CoverSwitchEffect::paintFrontWindow(EffectWindow* frontWindow, int width, i
     paintWindowCover(frontWindow, reflectedWindow, data);
 }
 
-void CoverSwitchEffect::paintWindows(const EffectWindowList& windows, bool left, bool reflectedWindows, EffectWindow* additionalWindow)
+void CoverSwitchEffect::paintWindows(const EffectWindowList &windows, bool left, bool reflectedWindows, EffectWindow *additionalWindow)
 {
     int width = area.width();
     int windowCount = windows.count();
-    EffectWindow* window;
+    EffectWindow *window;
 
     int rotateFactor = 1;
     if (!left) {
@@ -755,7 +746,7 @@ void CoverSwitchEffect::paintWindows(const EffectWindowList& windows, bool left,
     }
 
     const QSize screenSize = effects->virtualScreenSize();
-    float xTranslate = -((float)(width) * 0.5f - ((float)screenSize.width() * 0.5 * scaleFactor));
+    float xTranslate = -((float)(width)*0.5f - ((float)screenSize.width() * 0.5 * scaleFactor));
     if (!left)
         xTranslate = ((float)screenSize.width() * 0.5 * scaleFactor) - (float)width * 0.5f;
     // handling for additional window from other side
@@ -770,10 +761,8 @@ void CoverSwitchEffect::paintWindows(const EffectWindowList& windows, bool left,
         data.setRotationAngle(angle * rotateFactor);
         if (left) {
             data.translate(-xTranslate - additionalWindow->geometry().x());
-        }
-        else {
-            data.translate(xTranslate + area.width() -
-                           additionalWindow->geometry().x() - additionalWindow->geometry().width());
+        } else {
+            data.translate(xTranslate + area.width() - additionalWindow->geometry().x() - additionalWindow->geometry().width());
             data.setRotationOrigin(QVector3D(additionalWindow->geometry().width(), 0.0, 0.0));
         }
         data.multiplyOpacity((timeLine.value() - 0.5) * 2.0);
@@ -805,7 +794,8 @@ void CoverSwitchEffect::paintWindows(const EffectWindowList& windows, bool left,
                     data.setRotationAngle(angle - angle * timeLine.value());
                 }
                 // right most window does not have to be moved
-                else if (!left && (i == 0));     // do nothing
+                else if (!left && (i == 0))
+                    ; // do nothing
                 else {
                     // all other windows - move to next position
                     data.translate(xTranslate / windowCount * timeLine.value());
@@ -813,14 +803,15 @@ void CoverSwitchEffect::paintWindows(const EffectWindowList& windows, bool left,
             } else {
                 if ((i == windowCount - 1) && !left) {
                     // left most window on right side -> move to front
-                    data.translate(- (xTranslate / windowCount + (width - window->geometry().width()) * 0.5f) * timeLine.value());
+                    data.translate(-(xTranslate / windowCount + (width - window->geometry().width()) * 0.5f) * timeLine.value());
                     data.setRotationAngle(angle - angle * timeLine.value());
                 }
                 // left most window does not have to be moved
-                else if (i == 0 && left); // do nothing
+                else if (i == 0 && left)
+                    ; // do nothing
                 else {
                     // all other windows - move to next position
-                    data.translate(- xTranslate / windowCount * timeLine.value());
+                    data.translate(-xTranslate / windowCount * timeLine.value());
                 }
             }
         }
@@ -840,14 +831,14 @@ void CoverSwitchEffect::paintWindows(const EffectWindowList& windows, bool left,
     }
 }
 
-void CoverSwitchEffect::windowInputMouseEvent(QEvent* e)
+void CoverSwitchEffect::windowInputMouseEvent(QEvent *e)
 {
     if (e->type() != QEvent::MouseButtonPress)
         return;
     // we don't want click events during animations
     if (animation)
         return;
-    QMouseEvent* event = static_cast< QMouseEvent* >(e);
+    QMouseEvent *event = static_cast<QMouseEvent *>(e);
 
     switch (event->button()) {
     case Qt::XButton1: // wheel up
@@ -864,21 +855,21 @@ void CoverSwitchEffect::windowInputMouseEvent(QEvent* e)
 
         // determine if a window has been clicked
         // not interested in events above a fullscreen window (ignoring panel size)
-        if (pos.y() < (area.height()*scaleFactor - area.height()) * 0.5f *(1.0f / scaleFactor))
+        if (pos.y() < (area.height() * scaleFactor - area.height()) * 0.5f * (1.0f / scaleFactor))
             return;
 
         // if there is no selected window (that is no window at all) we cannot click it
         if (!selected_window)
             return;
 
-        if (pos.x() < (area.width()*scaleFactor - selected_window->width()) * 0.5f *(1.0f / scaleFactor)) {
+        if (pos.x() < (area.width() * scaleFactor - selected_window->width()) * 0.5f * (1.0f / scaleFactor)) {
             float availableSize = (area.width() * scaleFactor - area.width()) * 0.5f * (1.0f / scaleFactor);
             for (int i = 0; i < leftWindows.count(); i++) {
                 int windowPos = availableSize / leftWindows.count() * i;
                 if (pos.x() < windowPos)
                     continue;
                 if (i + 1 < leftWindows.count()) {
-                    if (pos.x() > availableSize / leftWindows.count()*(i + 1))
+                    if (pos.x() > availableSize / leftWindows.count() * (i + 1))
                         continue;
                 }
 
@@ -887,14 +878,14 @@ void CoverSwitchEffect::windowInputMouseEvent(QEvent* e)
             }
         }
 
-        if (pos.x() > area.width() - (area.width()*scaleFactor - selected_window->width()) * 0.5f *(1.0f / scaleFactor)) {
+        if (pos.x() > area.width() - (area.width() * scaleFactor - selected_window->width()) * 0.5f * (1.0f / scaleFactor)) {
             float availableSize = (area.width() * scaleFactor - area.width()) * 0.5f * (1.0f / scaleFactor);
             for (int i = 0; i < rightWindows.count(); i++) {
                 int windowPos = area.width() - availableSize / rightWindows.count() * i;
                 if (pos.x() > windowPos)
                     continue;
                 if (i + 1 < rightWindows.count()) {
-                    if (pos.x() < area.width() - availableSize / rightWindows.count()*(i + 1))
+                    if (pos.x() < area.width() - availableSize / rightWindows.count() * (i + 1))
                         continue;
                 }
 
@@ -924,7 +915,7 @@ void CoverSwitchEffect::abort()
     captionFrame->free();
 }
 
-void CoverSwitchEffect::slotWindowClosed(EffectWindow* c)
+void CoverSwitchEffect::slotWindowClosed(EffectWindow *c)
 {
     if (c == selected_window)
         selected_window = nullptr;
@@ -949,8 +940,7 @@ void CoverSwitchEffect::updateCaption()
         return;
     }
     if (selected_window->isDesktop()) {
-        captionFrame->setText(i18nc("Special entry in alt+tab list for minimizing all windows",
-                     "Show Desktop"));
+        captionFrame->setText(i18nc("Special entry in alt+tab list for minimizing all windows", "Show Desktop"));
         static QPixmap pix = QIcon::fromTheme(QStringLiteral("user-desktop")).pixmap(captionFrame->iconSize());
         captionFrame->setIcon(pix);
     } else {
@@ -991,7 +981,7 @@ void CoverSwitchEffect::selectNextOrPreviousWindow(bool forward)
     if (newIndex == effects->currentTabBoxWindowList().size()) {
         newIndex = 0;
     } else if (newIndex < 0) {
-        newIndex = effects->currentTabBoxWindowList().size() -1;
+        newIndex = effects->currentTabBoxWindowList().size() - 1;
     }
     if (index == newIndex) {
         return;

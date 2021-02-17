@@ -18,11 +18,11 @@
 #include "logging.h"
 #include "options.h"
 
-#include "wayland_server.h"
 #include "screens.h"
+#include "wayland_server.h"
 
-#include <unistd.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 // kwin libs
 #include <kwinglplatform.h>
@@ -42,7 +42,6 @@ namespace KWin
 {
 namespace Wayland
 {
-
 EglWaylandOutput::EglWaylandOutput(WaylandOutput *output, QObject *parent)
     : QObject(parent)
     , m_waylandOutput(output)
@@ -62,7 +61,7 @@ bool EglWaylandOutput::init(EglWaylandBackend *backend)
 
     EGLSurface eglSurface = EGL_NO_SURFACE;
     if (backend->havePlatformBase()) {
-        eglSurface = eglCreatePlatformWindowSurfaceEXT(backend->eglDisplay(), backend->config(), (void *) overlay, nullptr);
+        eglSurface = eglCreatePlatformWindowSurfaceEXT(backend->eglDisplay(), backend->config(), (void *)overlay, nullptr);
     } else {
         eglSurface = eglCreateWindowSurface(backend->eglDisplay(), backend->config(), overlay, nullptr);
     }
@@ -92,7 +91,7 @@ EglWaylandBackend::EglWaylandBackend(WaylandBackend *b)
         setFailed("Wayland Backend has not been created");
         return;
     }
-    qCDebug(KWIN_WAYLAND_BACKEND) << "Connected to Wayland display?" << (m_backend->display() ? "yes" : "no" );
+    qCDebug(KWIN_WAYLAND_BACKEND) << "Connected to Wayland display?" << (m_backend->display() ? "yes" : "no");
     if (!m_backend->display()) {
         setFailed("Could not connect to Wayland compositor");
         return;
@@ -102,20 +101,16 @@ EglWaylandBackend::EglWaylandBackend(WaylandBackend *b)
     setIsDirectRendering(true);
 
     connect(m_backend, &WaylandBackend::outputAdded, this, &EglWaylandBackend::createEglWaylandOutput);
-    connect(m_backend, &WaylandBackend::outputRemoved, this,
-        [this] (AbstractOutput *output) {
-            auto it = std::find_if(m_outputs.begin(), m_outputs.end(),
-                [output] (const EglWaylandOutput *o) {
-                    return o->m_waylandOutput == output;
-                }
-            );
-            if (it == m_outputs.end()) {
-                return;
-            }
-            cleanupOutput(*it);
-            m_outputs.erase(it);
+    connect(m_backend, &WaylandBackend::outputRemoved, this, [this](AbstractOutput *output) {
+        auto it = std::find_if(m_outputs.begin(), m_outputs.end(), [output](const EglWaylandOutput *o) {
+            return o->m_waylandOutput == output;
+        });
+        if (it == m_outputs.end()) {
+            return;
         }
-    );
+        cleanupOutput(*it);
+        m_outputs.erase(it);
+    });
 }
 
 EglWaylandBackend::~EglWaylandBackend()
@@ -241,21 +236,27 @@ bool EglWaylandBackend::makeContextCurrent(EglWaylandOutput *output)
     const qreal scale = output->m_waylandOutput->scale();
 
     const QSize overall = screens()->size();
-    glViewport(-v.x() * scale, (v.height() - overall.height() + v.y()) * scale,
-               overall.width() * scale, overall.height() * scale);
+    glViewport(-v.x() * scale, (v.height() - overall.height() + v.y()) * scale, overall.width() * scale, overall.height() * scale);
     return true;
 }
 
 bool EglWaylandBackend::initBufferConfigs()
 {
     const EGLint config_attribs[] = {
-        EGL_SURFACE_TYPE,         EGL_WINDOW_BIT,
-        EGL_RED_SIZE,             1,
-        EGL_GREEN_SIZE,           1,
-        EGL_BLUE_SIZE,            1,
-        EGL_ALPHA_SIZE,           0,
-        EGL_RENDERABLE_TYPE,      isOpenGLES() ? EGL_OPENGL_ES2_BIT : EGL_OPENGL_BIT,
-        EGL_CONFIG_CAVEAT,        EGL_NONE,
+        EGL_SURFACE_TYPE,
+        EGL_WINDOW_BIT,
+        EGL_RED_SIZE,
+        1,
+        EGL_GREEN_SIZE,
+        1,
+        EGL_BLUE_SIZE,
+        1,
+        EGL_ALPHA_SIZE,
+        0,
+        EGL_RENDERABLE_TYPE,
+        isOpenGLES() ? EGL_OPENGL_ES2_BIT : EGL_OPENGL_BIT,
+        EGL_CONFIG_CAVEAT,
+        EGL_NONE,
         EGL_NONE,
     };
 
@@ -277,9 +278,7 @@ bool EglWaylandBackend::initBufferConfigs()
 static QVector<EGLint> regionToRects(const QRegion &region, AbstractWaylandOutput *output)
 {
     const int height = output->modeSize().height();
-    const QMatrix4x4 matrix = WaylandOutput::logicalToNativeMatrix(output->geometry(),
-                                                                   output->scale(),
-                                                                   output->transform());
+    const QMatrix4x4 matrix = WaylandOutput::logicalToNativeMatrix(output->geometry(), output->scale(), output->transform());
 
     QVector<EGLint> rects;
     rects.reserve(region.rectCount() * 4);
@@ -302,8 +301,7 @@ void EglWaylandBackend::aboutToStartPainting(int screenId, const QRegion &damage
         const QRegion region = damagedRegion & output->m_waylandOutput->geometry();
 
         QVector<EGLint> rects = regionToRects(region, output->m_waylandOutput);
-        const bool correct = eglSetDamageRegionKHR(eglDisplay(), output->m_eglSurface,
-                                                   rects.data(), rects.count()/4);
+        const bool correct = eglSetDamageRegionKHR(eglDisplay(), output->m_eglSurface, rects.data(), rects.count() / 4);
         if (!correct) {
             qCWarning(KWIN_WAYLAND_BACKEND) << "failed eglSetDamageRegionKHR" << eglGetError();
         }
@@ -320,8 +318,7 @@ void EglWaylandBackend::presentOnSurface(EglWaylandOutput *output, const QRegion
 
     if (supportsSwapBuffersWithDamage() && !output->m_damageHistory.isEmpty()) {
         QVector<EGLint> rects = regionToRects(output->m_damageHistory.constFirst(), waylandOutput);
-        if (!eglSwapBuffersWithDamageEXT(eglDisplay(), output->m_eglSurface,
-                                         rects.data(), rects.count() / 4)) {
+        if (!eglSwapBuffersWithDamageEXT(eglDisplay(), output->m_eglSurface, rects.data(), rects.count() / 4)) {
             qCCritical(KWIN_WAYLAND_BACKEND, "eglSwapBuffersWithDamage() failed: %x", eglGetError());
         }
     } else {
@@ -333,7 +330,6 @@ void EglWaylandBackend::presentOnSurface(EglWaylandOutput *output, const QRegion
     if (supportsBufferAge()) {
         eglQuerySurface(eglDisplay(), output->m_eglSurface, EGL_BUFFER_AGE_EXT, &output->m_bufferAge);
     }
-
 }
 
 void EglWaylandBackend::screenGeometryChanged(const QSize &size)

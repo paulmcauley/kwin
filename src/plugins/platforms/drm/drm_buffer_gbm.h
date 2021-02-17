@@ -23,7 +23,6 @@ class BufferInterface;
 
 namespace KWin
 {
-
 class GbmSurface;
 
 class DrmSurfaceBuffer : public DrmBuffer
@@ -33,19 +32,22 @@ public:
     DrmSurfaceBuffer(int fd, gbm_bo *buffer, KWaylandServer::BufferInterface *bufferInterface);
     ~DrmSurfaceBuffer() override;
 
-    bool needsModeChange(DrmBuffer *b) const override {
-        if (DrmSurfaceBuffer *sb = dynamic_cast<DrmSurfaceBuffer*>(b)) {
+    bool needsModeChange(DrmBuffer *b) const override
+    {
+        if (DrmSurfaceBuffer *sb = dynamic_cast<DrmSurfaceBuffer *>(b)) {
             return hasBo() != sb->hasBo();
         } else {
             return true;
         }
     }
 
-    bool hasBo() const {
+    bool hasBo() const
+    {
         return m_bo != nullptr;
     }
 
-    gbm_bo* getBo() const {
+    gbm_bo *getBo() const
+    {
         return m_bo;
     }
 
@@ -62,4 +64,3 @@ private:
 }
 
 #endif
-

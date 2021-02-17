@@ -10,21 +10,19 @@
 #ifndef KWIN_COVERSWITCH_H
 #define KWIN_COVERSWITCH_H
 
+#include <QFont>
 #include <QHash>
+#include <QQueue>
 #include <QRect>
 #include <QRegion>
 #include <QSize>
-#include <QFont>
-#include <QQueue>
 
 #include <kwineffects.h>
 #include <kwinglutils.h>
 
 namespace KWin
 {
-
-class CoverSwitchEffect
-    : public Effect
+class CoverSwitchEffect : public Effect
 {
     Q_OBJECT
     Q_PROPERTY(int animationDuration READ configuredAnimationDuration)
@@ -52,35 +50,45 @@ public:
     static bool supported();
 
     // for properties
-    int configuredAnimationDuration() const {
+    int configuredAnimationDuration() const
+    {
         return animationDuration.count();
     }
-    bool isAnimateSwitch() const {
+    bool isAnimateSwitch() const
+    {
         return animateSwitch;
     }
-    bool isAnimateStart() const {
+    bool isAnimateStart() const
+    {
         return animateStart;
     }
-    bool isAnimateStop() const {
+    bool isAnimateStop() const
+    {
         return animateStop;
     }
-    bool isReflection() const {
+    bool isReflection() const
+    {
         return reflection;
     }
-    bool isWindowTitle() const {
+    bool isWindowTitle() const
+    {
         return windowTitle;
     }
-    qreal windowZPosition() const {
+    qreal windowZPosition() const
+    {
         return zPosition;
     }
-    bool isPrimaryTabBox() const {
+    bool isPrimaryTabBox() const
+    {
         return primaryTabBox;
     }
-    bool isSecondaryTabBox() const {
+    bool isSecondaryTabBox() const
+    {
         return secondaryTabBox;
     }
 
-    int requestedEffectChainPosition() const override {
+    int requestedEffectChainPosition() const override
+    {
         return 50;
     }
 
@@ -89,17 +97,22 @@ public Q_SLOTS:
     void slotTabBoxAdded(int mode);
     void slotTabBoxClosed();
     void slotTabBoxUpdated();
-    void slotTabBoxKeyEvent(QKeyEvent* event);
+    void slotTabBoxKeyEvent(QKeyEvent *event);
 
 private:
-    void paintScene(EffectWindow* frontWindow, const EffectWindowList& leftWindows, const EffectWindowList& rightWindows,
-                    bool reflectedWindows = false);
-    void paintWindowCover(EffectWindow* w, bool reflectedWindow, WindowPaintData& data);
-    void paintFrontWindow(EffectWindow* frontWindow, int width, int leftWindows, int rightWindows, bool reflectedWindow);
-    void paintWindows(const EffectWindowList& windows, bool left, bool reflectedWindows, EffectWindow* additionalWindow = nullptr);
+    void paintScene(EffectWindow *frontWindow, const EffectWindowList &leftWindows, const EffectWindowList &rightWindows, bool reflectedWindows = false);
+    void paintWindowCover(EffectWindow *w, bool reflectedWindow, WindowPaintData &data);
+    void paintFrontWindow(EffectWindow *frontWindow, int width, int leftWindows, int rightWindows, bool reflectedWindow);
+    void paintWindows(const EffectWindowList &windows, bool left, bool reflectedWindows, EffectWindow *additionalWindow = nullptr);
     void selectNextOrPreviousWindow(bool forward);
-    inline void selectNextWindow() { selectNextOrPreviousWindow(true); }
-    inline void selectPreviousWindow() { selectNextOrPreviousWindow(false); }
+    inline void selectNextWindow()
+    {
+        selectNextOrPreviousWindow(true);
+    }
+    inline void selectPreviousWindow()
+    {
+        selectNextOrPreviousWindow(false);
+    }
     void abort();
     /**
      * Updates the caption of the caption frame.
@@ -127,20 +140,17 @@ private:
     QRect area;
     float zPosition;
     float scaleFactor;
-    enum Direction {
-        Left,
-        Right
-    };
+    enum Direction { Left, Right };
     Direction direction;
     QQueue<Direction> scheduled_directions;
-    EffectWindow* selected_window;
+    EffectWindow *selected_window;
     int activeScreen;
-    QList< EffectWindow* > leftWindows;
-    QList< EffectWindow* > rightWindows;
+    QList<EffectWindow *> leftWindows;
+    QList<EffectWindow *> rightWindows;
     EffectWindowList currentWindowList;
     EffectWindowList referrencedWindows;
 
-    EffectFrame* captionFrame;
+    EffectFrame *captionFrame;
     QFont captionFont;
 
     bool primaryTabBox;

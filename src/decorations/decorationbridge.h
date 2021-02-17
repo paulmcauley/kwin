@@ -27,12 +27,10 @@ class DecorationSettings;
 
 namespace KWin
 {
-
 class AbstractClient;
 
 namespace Decoration
 {
-
 class KWIN_EXPORT DecorationBridge : public KDecoration2::DecorationBridge
 {
     Q_OBJECT
@@ -46,20 +44,24 @@ public:
     std::unique_ptr<KDecoration2::DecorationSettingsPrivate> settings(KDecoration2::DecorationSettings *parent) override;
     void update(KDecoration2::Decoration *decoration, const QRect &geometry) override;
 
-    bool needsBlur() const {
+    bool needsBlur() const
+    {
         return m_blur;
     }
-    QString recommendedBorderSize() const {
+    QString recommendedBorderSize() const
+    {
         return m_recommendedBorderSize;
     }
 
-    bool showToolTips() const {
+    bool showToolTips() const
+    {
         return m_showToolTips;
     }
 
     void reconfigure();
 
-    const QSharedPointer<KDecoration2::DecorationSettings> &settings() const {
+    const QSharedPointer<KDecoration2::DecorationSettings> &settings() const
+    {
         return m_settings;
     }
 

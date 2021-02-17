@@ -10,7 +10,6 @@
 
 namespace KWin
 {
-
 enum class SyncMode {
     Sync,
     Async,

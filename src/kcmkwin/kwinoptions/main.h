@@ -9,7 +9,6 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 
-
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
@@ -29,7 +28,6 @@ class KWinOptions : public KCModule
     Q_OBJECT
 
 public:
-
     KWinOptions(QWidget *parent, const QVariantList &args);
 
     void load() override;
@@ -38,8 +36,7 @@ public:
     QString quickHelp() const override;
 
 private:
-
-    QTabWidget   *tab;
+    QTabWidget *tab;
 
     KFocusConfig *mFocus;
     KTitleBarActionsConfig *mTitleBarActions;
@@ -55,7 +52,6 @@ class KActionsOptions : public KCModule
     Q_OBJECT
 
 public:
-
     KActionsOptions(QWidget *parent, const QVariantList &args);
 
     void load() override;
@@ -67,8 +63,7 @@ protected Q_SLOTS:
     void moduleChanged(bool state);
 
 private:
-
-    QTabWidget   *tab;
+    QTabWidget *tab;
 
     KTitleBarActionsConfig *mTitleBarActions;
     KWindowActionsConfig *mWindowActions;

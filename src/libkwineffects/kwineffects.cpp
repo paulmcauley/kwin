@@ -16,15 +16,15 @@
 #include "kwinxrenderutils.h"
 #endif
 
-#include <QVariant>
-#include <QTimeLine>
 #include <QFontMetrics>
 #include <QPainter>
 #include <QPixmap>
+#include <QTimeLine>
+#include <QVariant>
 #include <QtMath>
 
-#include <ksharedconfig.h>
 #include <kconfiggroup.h>
+#include <ksharedconfig.h>
 
 #include <KWaylandServer/surface_interface.h>
 
@@ -33,13 +33,11 @@
 #endif
 
 #if defined(__SSE2__)
-#  include <emmintrin.h>
+#include <emmintrin.h>
 #endif
-
 
 namespace KWin
 {
-
 void WindowPrePaintData::setTranslucent()
 {
     mask |= Effect::PAINT_WINDOW_TRANSLUCENT;
@@ -52,13 +50,15 @@ void WindowPrePaintData::setTransformed()
     mask |= Effect::PAINT_WINDOW_TRANSFORMED;
 }
 
-class PaintDataPrivate {
+class PaintDataPrivate
+{
 public:
     PaintDataPrivate()
-        :  scale(1., 1., 1.)
+        : scale(1., 1., 1.)
         , rotationAxis(0, 0, 1.)
         , rotationAngle(0.)
-    {}
+    {
+    }
     QVector3D scale;
     QVector3D translation;
 
@@ -212,7 +212,8 @@ void PaintData::setRotationOrigin(const QVector3D &origin)
     d->rotationOrigin = origin;
 }
 
-class WindowPaintDataPrivate {
+class WindowPaintDataPrivate
+{
 public:
     qreal opacity;
     qreal saturation;
@@ -229,7 +230,7 @@ WindowPaintData::WindowPaintData(EffectWindow *w)
 {
 }
 
-WindowPaintData::WindowPaintData(EffectWindow* w, const QMatrix4x4 &screenProjectionMatrix)
+WindowPaintData::WindowPaintData(EffectWindow *w, const QMatrix4x4 &screenProjectionMatrix)
     : PaintData()
     , shader(nullptr)
     , d(new WindowPaintDataPrivate())
@@ -549,16 +550,16 @@ void Effect::reconfigure(ReconfigureFlags)
 {
 }
 
-void* Effect::proxy()
+void *Effect::proxy()
 {
     return nullptr;
 }
 
-void Effect::windowInputMouseEvent(QEvent*)
+void Effect::windowInputMouseEvent(QEvent *)
 {
 }
 
-void Effect::grabbedKeyboardEvent(QKeyEvent*)
+void Effect::grabbedKeyboardEvent(QKeyEvent *)
 {
 }
 
@@ -567,12 +568,12 @@ bool Effect::borderActivated(ElectricBorder)
     return false;
 }
 
-void Effect::prePaintScreen(ScreenPrePaintData& data, std::chrono::milliseconds presentTime)
+void Effect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime)
 {
     effects->prePaintScreen(data, presentTime);
 }
 
-void Effect::paintScreen(int mask, const QRegion &region, ScreenPaintData& data)
+void Effect::paintScreen(int mask, const QRegion &region, ScreenPaintData &data)
 {
     effects->paintScreen(mask, region, data);
 }
@@ -582,22 +583,22 @@ void Effect::postPaintScreen()
     effects->postPaintScreen();
 }
 
-void Effect::prePaintWindow(EffectWindow* w, WindowPrePaintData& data, std::chrono::milliseconds presentTime)
+void Effect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::chrono::milliseconds presentTime)
 {
     effects->prePaintWindow(w, data, presentTime);
 }
 
-void Effect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPaintData& data)
+void Effect::paintWindow(EffectWindow *w, int mask, QRegion region, WindowPaintData &data)
 {
     effects->paintWindow(w, mask, region, data);
 }
 
-void Effect::postPaintWindow(EffectWindow* w)
+void Effect::postPaintWindow(EffectWindow *w)
 {
     effects->postPaintWindow(w);
 }
 
-void Effect::paintEffectFrame(KWin::EffectFrame* frame, const QRegion &region, double opacity, double frameOpacity)
+void Effect::paintEffectFrame(KWin::EffectFrame *frame, const QRegion &region, double opacity, double frameOpacity)
 {
     effects->paintEffectFrame(frame, region, opacity, frameOpacity);
 }
@@ -617,18 +618,17 @@ QString Effect::debug(const QString &) const
     return QString();
 }
 
-void Effect::drawWindow(EffectWindow* w, int mask, const QRegion &region, WindowPaintData& data)
+void Effect::drawWindow(EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data)
 {
     effects->drawWindow(w, mask, region, data);
 }
 
-void Effect::buildQuads(EffectWindow* w, WindowQuadList& quadList)
+void Effect::buildQuads(EffectWindow *w, WindowQuadList &quadList)
 {
     effects->buildQuads(w, quadList);
 }
 
-void Effect::setPositionTransformations(WindowPaintData& data, QRect& region, EffectWindow* w,
-                                        const QRect& r, Qt::AspectRatioMode aspect)
+void Effect::setPositionTransformations(WindowPaintData &data, QRect &region, EffectWindow *w, const QRect &r, Qt::AspectRatioMode aspect)
 {
     QSize size = w->size();
     size.scale(r.size(), aspect);
@@ -648,7 +648,7 @@ QPoint Effect::cursorPos()
     return effects->cursorPos();
 }
 
-double Effect::animationTime(const KConfigGroup& cfg, const QString& key, int defaultTime)
+double Effect::animationTime(const KConfigGroup &cfg, const QString &key, int defaultTime)
 {
     int time = cfg.readEntry(key, 0);
     return time != 0 ? time : qMax(defaultTime * effects->animationTimeFactor(), 1.);
@@ -760,8 +760,7 @@ bool EffectsHandler::isOpenGLCompositing() const
     return compositing_type & OpenGLCompositing;
 }
 
-EffectsHandler* effects = nullptr;
-
+EffectsHandler *effects = nullptr;
 
 //****************************************
 // EffectWindow
@@ -838,9 +837,7 @@ bool EffectWindow::hasDecoration() const
 
 bool EffectWindow::isVisible() const
 {
-    return !isMinimized()
-           && isOnCurrentDesktop()
-           && isOnCurrentActivity();
+    return !isMinimized() && isOnCurrentDesktop() && isOnCurrentActivity();
 }
 
 //****************************************
@@ -864,28 +861,28 @@ WindowQuad WindowQuad::makeSubQuad(double x1, double y1, double x2, double y2) c
 #endif
     WindowQuad ret(*this);
     // vertices are clockwise starting from topleft
-    ret.verts[ 0 ].px = x1;
-    ret.verts[ 3 ].px = x1;
-    ret.verts[ 1 ].px = x2;
-    ret.verts[ 2 ].px = x2;
-    ret.verts[ 0 ].py = y1;
-    ret.verts[ 1 ].py = y1;
-    ret.verts[ 2 ].py = y2;
-    ret.verts[ 3 ].py = y2;
+    ret.verts[0].px = x1;
+    ret.verts[3].px = x1;
+    ret.verts[1].px = x2;
+    ret.verts[2].px = x2;
+    ret.verts[0].py = y1;
+    ret.verts[1].py = y1;
+    ret.verts[2].py = y2;
+    ret.verts[3].py = y2;
     // original x/y are supposed to be the same, no transforming is done here
-    ret.verts[ 0 ].ox = x1;
-    ret.verts[ 3 ].ox = x1;
-    ret.verts[ 1 ].ox = x2;
-    ret.verts[ 2 ].ox = x2;
-    ret.verts[ 0 ].oy = y1;
-    ret.verts[ 1 ].oy = y1;
-    ret.verts[ 2 ].oy = y2;
-    ret.verts[ 3 ].oy = y2;
+    ret.verts[0].ox = x1;
+    ret.verts[3].ox = x1;
+    ret.verts[1].ox = x2;
+    ret.verts[2].ox = x2;
+    ret.verts[0].oy = y1;
+    ret.verts[1].oy = y1;
+    ret.verts[2].oy = y2;
+    ret.verts[3].oy = y2;
 
     const double xOrigin = left();
     const double yOrigin = top();
 
-    const double widthReciprocal  = 1 / (right() - xOrigin);
+    const double widthReciprocal = 1 / (right() - xOrigin);
     const double heightReciprocal = 1 / (bottom() - yOrigin);
 
     if (!uvAxisSwapped()) {
@@ -894,12 +891,8 @@ WindowQuad WindowQuad::makeSubQuad(double x1, double y1, double x2, double y2) c
             const double w2 = (ret.verts[i].py - yOrigin) * heightReciprocal;
 
             // Use bilinear interpolation to compute the texture coords.
-            ret.verts[i].tx = (1 - w1) * (1 - w2) * verts[0].tx +
-                    w1 * (1 - w2) * verts[1].tx +
-                    w1 * w2 * verts[2].tx + (1 - w1) * w2 * verts[3].tx;
-            ret.verts[i].ty = (1 - w1) * (1 - w2) * verts[0].ty +
-                    w1 * (1 - w2) * verts[1].ty +
-                    w1 * w2 * verts[2].ty + (1 - w1) * w2 * verts[3].ty;
+            ret.verts[i].tx = (1 - w1) * (1 - w2) * verts[0].tx + w1 * (1 - w2) * verts[1].tx + w1 * w2 * verts[2].tx + (1 - w1) * w2 * verts[3].tx;
+            ret.verts[i].ty = (1 - w1) * (1 - w2) * verts[0].ty + w1 * (1 - w2) * verts[1].ty + w1 * w2 * verts[2].ty + (1 - w1) * w2 * verts[3].ty;
         }
     } else {
         // Same as above, with just verts[1] and verts[3] being swapped.
@@ -908,12 +901,8 @@ WindowQuad WindowQuad::makeSubQuad(double x1, double y1, double x2, double y2) c
             const double w2 = (ret.verts[i].px - xOrigin) * widthReciprocal;
 
             // Use bilinear interpolation to compute the texture coords.
-            ret.verts[i].tx = (1 - w1) * (1 - w2) * verts[0].tx +
-                    w1 * (1 - w2) * verts[3].tx +
-                    w1 * w2 * verts[2].tx + (1 - w1) * w2 * verts[1].tx;
-            ret.verts[i].ty = (1 - w1) * (1 - w2) * verts[0].ty +
-                    w1 * (1 - w2) * verts[3].ty +
-                    w1 * w2 * verts[2].ty + (1 - w1) * w2 * verts[1].ty;
+            ret.verts[i].tx = (1 - w1) * (1 - w2) * verts[0].tx + w1 * (1 - w2) * verts[3].tx + w1 * w2 * verts[2].tx + (1 - w1) * w2 * verts[1].tx;
+            ret.verts[i].ty = (1 - w1) * (1 - w2) * verts[0].ty + w1 * (1 - w2) * verts[3].ty + w1 * w2 * verts[2].ty + (1 - w1) * w2 * verts[1].ty;
         }
     }
 
@@ -925,10 +914,10 @@ WindowQuad WindowQuad::makeSubQuad(double x1, double y1, double x2, double y2) c
 bool WindowQuad::smoothNeeded() const
 {
     // smoothing is needed if the width or height of the quad does not match the original size
-    double width = verts[ 1 ].ox - verts[ 0 ].ox;
-    double height = verts[ 2 ].oy - verts[ 1 ].oy;
-    return(verts[ 1 ].px - verts[ 0 ].px != width || verts[ 2 ].px - verts[ 3 ].px != width
-           || verts[ 2 ].py - verts[ 1 ].py != height || verts[ 3 ].py - verts[ 0 ].py != height);
+    double width = verts[1].ox - verts[0].ox;
+    double height = verts[2].oy - verts[1].oy;
+    return (verts[1].px - verts[0].px != width || verts[2].px - verts[3].px != width || verts[2].py - verts[1].py != height
+            || verts[3].py - verts[0].py != height);
 }
 
 /***************************************************************
@@ -939,19 +928,17 @@ WindowQuadList WindowQuadList::splitAtX(double x) const
 {
     WindowQuadList ret;
     ret.reserve(count());
-    for (const WindowQuad & quad : *this) {
+    for (const WindowQuad &quad : *this) {
 #if !defined(QT_NO_DEBUG)
         if (quad.isTransformed())
             qFatal("Splitting quads is allowed only in pre-paint calls!");
 #endif
         bool wholeleft = true;
         bool wholeright = true;
-        for (int i = 0;
-                i < 4;
-                ++i) {
-            if (quad[ i ].x() < x)
+        for (int i = 0; i < 4; ++i) {
+            if (quad[i].x() < x)
                 wholeright = false;
-            if (quad[ i ].x() > x)
+            if (quad[i].x() > x)
                 wholeleft = false;
         }
         if (wholeleft || wholeright) { // is whole in one split part
@@ -972,19 +959,17 @@ WindowQuadList WindowQuadList::splitAtY(double y) const
 {
     WindowQuadList ret;
     ret.reserve(count());
-    for (const WindowQuad & quad : *this) {
+    for (const WindowQuad &quad : *this) {
 #if !defined(QT_NO_DEBUG)
         if (quad.isTransformed())
             qFatal("Splitting quads is allowed only in pre-paint calls!");
 #endif
         bool wholetop = true;
         bool wholebottom = true;
-        for (int i = 0;
-                i < 4;
-                ++i) {
-            if (quad[ i ].y() < y)
+        for (int i = 0; i < 4; ++i) {
+            if (quad[i].y() < y)
                 wholebottom = false;
-            if (quad[ i ].y() > y)
+            if (quad[i].y() > y)
                 wholetop = false;
         }
         if (wholetop || wholebottom) { // is whole in one split part
@@ -1007,9 +992,9 @@ WindowQuadList WindowQuadList::makeGrid(int maxQuadSize) const
         return *this;
 
     // Find the bounding rectangle
-    double left   = first().left();
-    double right  = first().right();
-    double top    = first().top();
+    double left = first().left();
+    double right = first().right();
+    double top = first().top();
     double bottom = first().bottom();
 
     foreach (const WindowQuad &quad, *this) {
@@ -1017,18 +1002,18 @@ WindowQuadList WindowQuadList::makeGrid(int maxQuadSize) const
         if (quad.isTransformed())
             qFatal("Splitting quads is allowed only in pre-paint calls!");
 #endif
-        left   = qMin(left,   quad.left());
-        right  = qMax(right,  quad.right());
-        top    = qMin(top,    quad.top());
+        left = qMin(left, quad.left());
+        right = qMax(right, quad.right());
+        top = qMin(top, quad.top());
         bottom = qMax(bottom, quad.bottom());
     }
 
     WindowQuadList ret;
 
     for (const WindowQuad &quad : *this) {
-        const double quadLeft   = quad.left();
-        const double quadRight  = quad.right();
-        const double quadTop    = quad.top();
+        const double quadLeft = quad.left();
+        const double quadRight = quad.right();
+        const double quadTop = quad.top();
         const double quadBottom = quad.bottom();
 
         // sanity check, see BUG 390953
@@ -1039,7 +1024,7 @@ WindowQuadList WindowQuadList::makeGrid(int maxQuadSize) const
 
         // Compute the top-left corner of the first intersecting grid cell
         const double xBegin = left + qFloor((quadLeft - left) / maxQuadSize) * maxQuadSize;
-        const double yBegin = top  + qFloor((quadTop  - top)  / maxQuadSize) * maxQuadSize;
+        const double yBegin = top + qFloor((quadTop - top) / maxQuadSize) * maxQuadSize;
 
         // Loop over all intersecting cells and add sub-quads
         for (double y = yBegin; y < quadBottom; y += maxQuadSize) {
@@ -1064,9 +1049,9 @@ WindowQuadList WindowQuadList::makeRegularGrid(int xSubdivisions, int ySubdivisi
         return *this;
 
     // Find the bounding rectangle
-    double left   = first().left();
-    double right  = first().right();
-    double top    = first().top();
+    double left = first().left();
+    double right = first().right();
+    double top = first().top();
     double bottom = first().bottom();
 
     for (const WindowQuad &quad : *this) {
@@ -1074,9 +1059,9 @@ WindowQuadList WindowQuadList::makeRegularGrid(int xSubdivisions, int ySubdivisi
         if (quad.isTransformed())
             qFatal("Splitting quads is allowed only in pre-paint calls!");
 #endif
-        left   = qMin(left,   quad.left());
-        right  = qMax(right,  quad.right());
-        top    = qMin(top,    quad.top());
+        left = qMin(left, quad.left());
+        right = qMax(right, quad.right());
+        top = qMin(top, quad.top());
         bottom = qMax(bottom, quad.bottom());
     }
 
@@ -1086,9 +1071,9 @@ WindowQuadList WindowQuadList::makeRegularGrid(int xSubdivisions, int ySubdivisi
     WindowQuadList ret;
 
     for (const WindowQuad &quad : *this) {
-        const double quadLeft   = quad.left();
-        const double quadRight  = quad.right();
-        const double quadTop    = quad.top();
+        const double quadLeft = quad.left();
+        const double quadRight = quad.right();
+        const double quadTop = quad.top();
         const double quadBottom = quad.bottom();
 
         // sanity check, see BUG 390953
@@ -1099,7 +1084,7 @@ WindowQuadList WindowQuadList::makeRegularGrid(int xSubdivisions, int ySubdivisi
 
         // Compute the top-left corner of the first intersecting grid cell
         const double xBegin = left + qFloor((quadLeft - left) / xIncrement) * xIncrement;
-        const double yBegin = top  + qFloor((quadTop  - top)  / yIncrement) * yIncrement;
+        const double yBegin = top + qFloor((quadTop - top) / yIncrement) * yIncrement;
 
         // Loop over all intersecting cells and add sub-quads
         for (double y = yBegin; y < quadBottom; y += yIncrement) {
@@ -1119,11 +1104,11 @@ WindowQuadList WindowQuadList::makeRegularGrid(int xSubdivisions, int ySubdivisi
 }
 
 #ifndef GL_TRIANGLES
-#  define GL_TRIANGLES      0x0004
+#define GL_TRIANGLES 0x0004
 #endif
 
 #ifndef GL_QUADS
-#  define GL_QUADS          0x0007
+#define GL_QUADS 0x0007
 #endif
 
 void WindowQuadList::makeInterleavedArrays(unsigned int type, GLVertex2D *vertices, const QMatrix4x4 &textureMatrix) const
@@ -1137,8 +1122,7 @@ void WindowQuadList::makeInterleavedArrays(unsigned int type, GLVertex2D *vertic
 
     Q_ASSERT(type == GL_QUADS || type == GL_TRIANGLES);
 
-    switch (type)
-    {
+    switch (type) {
     case GL_QUADS:
 #if defined(__SSE2__)
         if (!(intptr_t(vertex) & 0xf)) {
@@ -1252,8 +1236,8 @@ void WindowQuadList::makeArrays(float **vertices, float **texcoords, const QSize
     float *vpos = *vertices;
     float *tpos = *texcoords;
 
-     // Note: The positions in a WindowQuad are stored in clockwise order
-    const int index[] = { 1, 0, 3, 3, 2, 1 };
+    // Note: The positions in a WindowQuad are stored in clockwise order
+    const int index[] = {1, 0, 3, 3, 2, 1};
 
     for (const WindowQuad &quad : *this) {
         for (int j = 0; j < 6; j++) {
@@ -1270,10 +1254,10 @@ void WindowQuadList::makeArrays(float **vertices, float **texcoords, const QSize
 
 WindowQuadList WindowQuadList::select(WindowQuadType type) const
 {
-    foreach (const WindowQuad & q, *this) {
+    foreach (const WindowQuad &q, *this) {
         if (q.type() != type) { // something else than ones to select, make a copy and filter
             WindowQuadList ret;
-            foreach (const WindowQuad & q, *this) {
+            foreach (const WindowQuad &q, *this) {
                 if (q.type() == type)
                     ret.append(q);
             }
@@ -1285,10 +1269,10 @@ WindowQuadList WindowQuadList::select(WindowQuadType type) const
 
 WindowQuadList WindowQuadList::filterOut(WindowQuadType type) const
 {
-    for (const WindowQuad & q : *this) {
+    for (const WindowQuad &q : *this) {
         if (q.type() == type) { // something to filter out, make a copy and filter
             WindowQuadList ret;
-            foreach (const WindowQuad & q, *this) {
+            foreach (const WindowQuad &q, *this) {
                 if (q.type() != type)
                     ret.append(q);
             }
@@ -1300,21 +1284,25 @@ WindowQuadList WindowQuadList::filterOut(WindowQuadType type) const
 
 bool WindowQuadList::smoothNeeded() const
 {
-    return std::any_of(constBegin(), constEnd(), [] (const WindowQuad & q) { return q.smoothNeeded(); });
+    return std::any_of(constBegin(), constEnd(), [](const WindowQuad &q) {
+        return q.smoothNeeded();
+    });
 }
 
 bool WindowQuadList::isTransformed() const
 {
-    return std::any_of(constBegin(), constEnd(), [] (const WindowQuad & q) { return q.isTransformed(); });
+    return std::any_of(constBegin(), constEnd(), [](const WindowQuad &q) {
+        return q.isTransformed();
+    });
 }
 
 /***************************************************************
  PaintClipper
 ***************************************************************/
 
-QStack< QRegion >* PaintClipper::areas = nullptr;
+QStack<QRegion> *PaintClipper::areas = nullptr;
 
-PaintClipper::PaintClipper(const QRegion& allowed_area)
+PaintClipper::PaintClipper(const QRegion &allowed_area)
     : area(allowed_area)
 {
     push(area);
@@ -1325,16 +1313,16 @@ PaintClipper::~PaintClipper()
     pop(area);
 }
 
-void PaintClipper::push(const QRegion& allowed_area)
+void PaintClipper::push(const QRegion &allowed_area)
 {
-    if (allowed_area == infiniteRegion())  // don't push these
+    if (allowed_area == infiniteRegion()) // don't push these
         return;
     if (areas == nullptr)
-        areas = new QStack< QRegion >;
+        areas = new QStack<QRegion>;
     areas->push(allowed_area);
 }
 
-void PaintClipper::pop(const QRegion& allowed_area)
+void PaintClipper::pop(const QRegion &allowed_area)
 {
     if (allowed_area == infiniteRegion())
         return;
@@ -1354,17 +1342,20 @@ bool PaintClipper::clip()
 
 QRegion PaintClipper::paintArea()
 {
-    Q_ASSERT(areas != nullptr);   // can be called only with clip() == true
+    Q_ASSERT(areas != nullptr); // can be called only with clip() == true
     const QSize &s = effects->virtualScreenSize();
     QRegion ret(0, 0, s.width(), s.height());
-    for (const QRegion & r : qAsConst(*areas)) {
+    for (const QRegion &r : qAsConst(*areas)) {
         ret &= r;
     }
     return ret;
 }
 
 struct PaintClipper::Iterator::Data {
-    Data() : index(0) {}
+    Data()
+        : index(0)
+    {
+    }
     int index;
     QRegion region;
 };
@@ -1467,7 +1458,7 @@ Motion2D::~Motion2D()
 ***************************************************************/
 
 WindowMotionManager::WindowMotionManager(bool useGlobalAnimationModifier)
-    :   m_useGlobalAnimationModifier(useGlobalAnimationModifier)
+    : m_useGlobalAnimationModifier(useGlobalAnimationModifier)
 
 {
     // TODO: Allow developer to modify motion attributes
@@ -1490,7 +1481,7 @@ void WindowMotionManager::manage(EffectWindow *w)
         smoothness = effects->animationTimeFactor() * 4.0;
     }
 
-    WindowMotion &motion = m_managedWindows[ w ];
+    WindowMotion &motion = m_managedWindows[w];
     motion.translation.setStrength(strength);
     motion.translation.setSmoothness(smoothness);
     motion.scale.setStrength(strength * 1.33);
@@ -1517,7 +1508,7 @@ void WindowMotionManager::calculate(int time)
     if (!effects->animationTimeFactor()) {
         // Just skip it completely if the user wants no animation
         m_movingWindowsSet.clear();
-        QHash<EffectWindow*, WindowMotion>::iterator it = m_managedWindows.begin();
+        QHash<EffectWindow *, WindowMotion>::iterator it = m_managedWindows.begin();
         for (; it != m_managedWindows.end(); ++it) {
             WindowMotion *motion = &it.value();
             motion->translation.finish();
@@ -1525,7 +1516,7 @@ void WindowMotionManager::calculate(int time)
         }
     }
 
-    QHash<EffectWindow*, WindowMotion>::iterator it = m_managedWindows.begin();
+    QHash<EffectWindow *, WindowMotion>::iterator it = m_managedWindows.begin();
     for (; it != m_managedWindows.end(); ++it) {
         WindowMotion *motion = &it.value();
         int stopped = 0;
@@ -1541,8 +1532,8 @@ void WindowMotionManager::calculate(int time)
             trans->calculate(time);
             const short fx = trans->target().x() <= trans->startValue().x() ? -1 : 1;
             const short fy = trans->target().y() <= trans->startValue().y() ? -1 : 1;
-            if (trans->distance().x()*fx/0.5 < 1.0 && trans->velocity().x()*fx/0.2 < 1.0 &&
-                trans->distance().y()*fy/0.5 < 1.0 && trans->velocity().y()*fy/0.2 < 1.0) {
+            if (trans->distance().x() * fx / 0.5 < 1.0 && trans->velocity().x() * fx / 0.2 < 1.0 && trans->distance().y() * fy / 0.5 < 1.0
+                && trans->velocity().y() * fy / 0.2 < 1.0) {
                 // Hide tiny oscillations
                 motion->translation.finish();
                 ++stopped;
@@ -1557,8 +1548,8 @@ void WindowMotionManager::calculate(int time)
             scale->calculate(time);
             const short fx = scale->target().x() < 1.0 ? -1 : 1;
             const short fy = scale->target().y() < 1.0 ? -1 : 1;
-            if (scale->distance().x()*fx/0.001 < 1.0 && scale->velocity().x()*fx/0.05 < 1.0 &&
-                scale->distance().y()*fy/0.001 < 1.0 && scale->velocity().y()*fy/0.05 < 1.0) {
+            if (scale->distance().x() * fx / 0.001 < 1.0 && scale->velocity().x() * fx / 0.05 < 1.0 && scale->distance().y() * fy / 0.001 < 1.0
+                && scale->velocity().y() * fy / 0.05 < 1.0) {
                 // Hide tiny oscillations
                 motion->scale.finish();
                 ++stopped;
@@ -1573,7 +1564,7 @@ void WindowMotionManager::calculate(int time)
 
 void WindowMotionManager::reset()
 {
-    QHash<EffectWindow*, WindowMotion>::iterator it = m_managedWindows.begin();
+    QHash<EffectWindow *, WindowMotion>::iterator it = m_managedWindows.begin();
     for (; it != m_managedWindows.end(); ++it) {
         WindowMotion *motion = &it.value();
         EffectWindow *window = it.key();
@@ -1586,7 +1577,7 @@ void WindowMotionManager::reset()
 
 void WindowMotionManager::reset(EffectWindow *w)
 {
-    QHash<EffectWindow*, WindowMotion>::iterator it = m_managedWindows.find(w);
+    QHash<EffectWindow *, WindowMotion>::iterator it = m_managedWindows.find(w);
     if (it == m_managedWindows.end())
         return;
 
@@ -1599,7 +1590,7 @@ void WindowMotionManager::reset(EffectWindow *w)
 
 void WindowMotionManager::apply(EffectWindow *w, WindowPaintData &data)
 {
-    QHash<EffectWindow*, WindowMotion>::iterator it = m_managedWindows.find(w);
+    QHash<EffectWindow *, WindowMotion>::iterator it = m_managedWindows.find(w);
     if (it == m_managedWindows.end())
         return;
 
@@ -1611,7 +1602,7 @@ void WindowMotionManager::apply(EffectWindow *w, WindowPaintData &data)
 
 void WindowMotionManager::moveWindow(EffectWindow *w, QPoint target, double scale, double yScale)
 {
-    QHash<EffectWindow*, WindowMotion>::iterator it = m_managedWindows.find(w);
+    QHash<EffectWindow *, WindowMotion>::iterator it = m_managedWindows.find(w);
     if (it == m_managedWindows.end())
         abort(); // Notify the effect author that they did something wrong
 
@@ -1632,7 +1623,7 @@ void WindowMotionManager::moveWindow(EffectWindow *w, QPoint target, double scal
 
 QRectF WindowMotionManager::transformedGeometry(EffectWindow *w) const
 {
-    QHash<EffectWindow*, WindowMotion>::const_iterator it = m_managedWindows.constFind(w);
+    QHash<EffectWindow *, WindowMotion>::const_iterator it = m_managedWindows.constFind(w);
     if (it == m_managedWindows.end())
         return w->geometry();
 
@@ -1649,7 +1640,7 @@ QRectF WindowMotionManager::transformedGeometry(EffectWindow *w) const
 
 void WindowMotionManager::setTransformedGeometry(EffectWindow *w, const QRectF &geometry)
 {
-    QHash<EffectWindow*, WindowMotion>::iterator it = m_managedWindows.find(w);
+    QHash<EffectWindow *, WindowMotion>::iterator it = m_managedWindows.find(w);
     if (it == m_managedWindows.end())
         return;
     WindowMotion *motion = &it.value();
@@ -1659,7 +1650,7 @@ void WindowMotionManager::setTransformedGeometry(EffectWindow *w, const QRectF &
 
 QRectF WindowMotionManager::targetGeometry(EffectWindow *w) const
 {
-    QHash<EffectWindow*, WindowMotion>::const_iterator it = m_managedWindows.constFind(w);
+    QHash<EffectWindow *, WindowMotion>::const_iterator it = m_managedWindows.constFind(w);
     if (it == m_managedWindows.end())
         return w->geometry();
 
@@ -1674,11 +1665,11 @@ QRectF WindowMotionManager::targetGeometry(EffectWindow *w) const
     return geometry;
 }
 
-EffectWindow* WindowMotionManager::windowAtPoint(QPoint point, bool useStackingOrder) const
+EffectWindow *WindowMotionManager::windowAtPoint(QPoint point, bool useStackingOrder) const
 {
     Q_UNUSED(useStackingOrder);
     // TODO: Stacking order uses EffectsHandler::stackingOrder() then filters by m_managedWindows
-    QHash< EffectWindow*, WindowMotion >::ConstIterator it = m_managedWindows.constBegin();
+    QHash<EffectWindow *, WindowMotion>::ConstIterator it = m_managedWindows.constBegin();
     while (it != m_managedWindows.constEnd()) {
         if (transformedGeometry(it.key()).contains(point))
             return it.key();
@@ -1795,8 +1786,7 @@ qreal TimeLine::progress() const
 qreal TimeLine::value() const
 {
     const qreal t = progress();
-    return d->easingCurve.valueForProgress(
-        d->direction == Backward ? 1.0 - t : t);
+    return d->easingCurve.valueForProgress(d->direction == Backward ? 1.0 - t : t);
 }
 
 void TimeLine::update(std::chrono::milliseconds delta)
@@ -1858,8 +1848,7 @@ void TimeLine::setDirection(TimeLine::Direction direction)
 
     d->direction = direction;
 
-    if (d->elapsed > std::chrono::milliseconds::zero()
-            || d->sourceRedirectMode == RedirectMode::Strict) {
+    if (d->elapsed > std::chrono::milliseconds::zero() || d->sourceRedirectMode == RedirectMode::Strict) {
         d->elapsed = d->duration - d->elapsed;
     }
 
@@ -1894,8 +1883,7 @@ void TimeLine::setEasingCurve(QEasingCurve::Type type)
 
 bool TimeLine::running() const
 {
-    return d->elapsed != std::chrono::milliseconds::zero()
-        && d->elapsed != d->duration;
+    return d->elapsed != std::chrono::milliseconds::zero() && d->elapsed != d->duration;
 }
 
 bool TimeLine::done() const

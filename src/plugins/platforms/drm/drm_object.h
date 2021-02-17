@@ -8,16 +8,14 @@
 */
 #pragma once
 
-#include <QVector>
 #include <QByteArray>
+#include <QVector>
 
 // drm
 #include <xf86drmMode.h>
 
-
 namespace KWin
 {
-
 class DrmBackend;
 class DrmOutput;
 
@@ -38,11 +36,13 @@ public:
      */
     virtual bool init() = 0;
 
-    uint32_t id() const {
+    uint32_t id() const
+    {
         return m_id;
     }
 
-    int fd() const {
+    int fd() const
+    {
         return m_fd;
     }
 
@@ -66,8 +66,7 @@ protected:
     virtual bool initProps() = 0;
 
     void setPropertyNames(QVector<QByteArray> &&vector);
-    void initProp(int n, drmModeObjectProperties *properties,
-                  QVector<QByteArray> enumNames = QVector<QByteArray>(0));
+    void initProp(int n, drmModeObjectProperties *properties, QVector<QByteArray> enumNames = QVector<QByteArray>(0));
 
     bool doAtomicPopulate(drmModeAtomicReq *req, int firstProperty) const;
 
@@ -95,26 +94,33 @@ protected:
          * @param n the index to the enum
          * @return the runtime enum value corresponding with enum index @param n
          */
-        uint64_t enumMap(int n) const {
-            return m_enumMap[n];    // TODO: test on index out of bounds?
+        uint64_t enumMap(int n) const
+        {
+            return m_enumMap[n]; // TODO: test on index out of bounds?
         }
-        bool hasEnum(uint64_t value) const {
+        bool hasEnum(uint64_t value) const
+        {
             return m_enumMap.contains(value);
         }
 
-        uint32_t propId() const {
+        uint32_t propId() const
+        {
             return m_propId;
         }
-        uint64_t value() const {
+        uint64_t value() const
+        {
             return m_value;
         }
-        void setValue(uint64_t new_value) {
+        void setValue(uint64_t new_value)
+        {
             m_value = new_value;
         }
-        const QByteArray &name() const {
+        const QByteArray &name() const
+        {
             return m_propName;
         }
-        bool isImmutable() const {
+        bool isImmutable() const
+        {
             return m_immutable;
         }
 
@@ -134,4 +140,4 @@ private:
 
 }
 
-QDebug& operator<<(QDebug& stream, const KWin::DrmObject*);
+QDebug &operator<<(QDebug &stream, const KWin::DrmObject *);

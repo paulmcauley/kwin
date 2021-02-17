@@ -15,7 +15,6 @@
 
 namespace KWin
 {
-
 class DrmBackend;
 class DrmDumbBuffer;
 class DrmOutput;

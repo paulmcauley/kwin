@@ -11,7 +11,6 @@
 
 namespace KWin
 {
-
 class XwaylandSocket
 {
 public:

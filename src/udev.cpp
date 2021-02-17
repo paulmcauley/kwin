@@ -12,12 +12,11 @@
 #include <QByteArray>
 #include <QScopedPointer>
 // system
-#include <libudev.h>
 #include <functional>
+#include <libudev.h>
 
 namespace KWin
 {
-
 Udev::Udev()
     : m_udev(udev_new())
 {
@@ -36,10 +35,7 @@ public:
     UdevEnumerate(Udev *udev);
     ~UdevEnumerate();
 
-    enum class Match {
-        SubSystem,
-        SysName
-    };
+    enum class Match { SubSystem, SysName };
     void addMatch(Match match, const char *name);
     void scan();
     std::vector<UdevDevice::Ptr> find();
@@ -47,8 +43,7 @@ public:
 private:
     Udev *m_udev;
 
-    struct EnumerateDeleter
-    {
+    struct EnumerateDeleter {
         static inline void cleanup(udev_enumerate *e)
         {
             udev_enumerate_unref(e);
@@ -95,7 +90,7 @@ std::vector<UdevDevice::Ptr> UdevEnumerate::find()
 {
     std::vector<UdevDevice::Ptr> vect;
     if (m_enumerate.isNull()) {
-        vect.push_back( UdevDevice::Ptr() );
+        vect.push_back(UdevDevice::Ptr());
         return vect;
     }
     QString defaultSeat = QStringLiteral("seat0");

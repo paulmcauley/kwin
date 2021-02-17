@@ -7,12 +7,12 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "decoratedclient.h"
-#include "decorationbridge.h"
-#include "decorationpalette.h"
-#include "decorationrenderer.h"
 #include "abstract_client.h"
 #include "composite.h"
 #include "cursor.h"
+#include "decorationbridge.h"
+#include "decorationpalette.h"
+#include "decorationrenderer.h"
 #include "platform.h"
 #include "workspace.h"
 
@@ -27,7 +27,6 @@ namespace KWin
 {
 namespace Decoration
 {
-
 DecoratedClientImpl::DecoratedClientImpl(AbstractClient *client, KDecoration2::DecoratedClient *decoratedClient, KDecoration2::Decoration *decoration)
     : QObject()
     , ApplicationMenuEnabledDecoratedClientPrivate(decoratedClient, decoration)
@@ -37,64 +36,47 @@ DecoratedClientImpl::DecoratedClientImpl(AbstractClient *client, KDecoration2::D
 {
     createRenderer();
     client->setDecoratedClient(QPointer<DecoratedClientImpl>(this));
-    connect(client, &AbstractClient::activeChanged, this,
-        [decoratedClient, client]() {
-            emit decoratedClient->activeChanged(client->isActive());
+    connect(client, &AbstractClient::activeChanged, this, [decoratedClient, client]() {
+        emit decoratedClient->activeChanged(client->isActive());
+    });
+    connect(client, &AbstractClient::clientGeometryChanged, this, [decoratedClient, this]() {
+        if (m_client->clientSize() == m_clientSize) {
+            return;
         }
-    );
-    connect(client, &AbstractClient::clientGeometryChanged, this,
-        [decoratedClient, this]() {
-            if (m_client->clientSize() == m_clientSize) {
-                return;
-            }
-            const auto oldSize = m_clientSize;
-            m_clientSize = m_client->clientSize();
-            if (oldSize.width() != m_clientSize.width()) {
-                emit decoratedClient->widthChanged(m_clientSize.width());
-            }
-            if (oldSize.height() != m_clientSize.height()) {
-                emit decoratedClient->heightChanged(m_clientSize.height());
-            }
-            emit decoratedClient->sizeChanged(m_clientSize);
+        const auto oldSize = m_clientSize;
+        m_clientSize = m_client->clientSize();
+        if (oldSize.width() != m_clientSize.width()) {
+            emit decoratedClient->widthChanged(m_clientSize.width());
         }
-    );
-    connect(client, &AbstractClient::desktopChanged, this,
-        [decoratedClient, client]() {
-            emit decoratedClient->onAllDesktopsChanged(client->isOnAllDesktops());
+        if (oldSize.height() != m_clientSize.height()) {
+            emit decoratedClient->heightChanged(m_clientSize.height());
         }
-    );
-    connect(client, &AbstractClient::captionChanged, this,
-        [decoratedClient, client]() {
-            emit decoratedClient->captionChanged(client->caption());
-        }
-    );
-    connect(client, &AbstractClient::iconChanged, this,
-        [decoratedClient, client]() {
-            emit decoratedClient->iconChanged(client->icon());
-        }
-    );
-    connect(client, &AbstractClient::shadeChanged, this,
-            &Decoration::DecoratedClientImpl::signalShadeChange);
+        emit decoratedClient->sizeChanged(m_clientSize);
+    });
+    connect(client, &AbstractClient::desktopChanged, this, [decoratedClient, client]() {
+        emit decoratedClient->onAllDesktopsChanged(client->isOnAllDesktops());
+    });
+    connect(client, &AbstractClient::captionChanged, this, [decoratedClient, client]() {
+        emit decoratedClient->captionChanged(client->caption());
+    });
+    connect(client, &AbstractClient::iconChanged, this, [decoratedClient, client]() {
+        emit decoratedClient->iconChanged(client->icon());
+    });
+    connect(client, &AbstractClient::shadeChanged, this, &Decoration::DecoratedClientImpl::signalShadeChange);
     connect(client, &AbstractClient::keepAboveChanged, decoratedClient, &KDecoration2::DecoratedClient::keepAboveChanged);
     connect(client, &AbstractClient::keepBelowChanged, decoratedClient, &KDecoration2::DecoratedClient::keepBelowChanged);
     connect(Compositor::self(), &Compositor::aboutToToggleCompositing, this, &DecoratedClientImpl::destroyRenderer);
-    m_compositorToggledConnection = connect(Compositor::self(), &Compositor::compositingToggled, this,
-        [this, decoration]() {
-            createRenderer();
-            decoration->update();
-        }
-    );
-    connect(Compositor::self(), &Compositor::aboutToDestroy, this,
-        [this] {
-            disconnect(m_compositorToggledConnection);
-            m_compositorToggledConnection = QMetaObject::Connection();
-        }
-    );
-    connect(client, &AbstractClient::quickTileModeChanged, decoratedClient,
-        [this, decoratedClient]() {
-            emit decoratedClient->adjacentScreenEdgesChanged(adjacentScreenEdges());
-        }
-    );
+    m_compositorToggledConnection = connect(Compositor::self(), &Compositor::compositingToggled, this, [this, decoration]() {
+        createRenderer();
+        decoration->update();
+    });
+    connect(Compositor::self(), &Compositor::aboutToDestroy, this, [this] {
+        disconnect(m_compositorToggledConnection);
+        m_compositorToggledConnection = QMetaObject::Connection();
+    });
+    connect(client, &AbstractClient::quickTileModeChanged, decoratedClient, [this, decoratedClient]() {
+        emit decoratedClient->adjacentScreenEdgesChanged(adjacentScreenEdges());
+    });
     connect(client, &AbstractClient::closeableChanged, decoratedClient, &KDecoration2::DecoratedClient::closeableChanged);
     connect(client, &AbstractClient::shadeableChanged, decoratedClient, &KDecoration2::DecoratedClient::shadeableChanged);
     connect(client, &AbstractClient::minimizeableChanged, decoratedClient, &KDecoration2::DecoratedClient::minimizeableChanged);
@@ -106,15 +88,13 @@ DecoratedClientImpl::DecoratedClientImpl(AbstractClient *client, KDecoration2::D
     connect(client, &AbstractClient::applicationMenuActiveChanged, decoratedClient, &KDecoration2::DecoratedClient::applicationMenuActiveChanged);
 
     m_toolTipWakeUp.setSingleShot(true);
-    connect(&m_toolTipWakeUp, &QTimer::timeout, this,
-            [this]() {
-                int fallAsleepDelay = QApplication::style()->styleHint(QStyle::SH_ToolTip_FallAsleepDelay);
-                this->m_toolTipFallAsleep.setRemainingTime(fallAsleepDelay);
+    connect(&m_toolTipWakeUp, &QTimer::timeout, this, [this]() {
+        int fallAsleepDelay = QApplication::style()->styleHint(QStyle::SH_ToolTip_FallAsleepDelay);
+        this->m_toolTipFallAsleep.setRemainingTime(fallAsleepDelay);
 
-                QToolTip::showText(Cursors::self()->mouse()->pos(), this->m_toolTipText);
-                m_toolTipShowing = true;
-            }
-    );
+        QToolTip::showText(Cursors::self()->mouse()->pos(), this->m_toolTipText);
+        m_toolTipShowing = true;
+    });
 }
 
 DecoratedClientImpl::~DecoratedClientImpl()
@@ -124,14 +104,15 @@ DecoratedClientImpl::~DecoratedClientImpl()
     }
 }
 
-void DecoratedClientImpl::signalShadeChange() {
+void DecoratedClientImpl::signalShadeChange()
+{
     emit decoratedClient()->shadedChanged(m_client->isShade());
 }
 
-#define DELEGATE(type, name, clientName) \
-    type DecoratedClientImpl::name() const \
-    { \
-        return m_client->clientName(); \
+#define DELEGATE(type, name, clientName)                                                                                                                       \
+    type DecoratedClientImpl::name() const                                                                                                                     \
+    {                                                                                                                                                          \
+        return m_client->clientName();                                                                                                                         \
     }
 
 #define DELEGATE2(type, name) DELEGATE(type, name, name)
@@ -154,10 +135,10 @@ DELEGATE2(QIcon, icon)
 #undef DELEGATE2
 #undef DELEGATE
 
-#define DELEGATE(type, name, clientName) \
-    type DecoratedClientImpl::name() const \
-    { \
-        return m_client->clientName(); \
+#define DELEGATE(type, name, clientName)                                                                                                                       \
+    type DecoratedClientImpl::name() const                                                                                                                     \
+    {                                                                                                                                                          \
+        return m_client->clientName();                                                                                                                         \
     }
 
 DELEGATE(bool, isKeepAbove, keepAbove)
@@ -168,10 +149,10 @@ DELEGATE(WId, decorationId, frameId)
 
 #undef DELEGATE
 
-#define DELEGATE(name, op) \
-    void DecoratedClientImpl::name() \
-    { \
-        Workspace::self()->performWindowOperation(m_client, Options::op); \
+#define DELEGATE(name, op)                                                                                                                                     \
+    void DecoratedClientImpl::name()                                                                                                                           \
+    {                                                                                                                                                          \
+        Workspace::self()->performWindowOperation(m_client, Options::op);                                                                                      \
     }
 
 DELEGATE(requestToggleShade, ShadeOp)
@@ -181,10 +162,10 @@ DELEGATE(requestToggleKeepBelow, KeepBelowOp)
 
 #undef DELEGATE
 
-#define DELEGATE(name, clientName) \
-    void DecoratedClientImpl::name() \
-    { \
-        m_client->clientName(); \
+#define DELEGATE(name, clientName)                                                                                                                             \
+    void DecoratedClientImpl::name()                                                                                                                           \
+    {                                                                                                                                                          \
+        m_client->clientName();                                                                                                                                \
     }
 
 DELEGATE(requestContextHelp, showContextHelp)
@@ -243,7 +224,10 @@ void DecoratedClientImpl::showApplicationMenu(int actionId)
 
 void DecoratedClientImpl::requestToggleMaximization(Qt::MouseButtons buttons)
 {
-    QMetaObject::invokeMethod(this, "delayedRequestToggleMaximization", Qt::QueuedConnection, Q_ARG(Options::WindowOperation, options->operationMaxButtonClick(buttons)));
+    QMetaObject::invokeMethod(this,
+                              "delayedRequestToggleMaximization",
+                              Qt::QueuedConnection,
+                              Q_ARG(Options::WindowOperation, options->operationMaxButtonClick(buttons)));
 }
 
 void DecoratedClientImpl::delayedRequestToggleMaximization(Options::WindowOperation operation)

@@ -9,32 +9,31 @@
 
 #include "scriptedeffect.h"
 #include "meta.h"
+#include "scripting_logging.h"
 #include "scriptingutils.h"
 #include "workspace_wrapper.h"
-#include "scripting_logging.h"
 
-#include "screens.h"
 #include "screenedge.h"
+#include "screens.h"
 // KDE
 #include <KConfigGroup>
-#include <kconfigloader.h>
 #include <KPluginMetaData>
+#include <kconfigloader.h>
 // Qt
 #include <QFile>
+#include <QStandardPaths>
 #include <QtScript/QScriptEngine>
 #include <QtScript/QScriptValueIterator>
-#include <QStandardPaths>
 
-typedef KWin::EffectWindow* KEffectWindowRef;
+typedef KWin::EffectWindow *KEffectWindowRef;
 
 Q_DECLARE_METATYPE(KSharedConfigPtr)
 
 namespace KWin
 {
-
 QScriptValue kwinEffectScriptPrint(QScriptContext *context, QScriptEngine *engine)
 {
-    ScriptedEffect *script = qobject_cast<ScriptedEffect*>(context->callee().data().toQObject());
+    ScriptedEffect *script = qobject_cast<ScriptedEffect *>(context->callee().data().toQObject());
     QString result;
     for (int i = 0; i < context->argumentCount(); ++i) {
         if (i > 0) {
@@ -74,33 +73,26 @@ QScriptValue kwinEffectDisplayHeight(QScriptContext *context, QScriptEngine *eng
 
 QScriptValue kwinScriptGlobalShortcut(QScriptContext *context, QScriptEngine *engine)
 {
-    return globalShortcut<KWin::ScriptedEffect*>(context, engine);
+    return globalShortcut<KWin::ScriptedEffect *>(context, engine);
 }
 
 QScriptValue kwinScriptScreenEdge(QScriptContext *context, QScriptEngine *engine)
 {
-    return registerScreenEdge<KWin::ScriptedEffect*>(context, engine);
+    return registerScreenEdge<KWin::ScriptedEffect *>(context, engine);
 }
 
 QScriptValue kwinRegisterTouchScreenEdge(QScriptContext *context, QScriptEngine *engine)
 {
-    return registerTouchScreenEdge<KWin::ScriptedEffect*>(context, engine);
+    return registerTouchScreenEdge<KWin::ScriptedEffect *>(context, engine);
 }
 
 QScriptValue kwinUnregisterTouchScreenEdge(QScriptContext *context, QScriptEngine *engine)
 {
-    return unregisterTouchScreenEdge<KWin::ScriptedEffect*>(context, engine);
+    return unregisterTouchScreenEdge<KWin::ScriptedEffect *>(context, engine);
 }
 
 struct AnimationSettings {
-    enum {
-        Type       = 1<<0,
-        Curve      = 1<<1,
-        Delay      = 1<<2,
-        Duration   = 1<<3,
-        FullScreen = 1<<4,
-        KeepAlive  = 1<<5
-    };
+    enum { Type = 1 << 0, Curve = 1 << 1, Delay = 1 << 2, Duration = 1 << 3, FullScreen = 1 << 4, KeepAlive = 1 << 5 };
     AnimationEffect::Attribute type;
     QEasingCurve::Type curve;
     FPx2 from;
@@ -194,7 +186,7 @@ QList<AnimationSettings> animationSettings(QScriptContext *context, ScriptedEffe
         context->throwError(QScriptContext::TypeError, QStringLiteral("Window property missing in animation options"));
         return settings;
     }
-    *window = qobject_cast<EffectWindow*>(windowProperty.toQObject());
+    *window = qobject_cast<EffectWindow *>(windowProperty.toQObject());
 
     settings << animationSettingsFromObject(object); // global
 
@@ -206,7 +198,7 @@ QList<AnimationSettings> animationSettings(QScriptContext *context, ScriptedEffe
             return settings;
         }
         const int length = static_cast<int>(animations.property(QStringLiteral("length")).toInteger());
-        for (int i=0; i<length; ++i) {
+        for (int i = 0; i < length; ++i) {
             QScriptValue value = animations.property(QString::number(i));
             if (!value.isValid()) {
                 continue;
@@ -242,18 +234,15 @@ QList<AnimationSettings> animationSettings(QScriptContext *context, ScriptedEffe
 
                 s.metaData = 0;
                 typedef QMap<AnimationEffect::MetaType, QString> MetaTypeMap;
-                static MetaTypeMap metaTypes({
-                    {AnimationEffect::SourceAnchor, QStringLiteral("sourceAnchor")},
-                    {AnimationEffect::TargetAnchor, QStringLiteral("targetAnchor")},
-                    {AnimationEffect::RelativeSourceX, QStringLiteral("relativeSourceX")},
-                    {AnimationEffect::RelativeSourceY, QStringLiteral("relativeSourceY")},
-                    {AnimationEffect::RelativeTargetX, QStringLiteral("relativeTargetX")},
-                    {AnimationEffect::RelativeTargetY, QStringLiteral("relativeTargetY")},
-                    {AnimationEffect::Axis, QStringLiteral("axis")}
-                });
+                static MetaTypeMap metaTypes({{AnimationEffect::SourceAnchor, QStringLiteral("sourceAnchor")},
+                                              {AnimationEffect::TargetAnchor, QStringLiteral("targetAnchor")},
+                                              {AnimationEffect::RelativeSourceX, QStringLiteral("relativeSourceX")},
+                                              {AnimationEffect::RelativeSourceY, QStringLiteral("relativeSourceY")},
+                                              {AnimationEffect::RelativeTargetX, QStringLiteral("relativeTargetX")},
+                                              {AnimationEffect::RelativeTargetY, QStringLiteral("relativeTargetY")},
+                                              {AnimationEffect::Axis, QStringLiteral("axis")}});
 
-                for (MetaTypeMap::const_iterator it = metaTypes.constBegin(),
-                                                end = metaTypes.constEnd(); it != end; ++it) {
+                for (MetaTypeMap::const_iterator it = metaTypes.constBegin(), end = metaTypes.constEnd(); it != end; ++it) {
                     QScriptValue metaVal = value.property(*it);
                     if (metaVal.isValid() && metaVal.isNumber()) {
                         AnimationEffect::setMetaData(it.key(), metaVal.toInt32(), s.metaData);
@@ -284,7 +273,7 @@ QList<AnimationSettings> animationSettings(QScriptContext *context, ScriptedEffe
 
 QScriptValue kwinEffectAnimate(QScriptContext *context, QScriptEngine *engine)
 {
-    ScriptedEffect *effect = qobject_cast<ScriptedEffect*>(context->callee().data().toQObject());
+    ScriptedEffect *effect = qobject_cast<ScriptedEffect *>(context->callee().data().toQObject());
     EffectWindow *window;
     QList<AnimationSettings> settings = animationSettings(context, effect, &window);
     if (settings.empty()) {
@@ -299,16 +288,17 @@ QScriptValue kwinEffectAnimate(QScriptContext *context, QScriptEngine *engine)
     QScriptValue array = engine->newArray(settings.length());
     int i = 0;
     foreach (const AnimationSettings &setting, settings) {
-        array.setProperty(i, (uint)effect->animate(window,
-                                    setting.type,
-                                    setting.duration,
-                                    setting.to,
-                                    setting.from,
-                                    setting.metaData,
-                                    setting.curve,
-                                    setting.delay,
-                                    setting.fullScreenEffect,
-                                    setting.keepAlive));
+        array.setProperty(i,
+                          (uint)effect->animate(window,
+                                                setting.type,
+                                                setting.duration,
+                                                setting.to,
+                                                setting.from,
+                                                setting.metaData,
+                                                setting.curve,
+                                                setting.delay,
+                                                setting.fullScreenEffect,
+                                                setting.keepAlive));
         ++i;
     }
     return array;
@@ -316,7 +306,7 @@ QScriptValue kwinEffectAnimate(QScriptContext *context, QScriptEngine *engine)
 
 QScriptValue kwinEffectSet(QScriptContext *context, QScriptEngine *engine)
 {
-    ScriptedEffect *effect = qobject_cast<ScriptedEffect*>(context->callee().data().toQObject());
+    ScriptedEffect *effect = qobject_cast<ScriptedEffect *>(context->callee().data().toQObject());
 
     EffectWindow *window;
     QList<AnimationSettings> settings = animationSettings(context, effect, &window);
@@ -332,15 +322,15 @@ QScriptValue kwinEffectSet(QScriptContext *context, QScriptEngine *engine)
     QList<QVariant> animIds;
     foreach (const AnimationSettings &setting, settings) {
         animIds << QVariant(effect->set(window,
-                               setting.type,
-                               setting.duration,
-                               setting.to,
-                               setting.from,
-                               setting.metaData,
-                               setting.curve,
-                               setting.delay,
-                               setting.fullScreenEffect,
-                               setting.keepAlive));
+                                        setting.type,
+                                        setting.duration,
+                                        setting.to,
+                                        setting.from,
+                                        setting.metaData,
+                                        setting.curve,
+                                        setting.delay,
+                                        setting.fullScreenEffect,
+                                        setting.keepAlive));
     }
 
     return engine->newVariant(animIds);
@@ -401,7 +391,7 @@ void fpx2FromScriptValue(const QScriptValue &value, KWin::FPx2 &fpx2)
 
 QScriptValue kwinEffectRetarget(QScriptContext *context, QScriptEngine *engine)
 {
-    ScriptedEffect *effect = qobject_cast<ScriptedEffect*>(context->callee().data().toQObject());
+    ScriptedEffect *effect = qobject_cast<ScriptedEffect *>(context->callee().data().toQObject());
     if (context->argumentCount() < 2 || context->argumentCount() > 3) {
         context->throwError(QScriptContext::SyntaxError, QStringLiteral("2 or 3 arguments expected"));
         return engine->undefinedValue();
@@ -431,8 +421,7 @@ QScriptValue kwinEffectRetarget(QScriptContext *context, QScriptEngine *engine)
 QScriptValue kwinEffectRedirect(QScriptContext *context, QScriptEngine *engine)
 {
     if (context->argumentCount() != 2 && context->argumentCount() != 3) {
-        const QString errorMessage = QStringLiteral("redirect() takes either 2 or 3 arguments (%1 given)")
-            .arg(context->argumentCount());
+        const QString errorMessage = QStringLiteral("redirect() takes either 2 or 3 arguments (%1 given)").arg(context->argumentCount());
         context->throwError(QScriptContext::SyntaxError, errorMessage);
         return engine->undefinedValue();
     }
@@ -485,8 +474,7 @@ QScriptValue kwinEffectRedirect(QScriptContext *context, QScriptEngine *engine)
 QScriptValue kwinEffectComplete(QScriptContext *context, QScriptEngine *engine)
 {
     if (context->argumentCount() != 1) {
-        const QString errorMessage = QStringLiteral("complete() takes exactly 1 arguments (%1 given)")
-            .arg(context->argumentCount());
+        const QString errorMessage = QStringLiteral("complete() takes exactly 1 arguments (%1 given)").arg(context->argumentCount());
         context->throwError(QScriptContext::SyntaxError, errorMessage);
         return engine->undefinedValue();
     }
@@ -510,7 +498,7 @@ QScriptValue kwinEffectComplete(QScriptContext *context, QScriptEngine *engine)
 
 QScriptValue kwinEffectCancel(QScriptContext *context, QScriptEngine *engine)
 {
-    ScriptedEffect *effect = qobject_cast<ScriptedEffect*>(context->callee().data().toQObject());
+    ScriptedEffect *effect = qobject_cast<ScriptedEffect *>(context->callee().data().toQObject());
     if (context->argumentCount() != 1) {
         context->throwError(QScriptContext::SyntaxError, QStringLiteral("Exactly one argument expected"));
         return engine->undefinedValue();
@@ -531,13 +519,14 @@ QScriptValue kwinEffectCancel(QScriptContext *context, QScriptEngine *engine)
 
 QScriptValue effectWindowToScriptValue(QScriptEngine *eng, const KEffectWindowRef &window)
 {
-    return eng->newQObject(window, QScriptEngine::QtOwnership,
+    return eng->newQObject(window,
+                           QScriptEngine::QtOwnership,
                            QScriptEngine::ExcludeChildObjects | QScriptEngine::ExcludeDeleteLater | QScriptEngine::PreferExistingWrapperObject);
 }
 
-void effectWindowFromScriptValue(const QScriptValue &value, EffectWindow* &window)
+void effectWindowFromScriptValue(const QScriptValue &value, EffectWindow *&window)
 {
-    window = qobject_cast<EffectWindow*>(value.toQObject());
+    window = qobject_cast<EffectWindow *>(value.toQObject());
 }
 
 ScriptedEffect *ScriptedEffect::create(const KPluginMetaData &effect)
@@ -548,8 +537,8 @@ ScriptedEffect *ScriptedEffect::create(const KPluginMetaData &effect)
         qCDebug(KWIN_SCRIPTING) << "X-Plasma-MainScript not set";
         return nullptr;
     }
-    const QString scriptFile = QStandardPaths::locate(QStandardPaths::GenericDataLocation,
-                                                      QLatin1String(KWIN_NAME "/effects/") + name + QLatin1String("/contents/") + scriptName);
+    const QString scriptFile =
+        QStandardPaths::locate(QStandardPaths::GenericDataLocation, QLatin1String(KWIN_NAME "/effects/") + name + QLatin1String("/contents/") + scriptName);
     if (scriptFile.isNull()) {
         qCDebug(KWIN_SCRIPTING) << "Could not locate the effect script";
         return nullptr;
@@ -557,7 +546,7 @@ ScriptedEffect *ScriptedEffect::create(const KPluginMetaData &effect)
     return ScriptedEffect::create(name, scriptFile, effect.value(QStringLiteral("X-KDE-Ordering")).toInt());
 }
 
-ScriptedEffect *ScriptedEffect::create(const QString& effectName, const QString& pathToScript, int chainPosition)
+ScriptedEffect *ScriptedEffect::create(const QString &effectName, const QString &pathToScript, int chainPosition)
 {
     ScriptedEffect *effect = new ScriptedEffect();
     if (!effect->init(effectName, pathToScript)) {
@@ -583,7 +572,7 @@ ScriptedEffect::ScriptedEffect()
     Q_ASSERT(effects);
     connect(m_engine, &QScriptEngine::signalHandlerException, this, &ScriptedEffect::signalHandlerException);
     connect(effects, &EffectsHandler::activeFullScreenEffectChanged, this, [this]() {
-        Effect* fullScreenEffect = effects->activeFullScreenEffect();
+        Effect *fullScreenEffect = effects->activeFullScreenEffect();
         if (fullScreenEffect == m_activeFullScreenEffect) {
             return;
         }
@@ -609,7 +598,8 @@ bool ScriptedEffect::init(const QString &effectName, const QString &pathToScript
     m_scriptFile = pathToScript;
 
     // does the effect contain an KConfigXT file?
-    const QString kconfigXTFile = QStandardPaths::locate(QStandardPaths::GenericDataLocation, QLatin1String(KWIN_NAME "/effects/") + m_effectName + QLatin1String("/contents/config/main.xml"));
+    const QString kconfigXTFile = QStandardPaths::locate(QStandardPaths::GenericDataLocation,
+                                                         QLatin1String(KWIN_NAME "/effects/") + m_effectName + QLatin1String("/contents/config/main.xml"));
     if (!kconfigXTFile.isNull()) {
         KConfigGroup cg = QCoreApplication::instance()->property("config").value<KSharedConfigPtr>()->group(QStringLiteral("Effect-%1").arg(m_effectName));
         QFile xmlFile(kconfigXTFile);
@@ -626,11 +616,13 @@ bool ScriptedEffect::init(const QString &effectName, const QString &pathToScript
     m_engine->globalObject().setProperty(QStringLiteral("Globals"), m_engine->newQMetaObject(&KWin::staticMetaObject));
 
     m_engine->globalObject().setProperty(QStringLiteral("QEasingCurve"), m_engine->newQMetaObject(&QEasingCurve::staticMetaObject));
-    m_engine->globalObject().setProperty(QStringLiteral("effect"), m_engine->newQObject(this, QScriptEngine::QtOwnership, QScriptEngine::ExcludeDeleteLater), QScriptValue::Undeletable);
+    m_engine->globalObject().setProperty(QStringLiteral("effect"),
+                                         m_engine->newQObject(this, QScriptEngine::QtOwnership, QScriptEngine::ExcludeDeleteLater),
+                                         QScriptValue::Undeletable);
     MetaScripting::registration(m_engine);
     qScriptRegisterMetaType<KEffectWindowRef>(m_engine, effectWindowToScriptValue, effectWindowFromScriptValue);
     qScriptRegisterMetaType<KWin::FPx2>(m_engine, fpx2ToScriptValue, fpx2FromScriptValue);
-    qScriptRegisterSequenceMetaType<QList< KWin::EffectWindow* > >(m_engine);
+    qScriptRegisterSequenceMetaType<QList<KWin::EffectWindow *>>(m_engine);
     // add our print
     QScriptValue printFunc = m_engine->newFunction(kwinEffectScriptPrint);
     printFunc.setData(m_engine->newQObject(this));
@@ -719,7 +711,16 @@ void ScriptedEffect::signalHandlerException(const QScriptValue &value)
     }
 }
 
-quint64 ScriptedEffect::animate(KWin::EffectWindow* w, KWin::AnimationEffect::Attribute a, int ms, KWin::FPx2 to, KWin::FPx2 from, uint metaData, int curve, int delay, bool fullScreen, bool keepAlive)
+quint64 ScriptedEffect::animate(KWin::EffectWindow *w,
+                                KWin::AnimationEffect::Attribute a,
+                                int ms,
+                                KWin::FPx2 to,
+                                KWin::FPx2 from,
+                                uint metaData,
+                                int curve,
+                                int delay,
+                                bool fullScreen,
+                                bool keepAlive)
 {
     QEasingCurve qec;
     if (curve < QEasingCurve::Custom)
@@ -729,7 +730,16 @@ quint64 ScriptedEffect::animate(KWin::EffectWindow* w, KWin::AnimationEffect::At
     return AnimationEffect::animate(w, a, metaData, ms, to, qec, delay, from, fullScreen, keepAlive);
 }
 
-quint64 ScriptedEffect::set(KWin::EffectWindow* w, KWin::AnimationEffect::Attribute a, int ms, KWin::FPx2 to, KWin::FPx2 from, uint metaData, int curve, int delay, bool fullScreen, bool keepAlive)
+quint64 ScriptedEffect::set(KWin::EffectWindow *w,
+                            KWin::AnimationEffect::Attribute a,
+                            int ms,
+                            KWin::FPx2 to,
+                            KWin::FPx2 from,
+                            uint metaData,
+                            int curve,
+                            int delay,
+                            bool fullScreen,
+                            bool keepAlive)
 {
     QEasingCurve qec;
     if (curve < QEasingCurve::Custom)
@@ -754,9 +764,9 @@ bool ScriptedEffect::complete(quint64 animationId)
     return AnimationEffect::complete(animationId);
 }
 
-bool ScriptedEffect::isGrabbed(EffectWindow* w, ScriptedEffect::DataRole grabRole)
+bool ScriptedEffect::isGrabbed(EffectWindow *w, ScriptedEffect::DataRole grabRole)
 {
-    void *e = w->data(static_cast<KWin::DataRole>(grabRole)).value<void*>();
+    void *e = w->data(static_cast<KWin::DataRole>(grabRole)).value<void *>();
     if (e) {
         return e != this;
     } else {
@@ -815,7 +825,7 @@ void ScriptedEffect::registerShortcut(QAction *a, QScriptValue callback)
 
 void ScriptedEffect::globalShortcutTriggered()
 {
-    callGlobalShortcutCallback<KWin::ScriptedEffect*>(this, sender());
+    callGlobalShortcutCallback<KWin::ScriptedEffect *>(this, sender());
 }
 
 bool ScriptedEffect::borderActivated(ElectricBorder edge)
@@ -838,12 +848,10 @@ bool ScriptedEffect::registerTouchScreenCallback(int edge, QScriptValue callback
         return false;
     }
     QAction *action = new QAction(this);
-    connect(action, &QAction::triggered, this,
-        [callback] {
-            QScriptValue invoke(callback);
-            invoke.call();
-        }
-    );
+    connect(action, &QAction::triggered, this, [callback] {
+        QScriptValue invoke(callback);
+        invoke.call();
+    });
     ScreenEdges::self()->reserveTouch(KWin::ElectricBorder(edge), action);
     m_touchScreenEdgeCallbacks.insert(edge, action);
     return true;

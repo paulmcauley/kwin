@@ -142,20 +142,14 @@ void Window::createFBO()
 void Window::createPbuffer()
 {
     const QSurfaceFormat requestedFormat = window()->requestedFormat();
-    const EGLConfig config = configFromFormat(m_eglDisplay,
-                                              requestedFormat,
-                                              EGL_PBUFFER_BIT);
+    const EGLConfig config = configFromFormat(m_eglDisplay, requestedFormat, EGL_PBUFFER_BIT);
     if (config == EGL_NO_CONFIG_KHR) {
         qCWarning(KWIN_QPA) << "Could not find any EGL config for:" << requestedFormat;
         return;
     }
 
     // The size doesn't matter as we render into a framebuffer object.
-    const EGLint attribs[] = {
-        EGL_WIDTH, 16,
-        EGL_HEIGHT, 16,
-        EGL_NONE
-    };
+    const EGLint attribs[] = {EGL_WIDTH, 16, EGL_HEIGHT, 16, EGL_NONE};
 
     m_eglSurface = eglCreatePbufferSurface(m_eglDisplay, config, attribs);
     if (m_eglSurface != EGL_NO_SURFACE) {

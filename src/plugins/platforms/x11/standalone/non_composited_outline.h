@@ -13,7 +13,6 @@
 
 namespace KWin
 {
-
 class NonCompositedOutlineVisual : public OutlineVisual
 {
 public:
@@ -24,8 +23,7 @@ public:
 
 private:
     // TODO: variadic template arguments for adding method arguments
-    template <typename T>
-    void forEachWindow(T method);
+    template<typename T> void forEachWindow(T method);
     bool m_initialized;
     Xcb::Window m_topOutline;
     Xcb::Window m_rightOutline;
@@ -33,9 +31,7 @@ private:
     Xcb::Window m_leftOutline;
 };
 
-template <typename T>
-inline
-void NonCompositedOutlineVisual::forEachWindow(T method)
+template<typename T> inline void NonCompositedOutlineVisual::forEachWindow(T method)
 {
     (m_topOutline.*method)();
     (m_rightOutline.*method)();

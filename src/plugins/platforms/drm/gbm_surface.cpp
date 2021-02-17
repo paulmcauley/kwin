@@ -12,7 +12,6 @@
 
 namespace KWin
 {
-
 GbmSurface::GbmSurface(gbm_device *gbm, uint32_t width, uint32_t height, uint32_t format, uint32_t flags)
     : m_surface(gbm_surface_create(gbm, width, height, format, flags))
 {

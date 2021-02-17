@@ -11,7 +11,6 @@
 
 namespace KWin
 {
-
 bool XwaylandClient::wantsSyncCounter() const
 {
     // When the frame window is resized, the attached buffer will be destroyed by

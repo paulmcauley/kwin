@@ -7,21 +7,21 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "keyboard_input.h"
+#include "abstract_client.h"
 #include "input_event.h"
 #include "input_event_spy.h"
 #include "keyboard_layout.h"
 #include "keyboard_repeat.h"
-#include "abstract_client.h"
 #include "modifier_only_shortcuts.h"
-#include "utils.h"
 #include "screenlockerwatcher.h"
 #include "toplevel.h"
+#include "utils.h"
 #include "wayland_server.h"
 #include "workspace.h"
 // KWayland
 #include <KWaylandServer/datadevice_interface.h>
 #include <KWaylandServer/seat_interface.h>
-//screenlocker
+// screenlocker
 #include <KScreenLocker/KsldApp>
 // Frameworks
 #include <KGlobalAccel>
@@ -30,7 +30,6 @@
 
 namespace KWin
 {
-
 KeyboardInputRedirection::KeyboardInputRedirection(InputRedirection *parent)
     : QObject(parent)
     , m_input(parent)
@@ -57,7 +56,8 @@ public:
         if (event->isAutoRepeat()) {
             return;
         }
-        emit m_input->keyStateChanged(event->nativeScanCode(), event->type() == QEvent::KeyPress ? InputRedirection::KeyboardKeyPressed : InputRedirection::KeyboardKeyReleased);
+        emit m_input->keyStateChanged(event->nativeScanCode(),
+                                      event->type() == QEvent::KeyPress ? InputRedirection::KeyboardKeyPressed : InputRedirection::KeyboardKeyReleased);
     }
 
 private:
@@ -115,23 +115,28 @@ void KeyboardInputRedirection::init()
     }
 
     KeyboardRepeat *keyRepeatSpy = new KeyboardRepeat(m_xkb.data());
-    connect(keyRepeatSpy, &KeyboardRepeat::keyRepeat, this,
+    connect(
+        keyRepeatSpy,
+        &KeyboardRepeat::keyRepeat,
+        this,
         std::bind(&KeyboardInputRedirection::processKey, this, std::placeholders::_1, InputRedirection::KeyboardKeyAutoRepeat, std::placeholders::_2, nullptr));
     m_input->installInputEventSpy(keyRepeatSpy);
 
-    connect(workspace(), &QObject::destroyed, this, [this] { m_inited = false; });
-    connect(waylandServer(), &QObject::destroyed, this, [this] { m_inited = false; });
-    connect(workspace(), &Workspace::clientActivated, this,
-        [this] {
-            disconnect(m_activeClientSurfaceChangedConnection);
-            if (auto c = workspace()->activeClient()) {
-                m_activeClientSurfaceChangedConnection = connect(c, &Toplevel::surfaceChanged, this, &KeyboardInputRedirection::update);
-            } else {
-                m_activeClientSurfaceChangedConnection = QMetaObject::Connection();
-            }
-            update();
+    connect(workspace(), &QObject::destroyed, this, [this] {
+        m_inited = false;
+    });
+    connect(waylandServer(), &QObject::destroyed, this, [this] {
+        m_inited = false;
+    });
+    connect(workspace(), &Workspace::clientActivated, this, [this] {
+        disconnect(m_activeClientSurfaceChangedConnection);
+        if (auto c = workspace()->activeClient()) {
+            m_activeClientSurfaceChangedConnection = connect(c, &Toplevel::surfaceChanged, this, &KeyboardInputRedirection::update);
+        } else {
+            m_activeClientSurfaceChangedConnection = QMetaObject::Connection();
         }
-    );
+        update();
+    });
     if (waylandServer()->hasScreenLockerIntegration()) {
         connect(ScreenLocker::KSldApp::self(), &ScreenLocker::KSldApp::lockStateChanged, this, &KeyboardInputRedirection::update);
     }
@@ -202,15 +207,7 @@ void KeyboardInputRedirection::processKey(uint32_t key, InputRedirection::Keyboa
     }
 
     const xkb_keysym_t keySym = m_xkb->currentKeysym();
-    KeyEvent event(type,
-                   m_xkb->toQtKey(keySym),
-                   m_xkb->modifiers(),
-                   key,
-                   keySym,
-                   m_xkb->toString(keySym),
-                   autoRepeat,
-                   time,
-                   device);
+    KeyEvent event(type, m_xkb->toQtKey(keySym), m_xkb->modifiers(), key, keySym, m_xkb->toString(keySym), autoRepeat, time, device);
     event.setModifiersRelevantForGlobalShortcuts(m_xkb->modifiersRelevantForGlobalShortcuts());
 
     m_input->processSpies(std::bind(&InputEventSpy::keyEvent, std::placeholders::_1, &event));

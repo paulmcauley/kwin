@@ -8,20 +8,19 @@
 */
 #include "drm_object_crtc.h"
 #include "drm_backend.h"
-#include "drm_output.h"
 #include "drm_buffer.h"
+#include "drm_gpu.h"
+#include "drm_output.h"
 #include "drm_pointer.h"
 #include "logging.h"
-#include "drm_gpu.h"
 
 namespace KWin
 {
-
 DrmCrtc::DrmCrtc(uint32_t crtc_id, DrmBackend *backend, DrmGpu *gpu, int resIndex)
-    : DrmObject(crtc_id, gpu->fd()),
-      m_resIndex(resIndex),
-      m_backend(backend),
-      m_gpu(gpu)
+    : DrmObject(crtc_id, gpu->fd())
+    , m_resIndex(resIndex)
+    , m_backend(backend)
+    , m_gpu(gpu)
 {
     DrmScopedPointer<drmModeCrtc> modeCrtc(drmModeGetCrtc(gpu->fd(), crtc_id));
     if (modeCrtc) {
@@ -50,10 +49,9 @@ bool DrmCrtc::initProps()
         QByteArrayLiteral("ACTIVE"),
     });
 
-    DrmScopedPointer<drmModeObjectProperties> properties(
-        drmModeObjectGetProperties(fd(), m_id, DRM_MODE_OBJECT_CRTC));
+    DrmScopedPointer<drmModeObjectProperties> properties(drmModeObjectGetProperties(fd(), m_id, DRM_MODE_OBJECT_CRTC));
     if (!properties) {
-        qCWarning(KWIN_DRM) << "Failed to get properties for crtc " << m_id ;
+        qCWarning(KWIN_DRM) << "Failed to get properties for crtc " << m_id;
         return false;
     }
 
@@ -111,8 +109,7 @@ bool DrmCrtc::setGammaRamp(const GammaRamp &gamma)
     uint16_t *green = const_cast<uint16_t *>(gamma.green());
     uint16_t *blue = const_cast<uint16_t *>(gamma.blue());
 
-    const bool isError = drmModeCrtcSetGamma(m_gpu->fd(), m_id,
-        gamma.size(), red, green, blue);
+    const bool isError = drmModeCrtcSetGamma(m_gpu->fd(), m_id, gamma.size(), red, green, blue);
 
     return !isError;
 }

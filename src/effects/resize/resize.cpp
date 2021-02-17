@@ -18,12 +18,11 @@
 
 #include <KColorScheme>
 
-#include <QVector2D>
 #include <QPainter>
+#include <QVector2D>
 
 namespace KWin
 {
-
 ResizeEffect::ResizeEffect()
     : AnimationEffect()
     , m_active(false)
@@ -40,7 +39,7 @@ ResizeEffect::~ResizeEffect()
 {
 }
 
-void ResizeEffect::prePaintScreen(ScreenPrePaintData& data, std::chrono::milliseconds presentTime)
+void ResizeEffect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime)
 {
     if (m_active) {
         data.mask |= PAINT_SCREEN_WITH_TRANSFORMED_WINDOWS;
@@ -48,20 +47,19 @@ void ResizeEffect::prePaintScreen(ScreenPrePaintData& data, std::chrono::millise
     AnimationEffect::prePaintScreen(data, presentTime);
 }
 
-void ResizeEffect::prePaintWindow(EffectWindow* w, WindowPrePaintData& data, std::chrono::milliseconds presentTime)
+void ResizeEffect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::chrono::milliseconds presentTime)
 {
     if (m_active && w == m_resizeWindow)
         data.mask |= PAINT_WINDOW_TRANSFORMED;
     AnimationEffect::prePaintWindow(w, data, presentTime);
 }
 
-void ResizeEffect::paintWindow(EffectWindow* w, int mask, QRegion region, WindowPaintData& data)
+void ResizeEffect::paintWindow(EffectWindow *w, int mask, QRegion region, WindowPaintData &data)
 {
     if (m_active && w == m_resizeWindow) {
         if (m_features & TextureScale) {
             data += (m_currentGeometry.topLeft() - m_originalGeometry.topLeft());
-            data *= QVector2D(float(m_currentGeometry.width())/m_originalGeometry.width(),
-                              float(m_currentGeometry.height())/m_originalGeometry.height());
+            data *= QVector2D(float(m_currentGeometry.width()) / m_originalGeometry.width(), float(m_currentGeometry.height()) / m_originalGeometry.height());
         }
         effects->paintWindow(w, mask, region, data);
 
@@ -103,9 +101,12 @@ void ResizeEffect::paintWindow(EffectWindow* w, int mask, QRegion region, Window
                     xcb_rectangle_t rect = {int16_t(r.x()), int16_t(r.y()), uint16_t(r.width()), uint16_t(r.height())};
                     rects << rect;
                 }
-                xcb_render_fill_rectangles(xcbConnection(), XCB_RENDER_PICT_OP_OVER,
-                                           effects->xrenderBufferPicture(), preMultiply(color, alpha),
-                                           rects.count(), rects.constData());
+                xcb_render_fill_rectangles(xcbConnection(),
+                                           XCB_RENDER_PICT_OP_OVER,
+                                           effects->xrenderBufferPicture(),
+                                           preMultiply(color, alpha),
+                                           rects.count(),
+                                           rects.constData());
             }
 #endif
             if (effects->compositingType() == QPainterCompositing) {

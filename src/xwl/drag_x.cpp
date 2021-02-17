@@ -32,7 +32,6 @@ namespace KWin
 {
 namespace Xwl
 {
-
 static QStringList atomToMimeTypes(xcb_atom_t atom)
 {
     QStringList mimeTypes;
@@ -42,8 +41,8 @@ static QStringList atomToMimeTypes(xcb_atom_t atom)
     } else if (atom == atoms->text) {
         mimeTypes << QString::fromLatin1("text/plain");
     } else if (atom == atoms->uri_list || atom == atoms->netscape_url || atom == atoms->moz_url) {
-    // We identify netscape and moz format as less detailed formats text/uri-list,
-    // text/x-uri and accept the information loss.
+        // We identify netscape and moz format as less detailed formats text/uri-list,
+        // text/x-uri and accept the information loss.
         mimeTypes << QString::fromLatin1("text/uri-list") << QString::fromLatin1("text/x-uri");
     } else {
         mimeTypes << Selection::atomName(atom);
@@ -82,7 +81,7 @@ XToWlDrag::XToWlDrag(X11Source *source)
                 checkForFinished();
             });
 
-            QTimer::singleShot(2000, this, [this]{
+            QTimer::singleShot(2000, this, [this] {
                 if (!m_visit->entered() || !m_visit->dropHandled()) {
                     // X client timed out
                     Q_EMIT finish(this);
@@ -104,17 +103,18 @@ XToWlDrag::XToWlDrag(X11Source *source)
     source->setDataSource(m_dataSource);
 
     auto *dc = new QMetaObject::Connection();
-    *dc = connect(waylandServer()->dataDeviceManager(), &KWaylandServer::DataDeviceManagerInterface::dataSourceCreated, this,
-                 [this, dc](KWaylandServer::DataSourceInterface *dsi) {
-                    Q_ASSERT(dsi);
-                    if (dsi->client() != waylandServer()->internalConnection()->client()) {
-                        return;
-                    }
-                    QObject::disconnect(*dc);
-                    delete dc;
-                    connect(dsi, &KWaylandServer::DataSourceInterface::mimeTypeOffered, this, &XToWlDrag::offerCallback);
-                }
-    );
+    *dc = connect(waylandServer()->dataDeviceManager(),
+                  &KWaylandServer::DataDeviceManagerInterface::dataSourceCreated,
+                  this,
+                  [this, dc](KWaylandServer::DataSourceInterface *dsi) {
+                      Q_ASSERT(dsi);
+                      if (dsi->client() != waylandServer()->internalConnection()->client()) {
+                          return;
+                      }
+                      QObject::disconnect(*dc);
+                      delete dc;
+                      connect(dsi, &KWaylandServer::DataSourceInterface::mimeTypeOffered, this, &XToWlDrag::offerCallback);
+                  });
     // Start drag with serial of last left pointer button press.
     // This means X to Wl drags can only be executed with the left pointer button being pressed.
     // For touch and (maybe) other pointer button drags we have to revisit this.
@@ -156,11 +156,10 @@ DragEventReply XToWlDrag::moveFilter(Toplevel *target, const QPoint &pos)
     const bool hasCurrent = m_visit;
     m_visit = nullptr;
 
-    if (!target || !target->surface() ||
-            target->surface()->client() == waylandServer()->xWaylandConnection()) {
+    if (!target || !target->surface() || target->surface()->client() == waylandServer()->xWaylandConnection()) {
         // currently there is no target or target is an Xwayland window
         // handled here and by X directly
-        if (AbstractClient *ac = qobject_cast<AbstractClient*>(target)) {
+        if (AbstractClient *ac = qobject_cast<AbstractClient *>(target)) {
             if (workspace()->activeClient() != ac) {
                 workspace()->activateClient(ac);
             }
@@ -173,7 +172,7 @@ DragEventReply XToWlDrag::moveFilter(Toplevel *target, const QPoint &pos)
         return DragEventReply::Ignore;
     }
     // new Wl native target
-    auto *ac = static_cast<AbstractClient*>(target);
+    auto *ac = static_cast<AbstractClient *>(target);
     m_visit = new WlVisit(ac, this);
     connect(m_visit, &WlVisit::offersReceived, this, &XToWlDrag::setOffers);
     return DragEventReply::Ignore;
@@ -236,8 +235,9 @@ using Mime = QPair<QString, xcb_atom_t>;
 
 void XToWlDrag::offerCallback(const QString &mime)
 {
-    m_offersPending.erase(std::remove_if(m_offersPending.begin(), m_offersPending.end(),
-                   [mime](const Mime &m) { return m.first == mime; }));
+    m_offersPending.erase(std::remove_if(m_offersPending.begin(), m_offersPending.end(), [mime](const Mime &m) {
+        return m.first == mime;
+    }));
     if (m_offersPending.isEmpty() && m_visit && m_visit->entered()) {
         setDragTarget();
     }
@@ -264,8 +264,9 @@ bool XToWlDrag::checkForFinished()
         // need to wait for first data request
         return false;
     }
-    const bool transfersFinished = std::all_of(m_dataRequests.begin(), m_dataRequests.end(),
-                                               [](QPair<xcb_timestamp_t, bool> req) { return req.second; });
+    const bool transfersFinished = std::all_of(m_dataRequests.begin(), m_dataRequests.end(), [](QPair<xcb_timestamp_t, bool> req) {
+        return req.second;
+    });
     if (transfersFinished) {
         m_visit->sendFinished();
         Q_EMIT finish(this);
@@ -274,23 +275,24 @@ bool XToWlDrag::checkForFinished()
 }
 
 WlVisit::WlVisit(AbstractClient *target, XToWlDrag *drag)
-    : QObject(drag),
-      m_target(target),
-      m_drag(drag)
+    : QObject(drag)
+    , m_target(target)
+    , m_drag(drag)
 {
     xcb_connection_t *xcbConn = kwinApp()->x11Connection();
 
     m_window = xcb_generate_id(xcbConn);
     DataBridge::self()->dnd()->overwriteRequestorWindow(m_window);
 
-    const uint32_t dndValues[] = { XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY |
-                                   XCB_EVENT_MASK_PROPERTY_CHANGE };
+    const uint32_t dndValues[] = {XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE};
     xcb_create_window(xcbConn,
                       XCB_COPY_FROM_PARENT,
                       m_window,
                       kwinApp()->x11RootWindow(),
-                      0, 0,
-                      8192, 8192,           // TODO: get current screen size and connect to changes
+                      0,
+                      0,
+                      8192,
+                      8192, // TODO: get current screen size and connect to changes
                       0,
                       XCB_WINDOW_CLASS_INPUT_OUTPUT,
                       XCB_COPY_FROM_PARENT,
@@ -298,12 +300,7 @@ WlVisit::WlVisit(AbstractClient *target, XToWlDrag *drag)
                       dndValues);
 
     uint32_t version = Dnd::version();
-    xcb_change_property(xcbConn,
-                        XCB_PROP_MODE_REPLACE,
-                        m_window,
-                        atoms->xdnd_aware,
-                        XCB_ATOM_ATOM,
-                        32, 1, &version);
+    xcb_change_property(xcbConn, XCB_PROP_MODE_REPLACE, m_window, atoms->xdnd_aware, XCB_ATOM_ATOM, 32, 1, &version);
 
     xcb_map_window(xcbConn, m_window);
     workspace()->addManualOverlay(m_window);
@@ -348,8 +345,9 @@ bool WlVisit::handleClientMessage(xcb_client_message_event_t *event)
 
 static bool hasMimeName(const Mimes &mimes, const QString &name)
 {
-    return std::any_of(mimes.begin(), mimes.end(),
-                       [name](const Mime &m) { return m.first == name; });
+    return std::any_of(mimes.begin(), mimes.end(), [name](const Mime &m) {
+        return m.first == name;
+    });
 }
 
 bool WlVisit::handleEnter(xcb_client_message_event_t *event)
@@ -371,7 +369,7 @@ bool WlVisit::handleEnter(xcb_client_message_event_t *event)
         for (size_t i = 0; i < 3; i++) {
             xcb_atom_t mimeAtom = data->data32[2 + i];
             const auto mimeStrings = atomToMimeTypes(mimeAtom);
-            for (const auto &mime : mimeStrings ) {
+            for (const auto &mime : mimeStrings) {
                 if (!hasMimeName(offers, mime)) {
                     offers << Mime(mime, mimeAtom);
                 }
@@ -389,12 +387,7 @@ bool WlVisit::handleEnter(xcb_client_message_event_t *event)
 void WlVisit::getMimesFromWinProperty(Mimes &offers)
 {
     xcb_connection_t *xcbConn = kwinApp()->x11Connection();
-    auto cookie = xcb_get_property(xcbConn,
-                                   0,
-                                   m_srcWindow,
-                                   atoms->xdnd_type_list,
-                                   XCB_GET_PROPERTY_TYPE_ANY,
-                                   0, 0x1fffffff);
+    auto cookie = xcb_get_property(xcbConn, 0, m_srcWindow, atoms->xdnd_type_list, XCB_GET_PROPERTY_TYPE_ANY, 0, 0x1fffffff);
 
     auto *reply = xcb_get_property_reply(xcbConn, cookie, nullptr);
     if (reply == nullptr) {
@@ -436,8 +429,7 @@ bool WlVisit::handlePosition(xcb_client_message_event_t *event)
     const xcb_timestamp_t timestamp = data->data32[3];
     m_drag->x11Source()->setTimestamp(timestamp);
 
-    xcb_atom_t actionAtom = m_version > 1 ? data->data32[4] :
-                                            atoms->xdnd_action_copy;
+    xcb_atom_t actionAtom = m_version > 1 ? data->data32[4] : atoms->xdnd_action_copy;
     auto action = Drag::atomToClientAction(actionAtom);
 
     if (action == DnDAction::None) {

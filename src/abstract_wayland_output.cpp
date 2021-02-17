@@ -24,7 +24,6 @@
 
 namespace KWin
 {
-
 AbstractWaylandOutput::AbstractWaylandOutput(QObject *parent)
     : AbstractOutput(parent)
 {
@@ -32,8 +31,7 @@ AbstractWaylandOutput::AbstractWaylandOutput(QObject *parent)
     m_waylandOutputDevice = new KWaylandServer::OutputDeviceInterface(waylandServer()->display(), this);
     m_xdgOutputV1 = waylandServer()->xdgOutputManagerV1()->createXdgOutput(m_waylandOutput, this);
 
-    connect(m_waylandOutput, &KWaylandServer::OutputInterface::dpmsModeRequested, this,
-            [this] (KWaylandServer::OutputInterface::DpmsMode mode) {
+    connect(m_waylandOutput, &KWaylandServer::OutputInterface::dpmsModeRequested, this, [this](KWaylandServer::OutputInterface::DpmsMode mode) {
         updateDpms(mode);
     });
 
@@ -166,14 +164,12 @@ void AbstractWaylandOutput::setTransform(DeviceInterface::Transform transform)
     m_xdgOutputV1->done();
 }
 
-inline
-AbstractWaylandOutput::Transform toTransform(DeviceInterface::Transform deviceTransform)
+inline AbstractWaylandOutput::Transform toTransform(DeviceInterface::Transform deviceTransform)
 {
     return static_cast<AbstractWaylandOutput::Transform>(deviceTransform);
 }
 
-inline
-DeviceInterface::Transform toDeviceTransform(AbstractWaylandOutput::Transform transform)
+inline DeviceInterface::Transform toDeviceTransform(AbstractWaylandOutput::Transform transform)
 {
     return static_cast<DeviceInterface::Transform>(transform);
 }
@@ -246,8 +242,7 @@ void AbstractWaylandOutput::setEnabled(bool enable)
 
 QString AbstractWaylandOutput::description() const
 {
-    return QStringLiteral("%1 %2").arg(m_waylandOutputDevice->manufacturer()).arg(
-                m_waylandOutputDevice->model());
+    return QStringLiteral("%1 %2").arg(m_waylandOutputDevice->manufacturer()).arg(m_waylandOutputDevice->model());
 }
 
 void AbstractWaylandOutput::setWaylandMode(const QSize &size, int refreshRate)
@@ -258,8 +253,10 @@ void AbstractWaylandOutput::setWaylandMode(const QSize &size, int refreshRate)
     m_xdgOutputV1->done();
 }
 
-void AbstractWaylandOutput::initInterfaces(const QString &model, const QString &manufacturer,
-                                           const QByteArray &uuid, const QSize &physicalSize,
+void AbstractWaylandOutput::initInterfaces(const QString &model,
+                                           const QString &manufacturer,
+                                           const QByteArray &uuid,
+                                           const QSize &physicalSize,
                                            const QVector<DeviceInterface::Mode> &modes,
                                            const QByteArray &edid)
 {
@@ -309,8 +306,7 @@ QSize AbstractWaylandOutput::orientateSize(const QSize &size) const
 {
     using Transform = DeviceInterface::Transform;
     const Transform transform = m_waylandOutputDevice->transform();
-    if (transform == Transform::Rotated90 || transform == Transform::Rotated270 ||
-            transform == Transform::Flipped90 || transform == Transform::Flipped270) {
+    if (transform == Transform::Rotated90 || transform == Transform::Rotated270 || transform == Transform::Flipped90 || transform == Transform::Flipped270) {
         return size.transposed();
     }
     return size;

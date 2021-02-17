@@ -14,7 +14,6 @@
 
 namespace KWin
 {
-
 FramebufferVsyncMonitorHelper::FramebufferVsyncMonitorHelper(int fileDescriptor, QObject *parent)
     : QObject(parent)
     , m_fileDescriptor(fileDescriptor)
@@ -42,10 +41,8 @@ FramebufferVsyncMonitor::FramebufferVsyncMonitor(int fileDescriptor, QObject *pa
 {
     m_helper->moveToThread(m_thread);
 
-    connect(m_helper, &FramebufferVsyncMonitorHelper::errorOccurred,
-            this, &FramebufferVsyncMonitor::errorOccurred);
-    connect(m_helper, &FramebufferVsyncMonitorHelper::vblankOccurred,
-            this, &FramebufferVsyncMonitor::vblankOccurred);
+    connect(m_helper, &FramebufferVsyncMonitorHelper::errorOccurred, this, &FramebufferVsyncMonitor::errorOccurred);
+    connect(m_helper, &FramebufferVsyncMonitorHelper::vblankOccurred, this, &FramebufferVsyncMonitor::vblankOccurred);
 
     m_thread->setObjectName(QStringLiteral("vsync event monitor"));
     m_thread->start();

@@ -9,30 +9,35 @@
 
 #include "drm_gpu.h"
 
+#include "abstract_egl_backend.h"
 #include "drm_backend.h"
-#include "drm_output.h"
 #include "drm_object_connector.h"
 #include "drm_object_crtc.h"
-#include "abstract_egl_backend.h"
+#include "drm_output.h"
 #include "logging.h"
 
 #if HAVE_GBM
 #include "egl_gbm_backend.h"
-#include <gbm.h>
 #include "gbm_dmabuf.h"
+#include <gbm.h>
 #endif
 // system
 #include <algorithm>
 #include <unistd.h>
 // drm
+#include <libdrm/drm_mode.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
-#include <libdrm/drm_mode.h>
 
 namespace KWin
 {
-
-DrmGpu::DrmGpu(DrmBackend *backend, QByteArray devNode, int fd, int drmId) : m_backend(backend), m_devNode(devNode), m_fd(fd), m_drmId(drmId), m_atomicModeSetting(false), m_gbmDevice(nullptr)
+DrmGpu::DrmGpu(DrmBackend *backend, QByteArray devNode, int fd, int drmId)
+    : m_backend(backend)
+    , m_devNode(devNode)
+    , m_fd(fd)
+    , m_drmId(drmId)
+    , m_atomicModeSetting(false)
+    , m_gbmDevice(nullptr)
 {
     uint64_t capability = 0;
 
@@ -125,7 +130,9 @@ bool DrmGpu::updateOutputs()
 
     for (int i = 0; i < resources->count_connectors; ++i) {
         const uint32_t currentConnector = resources->connectors[i];
-        auto it = std::find_if(m_connectors.constBegin(), m_connectors.constEnd(), [currentConnector] (DrmConnector *c) { return c->id() == currentConnector; });
+        auto it = std::find_if(m_connectors.constBegin(), m_connectors.constEnd(), [currentConnector](DrmConnector *c) {
+            return c->id() == currentConnector;
+        });
         if (it == m_connectors.constEnd()) {
             auto c = new DrmConnector(currentConnector, m_fd);
             if (!c->init()) {
@@ -148,7 +155,9 @@ bool DrmGpu::updateOutputs()
 
     for (int i = 0; i < resources->count_crtcs; ++i) {
         const uint32_t currentCrtc = resources->crtcs[i];
-        auto it = std::find_if(m_crtcs.constBegin(), m_crtcs.constEnd(), [currentCrtc] (DrmCrtc *c) { return c->id() == currentCrtc; });
+        auto it = std::find_if(m_crtcs.constBegin(), m_crtcs.constEnd(), [currentCrtc](DrmCrtc *c) {
+            return c->id() == currentCrtc;
+        });
         if (it == m_crtcs.constEnd()) {
             auto c = new DrmCrtc(currentCrtc, m_backend, this, i);
             if (!c->init()) {
@@ -168,8 +177,8 @@ bool DrmGpu::updateOutputs()
         m_crtcs.removeOne(c);
     }
 
-    QVector<DrmOutput*> connectedOutputs;
-    QVector<DrmConnector*> pendingConnectors;
+    QVector<DrmOutput *> connectedOutputs;
+    QVector<DrmConnector *> pendingConnectors;
 
     // split up connected connectors in already or not yet assigned ones
     for (DrmConnector *con : qAsConst(m_connectors)) {
@@ -185,7 +194,7 @@ bool DrmGpu::updateOutputs()
     }
 
     // check for outputs which got removed
-    QVector<DrmOutput*> removedOutputs;
+    QVector<DrmOutput *> removedOutputs;
     auto it = m_outputs.begin();
     while (it != m_outputs.end()) {
         if (connectedOutputs.contains(*it)) {
@@ -219,11 +228,9 @@ bool DrmGpu::updateOutputs()
                 }
 
                 // check if crtc isn't used yet -- currently we don't allow multiple outputs on one crtc (cloned mode)
-                auto it = std::find_if(connectedOutputs.constBegin(), connectedOutputs.constEnd(),
-                    [crtc] (DrmOutput *o) {
-                        return o->m_crtc == crtc;
-                    }
-                );
+                auto it = std::find_if(connectedOutputs.constBegin(), connectedOutputs.constEnd(), [crtc](DrmOutput *o) {
+                    return o->m_crtc == crtc;
+                });
                 if (it != connectedOutputs.constEnd()) {
                     continue;
                 }
@@ -263,10 +270,12 @@ bool DrmGpu::updateOutputs()
             }
         }
     }
-    std::sort(connectedOutputs.begin(), connectedOutputs.end(), [] (DrmOutput *a, DrmOutput *b) { return a->m_conn->id() < b->m_conn->id(); });
+    std::sort(connectedOutputs.begin(), connectedOutputs.end(), [](DrmOutput *a, DrmOutput *b) {
+        return a->m_conn->id() < b->m_conn->id();
+    });
     m_outputs = connectedOutputs;
 
-    for(DrmOutput *removedOutput : removedOutputs) {
+    for (DrmOutput *removedOutput : removedOutputs) {
         emit outputRemoved(removedOutput);
         removedOutput->teardown();
         removedOutput->m_crtc = nullptr;
@@ -285,7 +294,7 @@ bool DrmGpu::updateOutputs()
 
 DrmOutput *DrmGpu::findOutput(quint32 connector)
 {
-    auto it = std::find_if(m_outputs.constBegin(), m_outputs.constEnd(), [connector] (DrmOutput *o) {
+    auto it = std::find_if(m_outputs.constBegin(), m_outputs.constEnd(), [connector](DrmOutput *o) {
         return o->m_conn->id() == connector;
     });
     if (it != m_outputs.constEnd()) {

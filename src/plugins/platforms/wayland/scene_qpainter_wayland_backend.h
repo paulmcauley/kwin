@@ -12,8 +12,8 @@
 
 #include "qpainterbackend.h"
 
-#include <QObject>
 #include <QImage>
+#include <QObject>
 #include <QWeakPointer>
 
 namespace KWayland
@@ -73,7 +73,7 @@ public:
 
     QImage *bufferForScreen(int screenId) override;
 
-    void endFrame(int screenId, int mask, const QRegion& damage) override;
+    void endFrame(int screenId, int mask, const QRegion &damage) override;
     void beginFrame(int screenId) override;
 
     bool needsFullRepaint(int screenId) const override;
@@ -83,7 +83,7 @@ private:
     void frameRendered();
 
     WaylandBackend *m_backend;
-    QVector<WaylandQPainterOutput*> m_outputs;
+    QVector<WaylandQPainterOutput *> m_outputs;
 };
 
 }

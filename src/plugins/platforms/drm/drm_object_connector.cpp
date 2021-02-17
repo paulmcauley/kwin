@@ -12,7 +12,6 @@
 
 namespace KWin
 {
-
 DrmConnector::DrmConnector(uint32_t connector_id, int fd)
     : DrmObject(connector_id, fd)
 {
@@ -39,15 +38,11 @@ bool DrmConnector::init()
 
 bool DrmConnector::initProps()
 {
-    setPropertyNames( {
-        QByteArrayLiteral("CRTC_ID"),
-        QByteArrayLiteral("non-desktop")
-    });
+    setPropertyNames({QByteArrayLiteral("CRTC_ID"), QByteArrayLiteral("non-desktop")});
 
-    DrmScopedPointer<drmModeObjectProperties> properties(
-        drmModeObjectGetProperties(fd(), m_id, DRM_MODE_OBJECT_CONNECTOR));
+    DrmScopedPointer<drmModeObjectProperties> properties(drmModeObjectGetProperties(fd(), m_id, DRM_MODE_OBJECT_CONNECTOR));
     if (!properties) {
-        qCWarning(KWIN_DRM) << "Failed to get properties for connector " << m_id ;
+        qCWarning(KWIN_DRM) << "Failed to get properties for connector " << m_id;
         return false;
     }
 

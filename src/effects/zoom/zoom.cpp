@@ -16,14 +16,14 @@
 #include "accessibilityintegration.h"
 #endif
 
+#include <KConfigGroup>
+#include <KGlobalAccel>
+#include <KLocalizedString>
 #include <QAction>
 #include <QApplication>
 #include <QStyle>
 #include <QVector2D>
 #include <kstandardaction.h>
-#include <KConfigGroup>
-#include <KGlobalAccel>
-#include <KLocalizedString>
 
 #include <kwinglutils.h>
 #ifdef KWIN_HAVE_XRENDER_COMPOSITING
@@ -33,7 +33,6 @@
 
 namespace KWin
 {
-
 ZoomEffect::ZoomEffect()
     : Effect()
     , zoom(1)
@@ -42,7 +41,7 @@ ZoomEffect::ZoomEffect()
     , zoomFactor(1.25)
     , mouseTracking(MouseTrackingProportional)
     , mousePointer(MousePointerScale)
-    , focusDelay(350)   // in milliseconds
+    , focusDelay(350) // in milliseconds
     , imageWidth(0)
     , imageHeight(0)
     , isMouseHidden(false)
@@ -52,7 +51,7 @@ ZoomEffect::ZoomEffect()
     , lastPresentTime(std::chrono::milliseconds::zero())
 {
     initConfig<ZoomConfig>();
-    QAction* a = nullptr;
+    QAction *a = nullptr;
     a = KStandardAction::zoomIn(this, SLOT(zoomIn()), this);
     KGlobalAccel::self()->setDefaultShortcut(a, QList<QKeySequence>() << Qt::META + Qt::Key_Equal);
     KGlobalAccel::self()->setShortcut(a, QList<QKeySequence>() << Qt::META + Qt::Key_Equal);
@@ -214,8 +213,7 @@ void ZoomEffect::recreateTexture()
         if (effects->compositingType() == XRenderCompositing)
             xrenderPicture.reset(new XRenderPicture(cursor.image()));
 #endif
-    }
-    else {
+    } else {
         qCDebug(KWINEFFECTS) << "Falling back to proportional mouse tracking!";
         mouseTracking = MouseTrackingProportional;
     }
@@ -251,7 +249,7 @@ void ZoomEffect::reconfigure(ReconfigureFlags)
     }
 }
 
-void ZoomEffect::prePaintScreen(ScreenPrePaintData& data, std::chrono::milliseconds presentTime)
+void ZoomEffect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime)
 {
     if (zoom != target_zoom) {
         int time = 0;
@@ -261,9 +259,9 @@ void ZoomEffect::prePaintScreen(ScreenPrePaintData& data, std::chrono::milliseco
 
         const float zoomDist = qAbs(target_zoom - source_zoom);
         if (target_zoom > zoom)
-            zoom = qMin(zoom + ((zoomDist * time) / animationTime(150*zoomFactor)), target_zoom);
+            zoom = qMin(zoom + ((zoomDist * time) / animationTime(150 * zoomFactor)), target_zoom);
         else
-            zoom = qMax(zoom - ((zoomDist * time) / animationTime(150*zoomFactor)), target_zoom);
+            zoom = qMax(zoom - ((zoomDist * time) / animationTime(150 * zoomFactor)), target_zoom);
     }
 
     if (zoom == 1.0) {
@@ -276,17 +274,17 @@ void ZoomEffect::prePaintScreen(ScreenPrePaintData& data, std::chrono::milliseco
     effects->prePaintScreen(data, presentTime);
 }
 
-void ZoomEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData& data)
+void ZoomEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData &data)
 {
     if (zoom != 1.0) {
         data *= QVector2D(zoom, zoom);
         const QSize screenSize = effects->virtualScreenSize();
 
         // mouse-tracking allows navigation of the zoom-area using the mouse.
-        switch(mouseTracking) {
+        switch (mouseTracking) {
         case MouseTrackingProportional:
-            data.setXTranslation(- int(cursorPoint.x() * (zoom - 1.0)));
-            data.setYTranslation(- int(cursorPoint.y() * (zoom - 1.0)));
+            data.setXTranslation(-int(cursorPoint.x() * (zoom - 1.0)));
+            data.setYTranslation(-int(cursorPoint.y() * (zoom - 1.0)));
             prevPoint = cursorPoint;
             break;
         case MouseTrackingCentred:
@@ -297,27 +295,27 @@ void ZoomEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData& d
             data.setYTranslation(qMin(0, qMax(int(screenSize.height() - screenSize.height() * zoom), int(screenSize.height() / 2 - prevPoint.y() * zoom))));
             break;
         case MouseTrackingPush: {
-                // touching an edge of the screen moves the zoom-area in that direction.
-                int x = cursorPoint.x() * zoom - prevPoint.x() * (zoom - 1.0);
-                int y = cursorPoint.y() * zoom - prevPoint.y() * (zoom - 1.0);
-                int threshold = 4;
-                xMove = yMove = 0;
-                if (x < threshold)
-                    xMove = (x - threshold) / zoom;
-                else if (x + threshold > screenSize.width())
-                    xMove = (x + threshold - screenSize.width()) / zoom;
-                if (y < threshold)
-                    yMove = (y - threshold) / zoom;
-                else if (y + threshold > screenSize.height())
-                    yMove = (y + threshold - screenSize.height()) / zoom;
-                if (xMove)
-                    prevPoint.setX(qMax(0, qMin(screenSize.width(), prevPoint.x() + xMove)));
-                if (yMove)
-                    prevPoint.setY(qMax(0, qMin(screenSize.height(), prevPoint.y() + yMove)));
-                data.setXTranslation(- int(prevPoint.x() * (zoom - 1.0)));
-                data.setYTranslation(- int(prevPoint.y() * (zoom - 1.0)));
-                break;
-            }
+            // touching an edge of the screen moves the zoom-area in that direction.
+            int x = cursorPoint.x() * zoom - prevPoint.x() * (zoom - 1.0);
+            int y = cursorPoint.y() * zoom - prevPoint.y() * (zoom - 1.0);
+            int threshold = 4;
+            xMove = yMove = 0;
+            if (x < threshold)
+                xMove = (x - threshold) / zoom;
+            else if (x + threshold > screenSize.width())
+                xMove = (x + threshold - screenSize.width()) / zoom;
+            if (y < threshold)
+                yMove = (y - threshold) / zoom;
+            else if (y + threshold > screenSize.height())
+                yMove = (y + threshold - screenSize.height()) / zoom;
+            if (xMove)
+                prevPoint.setX(qMax(0, qMin(screenSize.width(), prevPoint.x() + xMove)));
+            if (yMove)
+                prevPoint.setY(qMax(0, qMin(screenSize.height(), prevPoint.y() + yMove)));
+            data.setXTranslation(-int(prevPoint.x() * (zoom - 1.0)));
+            data.setYTranslation(-int(prevPoint.y() * (zoom - 1.0)));
+            break;
+        }
         }
 
         // use the focusPoint if focus tracking is enabled
@@ -330,8 +328,8 @@ void ZoomEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData& d
                 acceptFocus = msecs > focusDelay;
             }
             if (acceptFocus) {
-                data.setXTranslation(- int(focusPoint.x() * (zoom - 1.0)));
-                data.setYTranslation(- int(focusPoint.y() * (zoom - 1.0)));
+                data.setXTranslation(-int(focusPoint.x() * (zoom - 1.0)));
+                data.setYTranslation(-int(focusPoint.y() * (zoom - 1.0)));
                 prevPoint = focusPoint;
             }
         }
@@ -367,23 +365,42 @@ void ZoomEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData& d
         }
 #ifdef KWIN_HAVE_XRENDER_COMPOSITING
         if (xrenderPicture) {
-#define DOUBLE_TO_FIXED(d) ((xcb_render_fixed_t) ((d) * 65536))
-            static const xcb_render_transform_t xrenderIdentity = {
-                DOUBLE_TO_FIXED(1), DOUBLE_TO_FIXED(0), DOUBLE_TO_FIXED(0),
-                DOUBLE_TO_FIXED(0), DOUBLE_TO_FIXED(1), DOUBLE_TO_FIXED(0),
-                DOUBLE_TO_FIXED(0), DOUBLE_TO_FIXED(0), DOUBLE_TO_FIXED(1)
-            };
+#define DOUBLE_TO_FIXED(d) ((xcb_render_fixed_t)((d)*65536))
+            static const xcb_render_transform_t xrenderIdentity = {DOUBLE_TO_FIXED(1),
+                                                                   DOUBLE_TO_FIXED(0),
+                                                                   DOUBLE_TO_FIXED(0),
+                                                                   DOUBLE_TO_FIXED(0),
+                                                                   DOUBLE_TO_FIXED(1),
+                                                                   DOUBLE_TO_FIXED(0),
+                                                                   DOUBLE_TO_FIXED(0),
+                                                                   DOUBLE_TO_FIXED(0),
+                                                                   DOUBLE_TO_FIXED(1)};
             if (mousePointer == MousePointerScale) {
-                xcb_render_set_picture_filter(xcbConnection(), *xrenderPicture, 4, const_cast<char*>("good"), 0, nullptr);
-                const xcb_render_transform_t xform = {
-                    DOUBLE_TO_FIXED(1.0 / zoom), DOUBLE_TO_FIXED(0), DOUBLE_TO_FIXED(0),
-                    DOUBLE_TO_FIXED(0), DOUBLE_TO_FIXED(1.0 / zoom), DOUBLE_TO_FIXED(0),
-                    DOUBLE_TO_FIXED(0), DOUBLE_TO_FIXED(0), DOUBLE_TO_FIXED(1)
-                };
+                xcb_render_set_picture_filter(xcbConnection(), *xrenderPicture, 4, const_cast<char *>("good"), 0, nullptr);
+                const xcb_render_transform_t xform = {DOUBLE_TO_FIXED(1.0 / zoom),
+                                                      DOUBLE_TO_FIXED(0),
+                                                      DOUBLE_TO_FIXED(0),
+                                                      DOUBLE_TO_FIXED(0),
+                                                      DOUBLE_TO_FIXED(1.0 / zoom),
+                                                      DOUBLE_TO_FIXED(0),
+                                                      DOUBLE_TO_FIXED(0),
+                                                      DOUBLE_TO_FIXED(0),
+                                                      DOUBLE_TO_FIXED(1)};
                 xcb_render_set_picture_transform(xcbConnection(), *xrenderPicture, xform);
             }
-            xcb_render_composite(xcbConnection(), XCB_RENDER_PICT_OP_OVER, *xrenderPicture, XCB_RENDER_PICTURE_NONE,
-                                 effects->xrenderBufferPicture(), 0, 0, 0, 0, rect.x(), rect.y(), rect.width(), rect.height());
+            xcb_render_composite(xcbConnection(),
+                                 XCB_RENDER_PICT_OP_OVER,
+                                 *xrenderPicture,
+                                 XCB_RENDER_PICTURE_NONE,
+                                 effects->xrenderBufferPicture(),
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 rect.x(),
+                                 rect.y(),
+                                 rect.width(),
+                                 rect.height());
             if (mousePointer == MousePointerScale)
                 xcb_render_set_picture_transform(xcbConnection(), *xrenderPicture, xrenderIdentity);
 #undef DOUBLE_TO_FIXED
@@ -461,14 +478,14 @@ void ZoomEffect::moveZoom(int x, int y)
 
     const QSize screenSize = effects->virtualScreenSize();
     if (x < 0)
-        xMove = - qMax(1.0, screenSize.width() / zoom / moveFactor);
+        xMove = -qMax(1.0, screenSize.width() / zoom / moveFactor);
     else if (x > 0)
-        xMove = qMax(1.0, screenSize.width() / zoom  / moveFactor);
+        xMove = qMax(1.0, screenSize.width() / zoom / moveFactor);
     else
         xMove = 0;
 
     if (y < 0)
-        yMove = - qMax(1.0, screenSize.height() / zoom / moveFactor);
+        yMove = -qMax(1.0, screenSize.height() / zoom / moveFactor);
     else if (y > 0)
         yMove = qMax(1.0, screenSize.height() / zoom / moveFactor);
     else
@@ -508,8 +525,7 @@ void ZoomEffect::moveMouseToCenter()
     QCursor::setPos(r.x() + r.width() / 2, r.y() + r.height() / 2);
 }
 
-void ZoomEffect::slotMouseChanged(const QPoint& pos, const QPoint& old, Qt::MouseButtons,
-                              Qt::MouseButtons, Qt::KeyboardModifiers, Qt::KeyboardModifiers)
+void ZoomEffect::slotMouseChanged(const QPoint &pos, const QPoint &old, Qt::MouseButtons, Qt::MouseButtons, Qt::KeyboardModifiers, Qt::KeyboardModifiers)
 {
     if (zoom == 1.0)
         return;
@@ -542,4 +558,3 @@ bool ZoomEffect::isActive() const
 }
 
 } // namespace
-

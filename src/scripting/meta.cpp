@@ -15,7 +15,7 @@
 using namespace KWin::MetaScripting;
 
 // Meta for QPoint object
-QScriptValue Point::toScriptValue(QScriptEngine* eng, const QPoint& point)
+QScriptValue Point::toScriptValue(QScriptEngine *eng, const QPoint &point)
 {
     QScriptValue temp = eng->newObject();
     temp.setProperty(QStringLiteral("x"), point.x());
@@ -23,7 +23,7 @@ QScriptValue Point::toScriptValue(QScriptEngine* eng, const QPoint& point)
     return temp;
 }
 
-void Point::fromScriptValue(const QScriptValue& obj, QPoint& point)
+void Point::fromScriptValue(const QScriptValue &obj, QPoint &point)
 {
     QScriptValue x = obj.property(QStringLiteral("x"), QScriptValue::ResolveLocal);
     QScriptValue y = obj.property(QStringLiteral("y"), QScriptValue::ResolveLocal);
@@ -36,7 +36,7 @@ void Point::fromScriptValue(const QScriptValue& obj, QPoint& point)
 // End of meta for QPoint object
 
 // Meta for QSize object
-QScriptValue Size::toScriptValue(QScriptEngine* eng, const QSize& size)
+QScriptValue Size::toScriptValue(QScriptEngine *eng, const QSize &size)
 {
     QScriptValue temp = eng->newObject();
     temp.setProperty(QStringLiteral("w"), size.width());
@@ -44,7 +44,7 @@ QScriptValue Size::toScriptValue(QScriptEngine* eng, const QSize& size)
     return temp;
 }
 
-void Size::fromScriptValue(const QScriptValue& obj, QSize& size)
+void Size::fromScriptValue(const QScriptValue &obj, QSize &size)
 {
     QScriptValue w = obj.property(QStringLiteral("w"), QScriptValue::ResolveLocal);
     QScriptValue h = obj.property(QStringLiteral("h"), QScriptValue::ResolveLocal);
@@ -58,7 +58,7 @@ void Size::fromScriptValue(const QScriptValue& obj, QSize& size)
 
 // Meta for QRect object. Just a temporary measure, hope to
 // add a much better wrapping of the QRect object soon
-QScriptValue Rect::toScriptValue(QScriptEngine* eng, const QRect& rect)
+QScriptValue Rect::toScriptValue(QScriptEngine *eng, const QRect &rect)
 {
     QScriptValue temp = eng->newObject();
     temp.setProperty(QStringLiteral("x"), rect.x());
@@ -69,7 +69,7 @@ QScriptValue Rect::toScriptValue(QScriptEngine* eng, const QRect& rect)
     return temp;
 }
 
-void Rect::fromScriptValue(const QScriptValue& obj, QRect &rect)
+void Rect::fromScriptValue(const QScriptValue &obj, QRect &rect)
 {
     QScriptValue w = obj.property(QStringLiteral("width"), QScriptValue::ResolveLocal);
     QScriptValue h = obj.property(QStringLiteral("height"), QScriptValue::ResolveLocal);
@@ -87,11 +87,10 @@ void Rect::fromScriptValue(const QScriptValue& obj, QRect &rect)
 
 QScriptValue AbstractClient::toScriptValue(QScriptEngine *engine, const KAbstractClientRef &client)
 {
-    return engine->newQObject(client, QScriptEngine::QtOwnership,
-                              QScriptEngine::ExcludeChildObjects |
-                              QScriptEngine::ExcludeDeleteLater |
-                              QScriptEngine::PreferExistingWrapperObject |
-                              QScriptEngine::AutoCreateDynamicProperties);
+    return engine->newQObject(client,
+                              QScriptEngine::QtOwnership,
+                              QScriptEngine::ExcludeChildObjects | QScriptEngine::ExcludeDeleteLater | QScriptEngine::PreferExistingWrapperObject
+                                  | QScriptEngine::AutoCreateDynamicProperties);
 }
 
 void AbstractClient::fromScriptValue(const QScriptValue &value, KWin::AbstractClient *&client)
@@ -101,11 +100,10 @@ void AbstractClient::fromScriptValue(const QScriptValue &value, KWin::AbstractCl
 
 QScriptValue X11Client::toScriptValue(QScriptEngine *eng, const KClientRef &client)
 {
-    return eng->newQObject(client, QScriptEngine::QtOwnership,
-                           QScriptEngine::ExcludeChildObjects |
-                           QScriptEngine::ExcludeDeleteLater |
-                           QScriptEngine::PreferExistingWrapperObject |
-                           QScriptEngine::AutoCreateDynamicProperties);
+    return eng->newQObject(client,
+                           QScriptEngine::QtOwnership,
+                           QScriptEngine::ExcludeChildObjects | QScriptEngine::ExcludeDeleteLater | QScriptEngine::PreferExistingWrapperObject
+                               | QScriptEngine::AutoCreateDynamicProperties);
 }
 
 void X11Client::fromScriptValue(const QScriptValue &value, KWin::X11Client *&client)
@@ -115,20 +113,19 @@ void X11Client::fromScriptValue(const QScriptValue &value, KWin::X11Client *&cli
 
 QScriptValue Toplevel::toScriptValue(QScriptEngine *eng, const KToplevelRef &client)
 {
-    return eng->newQObject(client, QScriptEngine::QtOwnership,
-                           QScriptEngine::ExcludeChildObjects |
-                           QScriptEngine::ExcludeDeleteLater |
-                           QScriptEngine::PreferExistingWrapperObject |
-                           QScriptEngine::AutoCreateDynamicProperties);
+    return eng->newQObject(client,
+                           QScriptEngine::QtOwnership,
+                           QScriptEngine::ExcludeChildObjects | QScriptEngine::ExcludeDeleteLater | QScriptEngine::PreferExistingWrapperObject
+                               | QScriptEngine::AutoCreateDynamicProperties);
 }
 
 void Toplevel::fromScriptValue(const QScriptValue &value, KToplevelRef &client)
 {
-    client = qobject_cast<KWin::Toplevel*>(value.toQObject());
+    client = qobject_cast<KWin::Toplevel *>(value.toQObject());
 }
 
 // Other helper functions
-void KWin::MetaScripting::registration(QScriptEngine* eng)
+void KWin::MetaScripting::registration(QScriptEngine *eng)
 {
     qScriptRegisterMetaType<QPoint>(eng, Point::toScriptValue, Point::fromScriptValue);
     qScriptRegisterMetaType<QSize>(eng, Size::toScriptValue, Size::fromScriptValue);
@@ -138,11 +135,11 @@ void KWin::MetaScripting::registration(QScriptEngine* eng)
     qScriptRegisterMetaType<KToplevelRef>(eng, Toplevel::toScriptValue, Toplevel::fromScriptValue);
 
     qScriptRegisterSequenceMetaType<QStringList>(eng);
-    qScriptRegisterSequenceMetaType< QList<KWin::AbstractClient*> >(eng);
-    qScriptRegisterSequenceMetaType< QList<KWin::X11Client *> >(eng);
+    qScriptRegisterSequenceMetaType<QList<KWin::AbstractClient *>>(eng);
+    qScriptRegisterSequenceMetaType<QList<KWin::X11Client *>>(eng);
 }
 
-QScriptValue KWin::MetaScripting::configExists(QScriptContext* ctx, QScriptEngine* eng)
+QScriptValue KWin::MetaScripting::configExists(QScriptContext *ctx, QScriptEngine *eng)
 {
     QHash<QString, QVariant> scriptConfig = (((ctx->thisObject()).data()).toVariant()).toHash();
     QVariant val = scriptConfig.value((ctx->argument(0)).toString(), QVariant());
@@ -150,7 +147,7 @@ QScriptValue KWin::MetaScripting::configExists(QScriptContext* ctx, QScriptEngin
     return eng->toScriptValue<bool>(val.isValid());
 }
 
-QScriptValue KWin::MetaScripting::getConfigValue(QScriptContext* ctx, QScriptEngine* eng)
+QScriptValue KWin::MetaScripting::getConfigValue(QScriptContext *ctx, QScriptEngine *eng)
 {
     int num = ctx->argumentCount();
     QHash<QString, QVariant> scriptConfig = (((ctx->thisObject()).data()).toVariant()).toHash();
@@ -210,7 +207,6 @@ QScriptValue KWin::MetaScripting::getConfigValue(QScriptContext* ctx, QScriptEng
             }
         }
 
-
         if (j == 0) {
             return QScriptValue();
         } else {
@@ -219,22 +215,24 @@ QScriptValue KWin::MetaScripting::getConfigValue(QScriptContext* ctx, QScriptEng
     }
 }
 
-void KWin::MetaScripting::supplyConfig(QScriptEngine* eng, const QVariant& scriptConfig)
+void KWin::MetaScripting::supplyConfig(QScriptEngine *eng, const QVariant &scriptConfig)
 {
     QScriptValue configObject = eng->newObject();
     configObject.setData(eng->newVariant(scriptConfig));
     configObject.setProperty(QStringLiteral("get"), eng->newFunction(getConfigValue, 0), QScriptValue::Undeletable);
     configObject.setProperty(QStringLiteral("exists"), eng->newFunction(configExists, 0), QScriptValue::Undeletable);
-    configObject.setProperty(QStringLiteral("loaded"), ((scriptConfig.toHash().empty()) ? eng->newVariant((bool)0) : eng->newVariant((bool)1)), QScriptValue::Undeletable);
+    configObject.setProperty(QStringLiteral("loaded"),
+                             ((scriptConfig.toHash().empty()) ? eng->newVariant((bool)0) : eng->newVariant((bool)1)),
+                             QScriptValue::Undeletable);
     (eng->globalObject()).setProperty(QStringLiteral("config"), configObject);
 }
 
-void KWin::MetaScripting::supplyConfig(QScriptEngine* eng)
+void KWin::MetaScripting::supplyConfig(QScriptEngine *eng)
 {
     KWin::MetaScripting::supplyConfig(eng, QVariant(QHash<QString, QVariant>()));
 }
 
-void KWin::MetaScripting::valueMerge(QScriptValue& first, QScriptValue second)
+void KWin::MetaScripting::valueMerge(QScriptValue &first, QScriptValue second)
 {
     QScriptValueIterator value_it(second);
 

@@ -9,13 +9,12 @@
 #ifndef KWIN_EGL_STREAM_BACKEND_H
 #define KWIN_EGL_STREAM_BACKEND_H
 #include "abstract_egl_drm_backend.h"
-#include <KWaylandServer/surface_interface.h>
 #include <KWaylandServer/eglstream_controller_interface.h>
+#include <KWaylandServer/surface_interface.h>
 #include <wayland-server-core.h>
 
 namespace KWin
 {
-
 class DrmOutput;
 class DrmBuffer;
 
@@ -32,7 +31,8 @@ public:
     void endFrame(int screenId, const QRegion &damage, const QRegion &damagedRegion) override;
     void init() override;
 
-    int screenCount() const override {
+    int screenCount() const override
+    {
         return m_outputs.count();
     }
 
@@ -46,17 +46,13 @@ private:
     bool initializeEgl();
     bool initBufferConfigs();
     bool initRenderingContext();
-    struct StreamTexture
-    {
+    struct StreamTexture {
         EGLStreamKHR stream;
         GLuint texture;
     };
     StreamTexture *lookupStreamTexture(KWaylandServer::SurfaceInterface *surface);
-    void attachStreamConsumer(KWaylandServer::SurfaceInterface *surface,
-                              void *eglStream,
-                              wl_array *attribs);
-    struct Output
-    {
+    void attachStreamConsumer(KWaylandServer::SurfaceInterface *surface, void *eglStream, wl_array *attribs);
+    struct Output {
         DrmOutput *output = nullptr;
         DrmBuffer *buffer = nullptr;
         EGLSurface eglSurface = EGL_NO_SURFACE;

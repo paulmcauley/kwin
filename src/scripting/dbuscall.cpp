@@ -12,8 +12,8 @@
 #include <QDBusMessage>
 #include <QDBusPendingCall>
 
-namespace KWin {
-
+namespace KWin
+{
 DBusCall::DBusCall(QObject *parent)
     : QObject(parent)
 {

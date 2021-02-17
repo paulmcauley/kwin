@@ -16,7 +16,6 @@
 
 namespace KWin
 {
-
 class KWIN_EXPORT Atoms
 {
 public:
@@ -90,8 +89,7 @@ private:
     bool m_helpersRetrieved;
 };
 
-
-extern KWIN_EXPORT Atoms* atoms;
+extern KWIN_EXPORT Atoms *atoms;
 
 } // namespace
 

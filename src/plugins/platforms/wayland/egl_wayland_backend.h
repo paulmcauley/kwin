@@ -19,7 +19,6 @@ struct wl_shm;
 
 namespace KWin
 {
-
 namespace Wayland
 {
 class WaylandBackend;
@@ -42,8 +41,8 @@ private:
     EGLSurface m_eglSurface = EGL_NO_SURFACE;
     int m_bufferAge = 0;
     /**
-    * @brief The damage history for the past 10 frames.
-    */
+     * @brief The damage history for the past 10 frames.
+     */
     QVector<QRegion> m_damageHistory;
 
     friend class EglWaylandBackend;
@@ -73,7 +72,8 @@ public:
     void endFrame(int screenId, const QRegion &damage, const QRegion &damagedRegion) override;
     void init() override;
 
-    bool havePlatformBase() const {
+    bool havePlatformBase() const
+    {
         return m_havePlatformBase;
     }
 
@@ -93,7 +93,7 @@ private:
     void presentOnSurface(EglWaylandOutput *output, const QRegion &damagedRegion);
 
     WaylandBackend *m_backend;
-    QVector<EglWaylandOutput*> m_outputs;
+    QVector<EglWaylandOutput *> m_outputs;
     bool m_havePlatformBase;
     friend class EglWaylandTexture;
 };

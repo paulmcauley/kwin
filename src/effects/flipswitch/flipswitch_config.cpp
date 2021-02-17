@@ -14,42 +14,40 @@
 
 #include <QAction>
 
-#include <kconfiggroup.h>
-#include <KActionCollection>
 #include <KAboutData>
+#include <KActionCollection>
 #include <KGlobalAccel>
 #include <KLocalizedString>
 #include <KPluginFactory>
+#include <kconfiggroup.h>
 
 #include <QVBoxLayout>
 
-K_PLUGIN_FACTORY_WITH_JSON(FlipSwitchEffectConfigFactory,
-                           "flipswitch_config.json",
-                           registerPlugin<KWin::FlipSwitchEffectConfig>();)
+K_PLUGIN_FACTORY_WITH_JSON(FlipSwitchEffectConfigFactory, "flipswitch_config.json", registerPlugin<KWin::FlipSwitchEffectConfig>();)
 
 namespace KWin
 {
-
-FlipSwitchEffectConfigForm::FlipSwitchEffectConfigForm(QWidget* parent) : QWidget(parent)
+FlipSwitchEffectConfigForm::FlipSwitchEffectConfigForm(QWidget *parent)
+    : QWidget(parent)
 {
     setupUi(this);
 }
 
-FlipSwitchEffectConfig::FlipSwitchEffectConfig(QWidget* parent, const QVariantList& args) :
-    KCModule(parent, args)
+FlipSwitchEffectConfig::FlipSwitchEffectConfig(QWidget *parent, const QVariantList &args)
+    : KCModule(parent, args)
 {
     m_ui = new FlipSwitchEffectConfigForm(this);
 
-    QVBoxLayout* layout = new QVBoxLayout(this);
+    QVBoxLayout *layout = new QVBoxLayout(this);
 
     layout->addWidget(m_ui);
 
     // Shortcut config. The shortcut belongs to the component "kwin"!
     m_actionCollection = new KActionCollection(this, QStringLiteral("kwin"));
-    QAction* a = m_actionCollection->addAction(QStringLiteral("FlipSwitchCurrent"));
+    QAction *a = m_actionCollection->addAction(QStringLiteral("FlipSwitchCurrent"));
     a->setText(i18n("Toggle Flip Switch (Current desktop)"));
     KGlobalAccel::self()->setShortcut(a, QList<QKeySequence>());
-    QAction* b = m_actionCollection->addAction(QStringLiteral("FlipSwitchAll"));
+    QAction *b = m_actionCollection->addAction(QStringLiteral("FlipSwitchAll"));
     b->setText(i18n("Toggle Flip Switch (All desktops)"));
     KGlobalAccel::self()->setShortcut(b, QList<QKeySequence>());
 
@@ -74,12 +72,9 @@ void FlipSwitchEffectConfig::save()
     KCModule::save();
     m_ui->shortcutEditor->save();
 
-    OrgKdeKwinEffectsInterface interface(QStringLiteral("org.kde.KWin"),
-                                         QStringLiteral("/Effects"),
-                                         QDBusConnection::sessionBus());
+    OrgKdeKwinEffectsInterface interface(QStringLiteral("org.kde.KWin"), QStringLiteral("/Effects"), QDBusConnection::sessionBus());
     interface.reconfigureEffect(QStringLiteral("flipswitch"));
 }
-
 
 } // namespace
 

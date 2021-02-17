@@ -8,13 +8,13 @@
 */
 #include "x11_decoration_renderer.h"
 #include "decorations/decoratedclient.h"
-#include "x11client.h"
 #include "deleted.h"
+#include "x11client.h"
 
 #include <kwinglobals.h>
 
-#include <KDecoration2/Decoration>
 #include <KDecoration2/DecoratedClient>
+#include <KDecoration2/Decoration>
 
 #include <QTimer>
 
@@ -22,7 +22,6 @@ namespace KWin
 {
 namespace Decoration
 {
-
 X11Renderer::X11Renderer(DecoratedClientImpl *client)
     : Renderer(client)
     , m_scheduleTimer(new QTimer(this))
@@ -71,9 +70,9 @@ void X11Renderer::render()
     client()->client()->layoutDecorationRects(left, top, right, bottom);
 
     const QRect geometry = scheduled.boundingRect();
-    left   = left.intersected(geometry);
-    top    = top.intersected(geometry);
-    right  = right.intersected(geometry);
+    left = left.intersected(geometry);
+    top = top.intersected(geometry);
+    right = right.intersected(geometry);
     bottom = bottom.intersected(geometry);
 
     auto renderPart = [this, c](const QRect &geo) {
@@ -81,9 +80,18 @@ void X11Renderer::render()
             return;
         }
         QImage image = renderToImage(geo);
-        xcb_put_image(c, XCB_IMAGE_FORMAT_Z_PIXMAP, client()->client()->frameId(), m_gc,
-                      image.width(), image.height(), geo.x(), geo.y(), 0, client()->client()->depth(),
-                      image.sizeInBytes(), image.constBits());
+        xcb_put_image(c,
+                      XCB_IMAGE_FORMAT_Z_PIXMAP,
+                      client()->client()->frameId(),
+                      m_gc,
+                      image.width(),
+                      image.height(),
+                      geo.x(),
+                      geo.y(),
+                      0,
+                      client()->client()->depth(),
+                      image.sizeInBytes(),
+                      image.constBits());
     };
     renderPart(left);
     renderPart(top);

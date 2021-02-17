@@ -14,7 +14,6 @@
 
 namespace KWin
 {
-
 class EglMultiBackend : public OpenGLBackend
 {
 public:
@@ -40,10 +39,9 @@ public:
     bool directScanoutAllowed(int screen) const override;
 
 private:
-    QVector<AbstractEglDrmBackend*> m_backends;
+    QVector<AbstractEglDrmBackend *> m_backends;
 
-    AbstractEglDrmBackend *findBackend(int screenId, int& internalScreenId) const;
-
+    AbstractEglDrmBackend *findBackend(int screenId, int &internalScreenId) const;
 };
 
 }

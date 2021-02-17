@@ -15,7 +15,6 @@
 
 namespace KWin
 {
-
 XRenderBackend::XRenderBackend()
     : m_buffer(XCB_RENDER_PICTURE_NONE)
     , m_failed(false)

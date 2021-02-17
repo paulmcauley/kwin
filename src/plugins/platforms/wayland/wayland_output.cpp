@@ -22,7 +22,6 @@ namespace KWin
 {
 namespace Wayland
 {
-
 using namespace KWayland::Client;
 
 WaylandOutput::WaylandOutput(Surface *surface, WaylandBackend *backend)
@@ -62,7 +61,7 @@ void WaylandOutput::init(const QPoint &logicalPosition, const QSize &pixelSize)
     mode.size = pixelSize;
     mode.flags = KWaylandServer::OutputDeviceInterface::ModeFlag::Current;
     mode.refreshRate = refreshRate;
-    initInterfaces("model_TODO", "manufacturer_TODO", "UUID_TODO", pixelSize, { mode }, {});
+    initInterfaces("model_TODO", "manufacturer_TODO", "UUID_TODO", pixelSize, {mode}, {});
     setGeometry(logicalPosition, pixelSize);
     setScale(backend()->initialOutputScale());
 }
@@ -130,7 +129,9 @@ void XdgShellOutput::updateWindowTitle()
         grab = i18n("Press right control key to grab pointer");
     }
     const QString title = i18nc("Title of nested KWin Wayland with Wayland socket identifier as argument",
-                                "KDE Wayland Compositor #%1 (%2)", m_number, waylandServer()->socketName());
+                                "KDE Wayland Compositor #%1 (%2)",
+                                m_number,
+                                waylandServer()->socketName());
 
     if (grab.isEmpty()) {
         m_xdgShellSurface->setTitle(title);
@@ -153,28 +154,22 @@ void XdgShellOutput::lockPointer(Pointer *pointer, bool lock)
     }
 
     Q_ASSERT(!m_pointerLock);
-    m_pointerLock = backend()->pointerConstraints()->lockPointer(surface(), pointer, nullptr,
-                                                                 PointerConstraints::LifeTime::OneShot,
-                                                                 this);
+    m_pointerLock = backend()->pointerConstraints()->lockPointer(surface(), pointer, nullptr, PointerConstraints::LifeTime::OneShot, this);
     if (!m_pointerLock->isValid()) {
         delete m_pointerLock;
         m_pointerLock = nullptr;
         return;
     }
-    connect(m_pointerLock, &LockedPointer::locked, this,
-        [this] {
-            m_hasPointerLock = true;
-            emit backend()->pointerLockChanged(true);
-        }
-    );
-    connect(m_pointerLock, &LockedPointer::unlocked, this,
-        [this] {
-            delete m_pointerLock;
-            m_pointerLock = nullptr;
-            m_hasPointerLock = false;
-            emit backend()->pointerLockChanged(false);
-        }
-    );
+    connect(m_pointerLock, &LockedPointer::locked, this, [this] {
+        m_hasPointerLock = true;
+        emit backend()->pointerLockChanged(true);
+    });
+    connect(m_pointerLock, &LockedPointer::unlocked, this, [this] {
+        delete m_pointerLock;
+        m_pointerLock = nullptr;
+        m_hasPointerLock = false;
+        emit backend()->pointerLockChanged(false);
+    });
 }
 
 }
