@@ -10,8 +10,6 @@
 #define KWIN_DRM_INPUTEVENTFILTER_H
 #include "input.h"
 
-#include <QElapsedTimer>
-
 namespace KWin
 {
 
@@ -33,9 +31,6 @@ public:
 private:
     void notify();
     DrmBackend *m_backend;
-    QElapsedTimer m_doubleTapTimer;
-    QVector<qint32> m_touchPoints;
-    bool m_secondTap = false;
 };
 
 }
