@@ -10,14 +10,14 @@
 #include "rulebooksettings.h"
 #include "rulesettings.h"
 
+#include <QUuid>
+
 namespace KWin
 {
 RuleBookSettings::RuleBookSettings(KSharedConfig::Ptr config, QObject *parent)
     : RuleBookSettingsBase(config, parent)
 {
-    for (int i = 1; i <= count(); i++) {
-        m_list.append(new RuleSettings(config, QString::number(i), this));
-    }
+    usrRead();
 }
 
 RuleBookSettings::RuleBookSettings(const QString &configname, KConfig::OpenFlags flags, QObject *parent)
@@ -37,32 +37,42 @@ RuleBookSettings::RuleBookSettings(QObject *parent)
 
 void RuleBookSettings::setRules(const QVector<Rules *> &rules)
 {
-    int i = 1;
+    mRuleGroupList.clear();
+
+    int i = 0;
     const int list_length = m_list.length();
     for (const auto &rule : rules) {
         RuleSettings *settings;
-        if (i <= list_length) {
-            settings = m_list[i - 1];
+        if (i < list_length) {
+            // Optimization. Reuse RuleSettings already created
+            settings = m_list.at(i);
             settings->setDefaults();
         } else {
             // If there are more rules than in cache
-            settings = new RuleSettings(this->sharedConfig(), QString::number(i), this);
+            settings = new RuleSettings(this->sharedConfig(), generateGroupName(), this);
             m_list.append(settings);
         }
+
         rule->write(settings);
+        mRuleGroupList.append(settings->currentGroup());
+
         i++;
     }
 
-    setCount(rules.length());
+    for (int j = m_list.count() - 1; j < rules.count(); j++) {
+        delete m_list[j];
+        m_list.removeAt(j);
+    }
+
+    mCount = mRuleGroupList.count();
 }
 
 QVector<Rules *> RuleBookSettings::rules()
 {
     QVector<Rules *> result;
-    result.reserve(mCount);
-    // mCount is always <= m_list.length()
-    for (int i = 0; i < mCount; i++) {
-        result.append(new Rules(m_list[i]));
+    result.reserve(m_list.count());
+    for (const auto &settings : qAsConst(m_list)) {
+        result.append(new Rules(settings));
     }
     return result;
 }
@@ -73,25 +83,40 @@ bool RuleBookSettings::usrSave()
     for (const auto &settings : qAsConst(m_list)) {
         result &= settings->save();
     }
-    int nRuleGroups = sharedConfig()->groupList().length() - 1;
-    // Remove any extra groups currently in config
-    for (int i = mCount + 1; i <= nRuleGroups; i++) {
-        sharedConfig()->deleteGroup(QString::number(i));
+
+    // Remove deleted groups from config
+    for (const QString &groupName : m_lastLoadedGroups) {
+        if (sharedConfig()->hasGroup(groupName) && !ruleGroupList().contains(groupName)) {
+            sharedConfig()->deleteGroup(groupName);
+        }
     }
+
     return result;
 }
 
 void RuleBookSettings::usrRead()
 {
-    const int list_length = m_list.length();
-    for (int i = 1; i <= mCount; i++) {
-        if (i <= list_length) {
-            m_list[i - 1]->load();
-        } else {
-            // If there are more groups than in cache
-            m_list.append(new RuleSettings(sharedConfig(), QString::number(i), this));
+    qDeleteAll(m_list);
+    m_list.clear();
+
+    // Legacy path for backwards compatibility with older config files without a rules list
+    if (ruleGroupList().isEmpty() && count() > 0) {
+        for (int i = 1; i <= count(); i++) {
+            mRuleGroupList.append(QString::number(i));
         }
     }
+
+    for (const QString &groupName : ruleGroupList()) {
+        m_list.append(new RuleSettings(sharedConfig(), groupName, this));
+    }
+
+    mCount = m_list.count();
+
+    m_lastLoadedGroups = ruleGroupList();
 }
 
+QString RuleBookSettings::generateGroupName()
+{
+    return QUuid::createUuid().toString(QUuid::WithoutBraces);
+}
 }
