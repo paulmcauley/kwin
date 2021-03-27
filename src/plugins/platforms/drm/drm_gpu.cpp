@@ -259,12 +259,10 @@ bool DrmGpu::updateOutputs()
                 DrmOutput *output = new DrmOutput(this->m_backend, this);
                 output->m_conn = con;
                 output->m_crtc = crtc;
-                output->m_mode = connector->modes[0];
                 output->m_primaryPlane = getCompatiblePlane(DrmPlane::TypeIndex::Primary, crtc);
-                output->m_cursorPlane = getCompatiblePlane(DrmPlane::TypeIndex::Cursor, crtc);
 
-                qCDebug(KWIN_DRM) << "For new output use mode " << output->m_mode.name << output->m_mode.hdisplay << output->m_mode.vdisplay;
-                if (!output->init(connector.data())) {
+                qCDebug(KWIN_DRM) << "For new output use mode" << con->currentMode().mode.name;
+                if (!output->init()) {
                     qCWarning(KWIN_DRM) << "Failed to create output for connector " << con->id();
                     delete output;
                     continue;
