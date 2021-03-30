@@ -23,6 +23,7 @@
 #include <QPointer>
 #include <QSize>
 #include <QVector>
+#include <QSocketNotifier>
 #include <xf86drmMode.h>
 
 #include <memory>
@@ -44,6 +45,7 @@ class DrmConnector;
 class GbmSurface;
 class Cursor;
 class DrmGpu;
+class UdevDevice;
 
 class KWIN_EXPORT DrmBackend : public Platform
 {
@@ -82,6 +84,10 @@ public:
 public Q_SLOTS:
     void turnOutputsOn();
 
+Q_SIGNALS:
+    void gpuUnloaded(DrmGpu *gpu);
+    void gpuLoaded(DrmGpu *gpu);
+
 protected:
     void doHideCursor() override;
     void doShowCursor() override;
@@ -103,8 +109,12 @@ private:
     QString generateOutputConfigurationUuid() const;
     DrmOutput *findOutput(quint32 connector);
     void updateOutputsEnabled();
+    DrmGpu *initGpu(std::unique_ptr<UdevDevice> device);
+    int openFd(const QByteArray &devNode);
+
     QScopedPointer<Udev> m_udev;
     QScopedPointer<UdevMonitor> m_udevMonitor;
+    QScopedPointer<QSocketNotifier> m_udevNotifier;
     Session *m_session = nullptr;
     // active output pipelines (planes + crtc + encoder + connector)
     QVector<DrmOutput*> m_outputs;

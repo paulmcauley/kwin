@@ -33,6 +33,7 @@ public:
     int sysNum() const;
     const char *property(const char *key);
     bool hasProperty(const char *key, const char *value);
+    QString action() const;
 
     operator udev_device*() const {
         return m_device;

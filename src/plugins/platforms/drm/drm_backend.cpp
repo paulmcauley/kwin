@@ -24,6 +24,7 @@
 #include "egl_gbm_backend.h"
 #include <gbm.h>
 #include "gbm_dmabuf.h"
+#include "egl_multi_backend.h"
 #endif
 #if HAVE_EGL_STREAMS
 #include "egl_stream_backend.h"
@@ -37,7 +38,6 @@
 #include <KSharedConfig>
 // Qt
 #include <QCryptographicHash>
-#include <QSocketNotifier>
 #include <QPainter>
 // system
 #include <algorithm>
@@ -47,7 +47,6 @@
 #include <libdrm/drm_mode.h>
 
 #include "drm_gpu.h"
-#include "egl_multi_backend.h"
 
 #ifndef DRM_CAP_CURSOR_WIDTH
 #define DRM_CAP_CURSOR_WIDTH 0x8
@@ -196,34 +195,9 @@ bool DrmBackend::initialize()
     }
 
     for (unsigned int gpu_index = 0; gpu_index < devices.size(); gpu_index++) {
-        auto device = std::move(devices.at(gpu_index));
-        auto devNode = QByteArray(device->devNode());
-        int fd = session()->openRestricted(devNode.constData());
-        if (fd < 0) {
-            qCWarning(KWIN_DRM) << "failed to open drm device at" << devNode;
-            return false;
-        }
-
-        // try to make a simple drm get resource call, if it fails it is not useful for us
-        drmModeRes *resources = drmModeGetResources(fd);
-        if (!resources) {
-            qCDebug(KWIN_DRM) << "Skipping KMS incapable drm device node at" << devNode;
-            session()->closeRestricted(fd);
-            continue;
-        }
-        drmModeFreeResources(resources);
-
-        DrmGpu *gpu = new DrmGpu(this, devNode, fd, device->sysNum());
-        if (!gpu->useEglStreams() || gpu_index == 0) {
-            m_gpus.append(gpu);
-            m_active = true;
-            connect(gpu, &DrmGpu::outputAdded, this, &DrmBackend::addOutput);
-            connect(gpu, &DrmGpu::outputRemoved, this, &DrmBackend::removeOutput);
-            if (gpu->useEglStreams()) {
-                break;
-            }
-        } else {
-            delete gpu;
+        initGpu(std::move(devices.at(gpu_index)));
+        if (!m_gpus.isEmpty() && m_gpus[0]->useEglStreams()) {
+            break;
         }
     }
 
@@ -253,20 +227,33 @@ bool DrmBackend::initialize()
                     if (!device) {
                         return;
                     }
-                    bool drm = false;
-                    for (auto gpu : m_gpus) {
+                    DrmGpu *drmGpu = nullptr;
+                    for (const auto &gpu : m_gpus) {
                         if (gpu->drmId() == device->sysNum()) {
-                            drm = true;
+                            drmGpu = gpu;
                             break;
                         }
                     }
-                    if (!drm) {
-                        return;
-                    }
-                    if (device->hasProperty("HOTPLUG", "1")) {
-                        qCDebug(KWIN_DRM) << "Received hot plug event for monitored drm device";
-                        updateOutputs();
-                        updateCursor();
+                    if (device->action() == QStringLiteral("add")) {
+                        if (m_gpus.isEmpty() || !m_gpus[0]->useEglStreams()) {
+                            if (const auto &gpu = initGpu(std::move(device))) {
+                                updateOutputs();
+                                updateCursor();
+                                emit gpuLoaded(gpu);
+                            }
+                        }
+                    } else if (drmGpu) {
+                        if (device->action() == QStringLiteral("change")) {
+                            qCDebug(KWIN_DRM) << "Received hot plug event for monitored drm device";
+                            updateOutputs();
+                            updateCursor();
+                        } else if (device->action() == QStringLiteral("remove")) {
+                            emit gpuUnloaded(drmGpu);
+                            m_gpus.removeOne(drmGpu);
+                            delete drmGpu;
+                            updateOutputs();
+                            updateCursor();
+                        }
                     }
                 }
             );
@@ -275,6 +262,45 @@ bool DrmBackend::initialize()
     }
     setReady(true);
     return true;
+}
+
+DrmGpu *DrmBackend::initGpu(std::unique_ptr<UdevDevice> device)
+{
+    QByteArray devNode = device->devNode();
+    int fd = openFd(devNode);
+    if (fd < 0) {
+        return nullptr;
+    }
+    DrmGpu *gpu = new DrmGpu(this, devNode, fd, device->sysNum(), m_gpus.isEmpty());
+    if (!gpu->useEglStreams() || m_gpus.isEmpty()) {
+        m_gpus.append(gpu);
+        m_active = true;
+        connect(gpu, &DrmGpu::outputAdded, this, &DrmBackend::addOutput);
+        connect(gpu, &DrmGpu::outputRemoved, this, &DrmBackend::removeOutput);
+        return gpu;
+    } else {
+        delete gpu;
+        return nullptr;
+    }
+}
+
+int DrmBackend::openFd(const QByteArray &devNode)
+{
+    int fd = session()->openRestricted(devNode.constData());
+    if (fd < 0) {
+        qCWarning(KWIN_DRM) << "failed to open drm device at" << devNode;
+        return -1;
+    }
+
+    // try to make a simple drm get resource call, if it fails it is not useful for us
+    drmModeRes *resources = drmModeGetResources(fd);
+    if (!resources) {
+        qCDebug(KWIN_DRM) << "Skipping KMS incapable drm device node at" << devNode;
+        session()->closeRestricted(fd);
+        return -1;
+    }
+    drmModeFreeResources(resources);
+    return fd;
 }
 
 void DrmBackend::addOutput(DrmOutput *o)
@@ -584,7 +610,7 @@ OpenGLBackend *DrmBackend::createOpenGLBackend()
 #if HAVE_GBM
     auto backend0 = new EglGbmBackend(this, m_gpus.at(0));
     AbstractEglBackend::setPrimaryBackend(backend0);
-    EglMultiBackend *backend = new EglMultiBackend(backend0);
+    EglMultiBackend *backend = new EglMultiBackend(this, backend0);
     for (int i = 1; i < m_gpus.count(); i++) {
         auto backendi = new EglGbmBackend(this, m_gpus.at(i));
         backend->addBackend(backendi);

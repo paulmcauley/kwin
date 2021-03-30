@@ -36,13 +36,14 @@
 namespace KWin
 {
 
-DrmGpu::DrmGpu(DrmBackend *backend, QByteArray devNode, int fd, int drmId)
+DrmGpu::DrmGpu(DrmBackend *backend, QByteArray devNode, int fd, int drmId, bool isPrimary)
     : m_backend(backend)
     , m_devNode(devNode)
     , m_fd(fd)
     , m_drmId(drmId)
     , m_atomicModeSetting(false)
     , m_gbmDevice(nullptr)
+    , m_isPrimary(isPrimary)
 {
     uint64_t capability = 0;
 
@@ -81,6 +82,9 @@ DrmGpu::DrmGpu(DrmBackend *backend, QByteArray devNode, int fd, int drmId)
 DrmGpu::~DrmGpu()
 {
     waitIdle();
+    for (const auto &output : m_outputs) {
+        cleanUpOutput(output);
+    }
     if (m_eglDisplay != EGL_NO_DISPLAY) {
         eglTerminate(m_eglDisplay);
     }
@@ -136,6 +140,16 @@ void DrmGpu::tryAMS()
 
 bool DrmGpu::updateOutputs()
 {
+    if (m_fd < 0) {
+        m_fd = m_backend->openFd(m_devNode);
+        if (m_fd < 0) {
+            return false;
+        }
+        tryAMS();
+        // load EGL backend
+        emit m_backend->gpuLoaded(this);
+    }
+
     auto oldConnectors = m_connectors;
     auto oldCrtcs = m_crtcs;
     DrmScopedPointer<drmModeRes> resources(drmModeGetResources(m_fd));
@@ -288,19 +302,31 @@ bool DrmGpu::updateOutputs()
     m_outputs = connectedOutputs;
 
     for(DrmOutput *removedOutput : removedOutputs) {
-        emit outputRemoved(removedOutput);
-        removedOutput->teardown();
-        removedOutput->m_crtc = nullptr;
-        m_connectors.removeOne(removedOutput->m_conn);
-        delete removedOutput->m_conn;
-        removedOutput->m_conn = nullptr;
-        if (removedOutput->m_primaryPlane) {
-            m_unusedPlanes << removedOutput->m_primaryPlane;
-        }
+        cleanUpOutput(removedOutput);
     }
 
     qDeleteAll(oldConnectors);
     qDeleteAll(oldCrtcs);
+
+    // close the fd of secondary GPUs if not needed so that the device can turn off
+    if (m_outputs.isEmpty() && !m_isPrimary) {
+        // unload egl backend:
+        emit m_backend->gpuUnloaded(this);
+        // destroy all associated resources
+        if (m_gbmDevice) {
+            gbm_device_destroy(m_gbmDevice);
+            m_gbmDevice = nullptr;
+        }
+        qDeleteAll(m_unusedPlanes);
+        m_unusedPlanes.clear();
+        qDeleteAll(m_crtcs);
+        m_crtcs.clear();
+        qDeleteAll(m_connectors);
+        m_connectors.clear();
+        m_backend->session()->closeRestricted(m_fd);
+        m_fd = -1;
+    }
+
     return true;
 }
 
@@ -411,6 +437,19 @@ void DrmGpu::dispatchEvents()
     context.version = 2;
     context.page_flip_handler = pageFlipHandler;
     drmHandleEvent(m_fd, &context);
+}
+
+void DrmGpu::cleanUpOutput(DrmOutput *output)
+{
+    emit outputRemoved(output);
+    output->teardown();
+    output->m_crtc = nullptr;
+    m_connectors.removeOne(output->m_conn);
+    delete output->m_conn;
+    output->m_conn = nullptr;
+    if (output->m_primaryPlane) {
+        m_unusedPlanes << output->m_primaryPlane;
+    }
 }
 
 }

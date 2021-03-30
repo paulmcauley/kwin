@@ -265,6 +265,11 @@ bool UdevDevice::hasProperty(const char *key, const char *value)
     return qstrcmp(p, value) == 0;
 }
 
+QString UdevDevice::action() const
+{
+    return QString::fromLocal8Bit(udev_device_get_action(m_device));
+}
+
 UdevMonitor::UdevMonitor(Udev *udev)
     : m_monitor(udev_monitor_new_from_netlink(*udev, "udev"))
 {

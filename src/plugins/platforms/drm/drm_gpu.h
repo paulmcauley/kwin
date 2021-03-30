@@ -34,7 +34,7 @@ class DrmGpu : public QObject
 {
     Q_OBJECT
 public:
-    DrmGpu(DrmBackend *backend, QByteArray devNode, int fd, int drmId);
+    DrmGpu(DrmBackend *backend, QByteArray devNode, int fd, int drmId, bool isPrimary);
     ~DrmGpu();
 
     // getters
@@ -114,13 +114,14 @@ private:
     void dispatchEvents();
     DrmPlane *getCompatiblePlane(DrmPlane::TypeIndex typeIndex, DrmCrtc *crtc);
     DrmOutput *findOutput(quint32 connector);
+    void cleanUpOutput(DrmOutput *output);
 
     DrmBackend* const m_backend;
     AbstractEglBackend *m_eglBackend;
 
     const QByteArray m_devNode;
     QSize m_cursorSize;
-    const int m_fd;
+    int m_fd;
     const int m_drmId;
     bool m_atomicModeSetting;
     bool m_useEglStreams;
@@ -129,6 +130,7 @@ private:
     clockid_t m_presentationClock;
     QSocketNotifier *m_socketNotifier = nullptr;
     bool m_addFB2ModifiersSupported = false;
+    bool m_isPrimary = false;
 
     // all planes: primarys, cursors and overlays
     QVector<DrmPlane*> m_planes;
