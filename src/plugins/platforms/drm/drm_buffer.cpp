@@ -80,6 +80,9 @@ bool DrmDumbBuffer::map(QImage::Format format)
     if (!m_handle || !m_bufferId) {
         return false;
     }
+    if (m_image) {
+        return true;
+    }
     drm_mode_map_dumb mapArgs;
     memset(&mapArgs, 0, sizeof mapArgs);
     mapArgs.handle = m_handle;

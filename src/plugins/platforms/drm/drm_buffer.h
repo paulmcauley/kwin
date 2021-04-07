@@ -63,6 +63,10 @@ public:
         return m_stride;
     }
 
+    void *data() const {
+        return m_memory;
+    }
+
 private:
     quint32 m_handle = 0;
     quint64 m_bufferSize = 0;

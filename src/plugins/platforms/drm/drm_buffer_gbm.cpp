@@ -32,12 +32,16 @@ GbmBuffer::GbmBuffer(const QSharedPointer<GbmSurface> &surface)
     : m_surface(surface)
 {
     m_bo = m_surface->lockFrontBuffer();
+    if (m_bo) {
+        m_stride = gbm_bo_get_stride(m_bo);
+    }
 }
 
 GbmBuffer::GbmBuffer(gbm_bo *buffer, KWaylandServer::BufferInterface *bufferInterface)
     : m_bo(buffer)
     , m_bufferInterface(bufferInterface)
 {
+    m_stride = gbm_bo_get_stride(m_bo);
     if (m_bufferInterface) {
         m_bufferInterface->ref();
         connect(m_bufferInterface, &KWaylandServer::BufferInterface::aboutToBeDestroyed, this, &GbmBuffer::clearBufferInterface);
@@ -49,11 +53,22 @@ GbmBuffer::~GbmBuffer()
     if (m_bufferInterface) {
         clearBufferInterface();
     }
+    if (m_data) {
+        gbm_bo_unmap(m_bo, m_data);
+    }
     if (m_surface) {
         m_surface->releaseBuffer(m_bo);
     } else if (m_bo) {
         gbm_bo_destroy(m_bo);
     }
+}
+
+bool GbmBuffer::map()
+{
+    if (m_data) {
+        return true;
+    }
+    return gbm_bo_map(m_bo, 0, 0, gbm_bo_get_width(m_bo), gbm_bo_get_height(m_bo), GBM_BO_USE_WRITE, &m_stride, &m_data);
 }
 
 void GbmBuffer::clearBufferInterface()
