@@ -17,7 +17,7 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "scene_opengl.h"
-#include "texture.h"
+#include "platformopenglsurfacetexture.h"
 
 #include "platform.h"
 #include "wayland_server.h"
@@ -660,7 +660,7 @@ void SceneOpenGL::paint(int screenId, const QRegion &damage, const QList<Topleve
                             continue;
                         }
                         SurfaceItem *topMost = findTopMostSurface(window->surfaceItem());
-                        auto pixmap = topMost->windowPixmap();
+                        auto pixmap = topMost->texture();
                         if (!pixmap) {
                             break;
                         }
@@ -809,11 +809,6 @@ void SceneOpenGL::extendPaintRegion(QRegion &region, bool opaqueFullscreen)
     }
 }
 
-SceneOpenGLTexture *SceneOpenGL::createTexture()
-{
-    return new SceneOpenGLTexture(m_backend);
-}
-
 bool SceneOpenGL::viewportLimitsMatched(const QSize &size) const {
     if (kwinApp()->operationMode() != Application::OperationModeX11) {
         // TODO: On Wayland we can't suspend. Find a solution that works here as well!
@@ -923,6 +918,21 @@ QVector<QByteArray> SceneOpenGL::openGLPlatformInterfaceExtensions() const
 QSharedPointer<GLTexture> SceneOpenGL::textureForOutput(AbstractOutput* output) const
 {
     return m_backend->textureForOutput(output);
+}
+
+PlatformSurfaceTexture *SceneOpenGL::createPlatformSurfaceTextureInternal(SurfaceTextureInternal *texture)
+{
+    return m_backend->createPlatformSurfaceTextureInternal(texture);
+}
+
+PlatformSurfaceTexture *SceneOpenGL::createPlatformSurfaceTextureWayland(SurfaceTextureWayland *texture)
+{
+    return m_backend->createPlatformSurfaceTextureWayland(texture);
+}
+
+PlatformSurfaceTexture *SceneOpenGL::createPlatformSurfaceTextureX11(SurfaceTextureX11 *texture)
+{
+    return m_backend->createPlatformSurfaceTextureX11(texture);
 }
 
 //****************************************
@@ -1222,11 +1232,6 @@ GLTexture *OpenGLWindow::getDecorationTexture() const
     return nullptr;
 }
 
-WindowPixmap *OpenGLWindow::createWindowPixmap()
-{
-    return new OpenGLWindowPixmap(this, m_scene);
-}
-
 QVector4D OpenGLWindow::modulate(float opacity, float brightness) const
 {
     const float a = opacity;
@@ -1264,16 +1269,34 @@ static int countChildren(Item *root)
 
 static bool bindSurfaceTexture(SurfaceItem *surfaceItem)
 {
-    auto pixmap = static_cast<OpenGLWindowPixmap *>(surfaceItem->windowPixmap());
-    if (!pixmap) {
+    SurfaceTexture *surfaceTexture = surfaceItem->texture();
+    if (!surfaceTexture) {
         return false;
     }
-    if (pixmap->isDiscarded()) {
-        return !pixmap->texture()->isNull();
+
+    auto platformSurfaceTexture =
+            static_cast<PlatformOpenGLSurfaceTexture *>(surfaceTexture->platformTexture());
+    if (surfaceTexture->isDiscarded()) {
+        return platformSurfaceTexture->texture();
     }
-    if (!pixmap->bind(surfaceItem->damage())) {
+
+    if (platformSurfaceTexture->texture()) {
+        const QRegion region = surfaceItem->damage();
+        if (!region.isEmpty()) {
+            platformSurfaceTexture->update(region);
+        }
+        surfaceItem->resetDamage();
+        return true;
+    }
+    if (!surfaceTexture->isValid()) {
         return false;
     }
+
+    if (!platformSurfaceTexture->create()) {
+        qCDebug(KWIN_OPENGL) << "Failed to bind window";
+        return false;
+    }
+
     surfaceItem->resetDamage();
     return true;
 }
@@ -1355,11 +1378,13 @@ void OpenGLWindow::initializeRenderContext(RenderContext &context, const WindowP
                 break;
             }
 
-            auto windowPixmap = static_cast<OpenGLWindowPixmap *>(item->windowPixmap());
+            const SurfaceTexture *surfaceTexture = item->texture();
+            const PlatformOpenGLSurfaceTexture *platformSurfaceTexture =
+                    static_cast<PlatformOpenGLSurfaceTexture *>(surfaceTexture->platformTexture());
 
             RenderNode &contentRenderNode = renderNodes[context.contentOffset + i++];
-            contentRenderNode.texture = windowPixmap->texture();
-            contentRenderNode.hasAlpha = windowPixmap->hasAlphaChannel();
+            contentRenderNode.texture = platformSurfaceTexture->texture();
+            contentRenderNode.hasAlpha = surfaceTexture->hasAlphaChannel();
             contentRenderNode.opacity = contentOpacity;
             contentRenderNode.coordinateType = UnnormalizedCoordinates;
             contentRenderNode.leafType = ContentLeaf;
@@ -1374,9 +1399,8 @@ void OpenGLWindow::initializeRenderContext(RenderContext &context, const WindowP
         // work on Wayland, we have to render the current and the previous window pixmap trees in
         // offscreen render targets, then use a cross-fading shader to blend those two layers.
         if (data.crossFadeProgress() != 1.0) {
-            OpenGLWindowPixmap *previous =
-                    static_cast<OpenGLWindowPixmap *>(surfaceItem()->previousWindowPixmap());
-            if (previous) { // TODO(vlad): Should cross-fading be disabled on Wayland?
+            const SurfaceTexture *previous = surfaceItem()->previousTexture();
+            if (previous && previous->isValid()) { // TODO(vlad): Should cross-fading be disabled on Wayland?
                 const QRect &oldGeometry = previous->contentsRect();
                 RenderNode &previousContentRenderNode = renderNodes[context.previousContentOffset];
                 for (const WindowQuad &quad : qAsConst(renderNodes[context.contentOffset].quads)) {
@@ -1401,7 +1425,10 @@ void OpenGLWindow::initializeRenderContext(RenderContext &context, const WindowP
                     previousContentRenderNode.quads.append(newQuad);
                 }
 
-                previousContentRenderNode.texture = previous->texture();
+                const auto previousPlatformTexture =
+                        static_cast<PlatformOpenGLSurfaceTexture *>(previous->platformTexture());
+
+                previousContentRenderNode.texture = previousPlatformTexture->texture();
                 previousContentRenderNode.hasAlpha = previous->hasAlphaChannel();
                 previousContentRenderNode.opacity = data.opacity() * (1.0 - data.crossFadeProgress());
                 previousContentRenderNode.coordinateType = NormalizedCoordinates;
@@ -1569,11 +1596,11 @@ void OpenGLWindow::performPaint(int mask, const QRegion &region, const WindowPai
 
 QSharedPointer<GLTexture> OpenGLWindow::windowTexture()
 {
-    OpenGLWindowPixmap *frame = nullptr;
+    PlatformOpenGLSurfaceTexture *frame = nullptr;
     const SurfaceItem *item = surfaceItem();
 
     if (item) {
-        frame = static_cast<OpenGLWindowPixmap *>(item->windowPixmap());
+        frame = static_cast<PlatformOpenGLSurfaceTexture *>(item->texture()->platformTexture());
     }
 
     if (frame && item->childItems().isEmpty()) {
@@ -1602,51 +1629,6 @@ QSharedPointer<GLTexture> OpenGLWindow::windowTexture()
         GLRenderTarget::setVirtualScreenGeometry(renderVSG);
         return texture;
     }
-}
-
-//****************************************
-// OpenGLWindowPixmap
-//****************************************
-
-OpenGLWindowPixmap::OpenGLWindowPixmap(Scene::Window *window, SceneOpenGL* scene)
-    : WindowPixmap(window)
-    , m_texture(scene->createTexture())
-    , m_scene(scene)
-{
-}
-
-OpenGLWindowPixmap::~OpenGLWindowPixmap()
-{
-}
-
-bool OpenGLWindowPixmap::bind(const QRegion &region)
-{
-    if (!m_texture->isNull()) {
-        if (!region.isEmpty()) {
-            m_texture->updateFromPixmap(this, region);
-            // mipmaps need to be updated
-            m_texture->setDirty();
-        }
-        return true;
-    }
-    if (!isValid()) {
-        return false;
-    }
-
-    if (!m_texture->load(this)) {
-        qCDebug(KWIN_OPENGL) << "Failed to bind window";
-        return false;
-    }
-
-    return true;
-}
-
-bool OpenGLWindowPixmap::isValid() const
-{
-    if (!m_texture->isNull()) {
-        return true;
-    }
-    return WindowPixmap::isValid();
 }
 
 //****************************************

@@ -30,7 +30,8 @@ public:
     bool makeCurrent() override;
     void doneCurrent() override;
 
-    SceneOpenGLTexturePrivate *createBackendTexture(SceneOpenGLTexture *texture) override;
+    PlatformSurfaceTexture *createPlatformSurfaceTextureInternal(SurfaceTextureInternal *pixmap) override;
+    PlatformSurfaceTexture *createPlatformSurfaceTextureWayland(SurfaceTextureWayland *pixmap) override;
     QSharedPointer<GLTexture> textureForOutput(AbstractOutput *requestedOutput) const override;
 
     void screenGeometryChanged(const QSize &size) override;
@@ -43,7 +44,6 @@ private:
     QVector<AbstractEglDrmBackend*> m_backends;
 
     AbstractEglDrmBackend *findBackend(int screenId, int& internalScreenId) const;
-
 };
 
 }

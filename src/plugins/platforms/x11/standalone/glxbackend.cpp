@@ -28,6 +28,7 @@
 #include "renderloop_p.h"
 #include "scene.h"
 #include "screens.h"
+#include "surfaceitem_x11.h"
 #include "xcbutils.h"
 // kwin libs
 #include <kwinglplatform.h>
@@ -722,9 +723,9 @@ void GlxBackend::screenGeometryChanged(const QSize &size)
     m_bufferAge = 0;
 }
 
-SceneOpenGLTexturePrivate *GlxBackend::createBackendTexture(SceneOpenGLTexture *texture)
+PlatformSurfaceTexture *GlxBackend::createPlatformSurfaceTextureX11(SurfaceTextureX11 *texture)
 {
-    return new GlxTexture(texture, this);
+    return new GlxSurfaceTextureX11(this, texture);
 }
 
 QRegion GlxBackend::beginFrame(int screenId)
@@ -788,43 +789,71 @@ OverlayWindow* GlxBackend::overlayWindow() const
     return m_overlayWindow;
 }
 
-/********************************************************
- * GlxTexture
- *******************************************************/
-GlxTexture::GlxTexture(SceneOpenGLTexture *texture, GlxBackend *backend)
-    : SceneOpenGLTexturePrivate()
-    , q(texture)
-    , m_backend(backend)
-    , m_glxpixmap(None)
+GlxSurfaceTextureX11::GlxSurfaceTextureX11(GlxBackend *backend, SurfaceTextureX11 *texture)
+    : PlatformOpenGLSurfaceTextureX11(backend, texture)
 {
 }
 
-GlxTexture::~GlxTexture()
+bool GlxSurfaceTextureX11::create()
 {
-    if (m_glxpixmap != None) {
+    auto texture = new GlxTexture(static_cast<GlxBackend *>(m_backend));
+    texture->create(m_pixmap);
+
+    m_texture.reset(texture);
+    return !m_texture->isNull();
+}
+
+void GlxSurfaceTextureX11::update(const QRegion &region)
+{
+    Q_UNUSED(region)
+    // mipmaps need to be updated
+    m_texture->setDirty();
+}
+
+GlxTexture::GlxTexture(GlxBackend *backend)
+    : GLTexture(*new GlxTexturePrivate(this, backend))
+{
+}
+
+bool GlxTexture::create(SurfaceTextureX11 *texture)
+{
+    Q_D(GlxTexture);
+    return d->create(texture);
+}
+
+GlxTexturePrivate::GlxTexturePrivate(GlxTexture *texture, GlxBackend *backend)
+    : m_backend(backend)
+    , q(texture)
+    , m_glxPixmap(None)
+{
+}
+
+GlxTexturePrivate::~GlxTexturePrivate()
+{
+    if (m_glxPixmap != None) {
         if (!options->isGlStrictBinding()) {
-            glXReleaseTexImageEXT(display(), m_glxpixmap, GLX_FRONT_LEFT_EXT);
+            glXReleaseTexImageEXT(m_backend->display(), m_glxPixmap, GLX_FRONT_LEFT_EXT);
         }
-        glXDestroyPixmap(display(), m_glxpixmap);
-        m_glxpixmap = None;
+        glXDestroyPixmap(m_backend->display(), m_glxPixmap);
+        m_glxPixmap = None;
     }
 }
 
-void GlxTexture::onDamage()
+void GlxTexturePrivate::onDamage()
 {
-    if (options->isGlStrictBinding() && m_glxpixmap) {
-        glXReleaseTexImageEXT(display(), m_glxpixmap, GLX_FRONT_LEFT_EXT);
-        glXBindTexImageEXT(display(), m_glxpixmap, GLX_FRONT_LEFT_EXT, nullptr);
+    if (options->isGlStrictBinding() && m_glxPixmap) {
+        glXReleaseTexImageEXT(m_backend->display(), m_glxPixmap, GLX_FRONT_LEFT_EXT);
+        glXBindTexImageEXT(m_backend->display(), m_glxPixmap, GLX_FRONT_LEFT_EXT, nullptr);
     }
     GLTexturePrivate::onDamage();
 }
 
-bool GlxTexture::loadTexture(xcb_pixmap_t pixmap, const QSize &size, xcb_visualid_t visual)
+bool GlxTexturePrivate::create(SurfaceTextureX11 *texture)
 {
-    if (pixmap == XCB_NONE || size.isEmpty() || visual == XCB_NONE)
+    if (texture->pixmap() == XCB_NONE || texture->size().isEmpty() || texture->visual() == XCB_NONE)
         return false;
 
-    const FBConfigInfo *info = m_backend->infoForVisual(visual);
+    const FBConfigInfo *info = m_backend->infoForVisual(texture->visual());
     if (!info || info->fbconfig == nullptr)
         return false;
 
@@ -847,8 +876,8 @@ bool GlxTexture::loadTexture(xcb_pixmap_t pixmap, const QSize &size, xcb_visuali
         0
     };
 
-    m_glxpixmap     = glXCreatePixmap(display(), info->fbconfig, pixmap, attrs);
-    m_size          = size;
+    m_glxPixmap     = glXCreatePixmap(m_backend->display(), info->fbconfig, texture->pixmap(), attrs);
+    m_size          = texture->size();
     m_yInverted     = info->y_inverted ? true : false;
     m_canUseMipmaps = false;
 
@@ -858,21 +887,10 @@ bool GlxTexture::loadTexture(xcb_pixmap_t pixmap, const QSize &size, xcb_visuali
     q->setFilter(GL_NEAREST);
 
     glBindTexture(m_target, m_texture);
-    glXBindTexImageEXT(display(), m_glxpixmap, GLX_FRONT_LEFT_EXT, nullptr);
+    glXBindTexImageEXT(m_backend->display(), m_glxPixmap, GLX_FRONT_LEFT_EXT, nullptr);
 
     updateMatrix();
     return true;
-}
-
-bool GlxTexture::loadTexture(WindowPixmap *pixmap)
-{
-    Toplevel *t = pixmap->toplevel();
-    return loadTexture(pixmap->pixmap(), t->bufferGeometry().size(), t->visual());
-}
-
-OpenGLBackend *GlxTexture::backend()
-{
-    return m_backend;
 }
 
 } // namespace

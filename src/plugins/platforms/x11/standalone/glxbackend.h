@@ -9,16 +9,24 @@
 #ifndef KWIN_GLX_BACKEND_H
 #define KWIN_GLX_BACKEND_H
 #include "openglbackend.h"
-#include "texture.h"
+#include "platformopenglsurfacetexture_x11.h"
 #include "x11eventfilter.h"
 
 #include <xcb/glx.h>
 #include <epoxy/glx.h>
 #include <fixx11h.h>
 
+#include <kwingltexture.h>
+#include <kwingltexture_p.h>
+
+#include <QHash>
+
+#include <memory>
+
 namespace KWin
 {
 
+class GlxTexturePrivate;
 class VsyncMonitor;
 class X11StandalonePlatform;
 
@@ -63,13 +71,15 @@ public:
     GlxBackend(Display *display, X11StandalonePlatform *backend);
     ~GlxBackend() override;
     void screenGeometryChanged(const QSize &size) override;
-    SceneOpenGLTexturePrivate *createBackendTexture(SceneOpenGLTexture *texture) override;
+    PlatformSurfaceTexture *createPlatformSurfaceTextureX11(SurfaceTextureX11 *texture) override;
     QRegion beginFrame(int screenId) override;
     void endFrame(int screenId, const QRegion &damage, const QRegion &damagedRegion) override;
     bool makeCurrent() override;
     void doneCurrent() override;
     OverlayWindow* overlayWindow() const override;
     void init() override;
+
+    Display *display() const { return m_x11Display; }
 
 private:
     void vblank(std::chrono::nanoseconds timestamp);
@@ -81,9 +91,6 @@ private:
     bool initFbConfig();
     void initVisualDepthHashTable();
     void setSwapInterval(int interval);
-    Display *display() const {
-        return m_x11Display;
-    }
 
     int visualDepth(xcb_visualid_t visual) const;
     FBConfigInfo *infoForVisual(xcb_visualid_t visual);
@@ -107,30 +114,44 @@ private:
     Display *m_x11Display;
     X11StandalonePlatform *m_backend;
     VsyncMonitor *m_vsyncMonitor = nullptr;
-    friend class GlxTexture;
+    friend class GlxTexturePrivate;
 };
 
-/**
- * @brief Texture using an GLXPixmap.
- */
-class GlxTexture : public SceneOpenGLTexturePrivate
+class GlxTexture final : public GLTexture
 {
 public:
-    ~GlxTexture() override;
-    void onDamage() override;
-    bool loadTexture(WindowPixmap *pixmap) override;
-    OpenGLBackend *backend() override;
+    explicit GlxTexture(GlxBackend *backend);
+
+    bool create(SurfaceTextureX11 *texture);
 
 private:
-    friend class GlxBackend;
-    GlxTexture(SceneOpenGLTexture *texture, GlxBackend *backend);
-    bool loadTexture(xcb_pixmap_t pix, const QSize &size, xcb_visualid_t visual);
-    Display *display() const {
-        return m_backend->m_x11Display;
-    }
-    SceneOpenGLTexture *q;
+    Q_DECLARE_PRIVATE(GlxTexture)
+};
+
+class GlxTexturePrivate final : public GLTexturePrivate
+{
+public:
+    GlxTexturePrivate(GlxTexture *texture, GlxBackend *backend);
+    ~GlxTexturePrivate() override;
+
+    bool create(SurfaceTextureX11 *texture);
+
+protected:
+    void onDamage() override;
+
+private:
     GlxBackend *m_backend;
-    GLXPixmap m_glxpixmap; // the glx pixmap the texture is bound to
+    GlxTexture *q;
+    GLXPixmap m_glxPixmap;
+};
+
+class GlxSurfaceTextureX11 final : public PlatformOpenGLSurfaceTextureX11
+{
+public:
+    GlxSurfaceTextureX11(GlxBackend *backend, SurfaceTextureX11 *pixmap);
+
+    bool create() override;
+    void update(const QRegion &region) override;
 };
 
 } // namespace

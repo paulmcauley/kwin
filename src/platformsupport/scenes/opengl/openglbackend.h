@@ -19,11 +19,11 @@ namespace KWin
 class AbstractOutput;
 class OpenGLBackend;
 class OverlayWindow;
-class SceneOpenGL;
-class SceneOpenGLTexture;
-class SceneOpenGLTexturePrivate;
+class PlatformSurfaceTexture;
 class SurfaceItem;
-class WindowPixmap;
+class SurfaceTextureInternal;
+class SurfaceTextureX11;
+class SurfaceTextureWayland;
 class GLTexture;
 
 /**
@@ -49,7 +49,10 @@ public:
     virtual void init() = 0;
 
     virtual void screenGeometryChanged(const QSize &size) = 0;
-    virtual SceneOpenGLTexturePrivate *createBackendTexture(SceneOpenGLTexture *texture) = 0;
+
+    virtual PlatformSurfaceTexture *createPlatformSurfaceTextureInternal(SurfaceTextureInternal *texture);
+    virtual PlatformSurfaceTexture *createPlatformSurfaceTextureX11(SurfaceTextureX11 *texture);
+    virtual PlatformSurfaceTexture *createPlatformSurfaceTextureWayland(SurfaceTextureWayland *texture);
 
     /**
      * Notifies about starting to paint.

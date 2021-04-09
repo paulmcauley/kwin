@@ -5,7 +5,10 @@
 */
 
 #include "surfaceitem_wayland.h"
+#include "composite.h"
+#include "scene.h"
 
+#include <KWaylandServer/buffer_interface.h>
 #include <KWaylandServer/subcompositor_interface.h>
 #include <KWaylandServer/surface_interface.h>
 
@@ -20,12 +23,12 @@ SurfaceItemWayland::SurfaceItemWayland(KWaylandServer::SurfaceInterface *surface
     connect(surface, &KWaylandServer::SurfaceInterface::surfaceToBufferMatrixChanged,
             this, &SurfaceItemWayland::discardQuads);
     connect(surface, &KWaylandServer::SurfaceInterface::surfaceToBufferMatrixChanged,
-            this, &SurfaceItemWayland::discardPixmap);
+            this, &SurfaceItemWayland::discardTexture);
 
     connect(surface, &KWaylandServer::SurfaceInterface::sizeChanged,
             this, &SurfaceItemWayland::handleSurfaceSizeChanged);
     connect(surface, &KWaylandServer::SurfaceInterface::bufferSizeChanged,
-            this, &SurfaceItemWayland::discardPixmap);
+            this, &SurfaceItemWayland::discardTexture);
 
     connect(surface, &KWaylandServer::SurfaceInterface::childSubSurfacesChanged,
             this, &SurfaceItemWayland::handleChildSubSurfacesChanged);
@@ -123,11 +126,74 @@ void SurfaceItemWayland::handleSubSurfacePositionChanged()
     setPosition(m_surface->subSurface()->position());
 }
 
-WindowPixmap *SurfaceItemWayland::createPixmap()
+SurfaceTexture *SurfaceItemWayland::createTexture()
 {
-    WindowPixmap *pixmap = window()->createWindowPixmap();
-    pixmap->setSurface(m_surface);
-    return pixmap;
+    return new SurfaceTextureWayland(this);
+}
+
+SurfaceTextureWayland::SurfaceTextureWayland(SurfaceItemWayland *item, QObject *parent)
+    : SurfaceTexture(Compositor::self()->scene()->createPlatformSurfaceTextureWayland(this), parent)
+    , m_item(item)
+{
+}
+
+SurfaceTextureWayland::~SurfaceTextureWayland()
+{
+    setBuffer(nullptr);
+}
+
+KWaylandServer::SurfaceInterface *SurfaceTextureWayland::surface() const
+{
+    return m_item->surface();
+}
+
+KWaylandServer::BufferInterface *SurfaceTextureWayland::buffer() const
+{
+    return m_buffer;
+}
+
+void SurfaceTextureWayland::create()
+{
+    update();
+}
+
+void SurfaceTextureWayland::update()
+{
+    KWaylandServer::SurfaceInterface *surface = m_item->surface();
+    if (surface) {
+        setBuffer(surface->buffer());
+    }
+}
+
+bool SurfaceTextureWayland::isValid() const
+{
+    // Referenced buffers get destroyed under our nose, check also the platform texture
+    // to work around BufferInterface's weird api.
+    return m_buffer || platformTexture()->isValid();
+}
+
+void SurfaceTextureWayland::clearBuffer()
+{
+    setBuffer(nullptr);
+}
+
+void SurfaceTextureWayland::setBuffer(KWaylandServer::BufferInterface *buffer)
+{
+    if (m_buffer == buffer) {
+        return;
+    }
+    if (m_buffer) {
+        disconnect(m_buffer, &KWaylandServer::BufferInterface::aboutToBeDestroyed,
+                   this, &SurfaceTextureWayland::clearBuffer);
+        m_buffer->unref();
+    }
+    m_buffer = buffer;
+    if (m_buffer) {
+        m_buffer->ref();
+        connect(m_buffer, &KWaylandServer::BufferInterface::aboutToBeDestroyed,
+                this, &SurfaceTextureWayland::clearBuffer);
+        m_hasAlphaChannel = m_buffer->hasAlphaChannel();
+    }
 }
 
 SurfaceItemXwayland::SurfaceItemXwayland(Scene::Window *window, Item *parent)

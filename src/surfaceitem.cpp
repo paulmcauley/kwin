@@ -48,64 +48,65 @@ QRegion SurfaceItem::damage() const
     return m_damage;
 }
 
-WindowPixmap *SurfaceItem::windowPixmap() const
+SurfaceTexture *SurfaceItem::texture() const
 {
-    if (m_windowPixmap && m_windowPixmap->isValid()) {
-        return m_windowPixmap.data();
+    if (m_texture && m_texture->isValid()) {
+        return m_texture.data();
     }
-    if (m_previousWindowPixmap && m_previousWindowPixmap->isValid()) {
-        return m_previousWindowPixmap.data();
+    if (m_previousTexture && m_previousTexture->isValid()) {
+        return m_previousTexture.data();
     }
     return nullptr;
 }
 
-WindowPixmap *SurfaceItem::previousWindowPixmap() const
+SurfaceTexture *SurfaceItem::previousTexture() const
 {
-    return m_previousWindowPixmap.data();
+    return m_previousTexture.data();
 }
 
-void SurfaceItem::referencePreviousPixmap()
+void SurfaceItem::referencePreviousTexture()
 {
-    if (m_previousWindowPixmap && m_previousWindowPixmap->isDiscarded()) {
-        m_referencePixmapCounter++;
+    if (m_previousTexture && m_previousTexture->isDiscarded()) {
+        m_referenceTextureCounter++;
     }
 }
 
-void SurfaceItem::unreferencePreviousPixmap()
+void SurfaceItem::unreferencePreviousTexture()
 {
-    if (!m_previousWindowPixmap || !m_previousWindowPixmap->isDiscarded()) {
+    if (!m_previousTexture || !m_previousTexture->isDiscarded()) {
         return;
     }
-    m_referencePixmapCounter--;
-    if (m_referencePixmapCounter == 0) {
-        m_previousWindowPixmap.reset();
+    m_referenceTextureCounter--;
+    if (m_referenceTextureCounter == 0) {
+        m_previousTexture.reset();
     }
 }
 
-void SurfaceItem::updatePixmap()
+void SurfaceItem::updateTexture()
 {
-    if (m_windowPixmap.isNull()) {
-        m_windowPixmap.reset(createPixmap());
+    if (m_texture.isNull()) {
+        m_texture.reset(createTexture());
     }
-    if (m_windowPixmap->isValid()) {
-        m_windowPixmap->update();
+    if (m_texture->isValid()) {
+        m_texture->update();
     } else {
-        m_windowPixmap->create();
-        if (m_windowPixmap->isValid()) {
-            m_previousWindowPixmap.reset();
+        m_texture->create();
+        if (m_texture->isValid()) {
+            m_previousTexture.reset();
             discardQuads();
         }
     }
 }
 
-void SurfaceItem::discardPixmap()
+void SurfaceItem::discardTexture()
 {
-    if (!m_windowPixmap.isNull()) {
-        if (m_windowPixmap->isValid()) {
-            m_previousWindowPixmap.reset(m_windowPixmap.take());
-            m_previousWindowPixmap->markAsDiscarded();
+    if (!m_texture.isNull()) {
+        if (m_texture->isValid()) {
+            m_previousTexture.reset(m_texture.take());
+            m_previousTexture->markAsDiscarded();
+            m_referenceTextureCounter++;
         } else {
-            m_windowPixmap.reset();
+            m_texture.reset();
         }
     }
     addDamage(rect());
@@ -113,7 +114,51 @@ void SurfaceItem::discardPixmap()
 
 void SurfaceItem::preprocess()
 {
-    updatePixmap();
+    updateTexture();
+}
+
+PlatformSurfaceTexture::~PlatformSurfaceTexture()
+{
+}
+
+SurfaceTexture::SurfaceTexture(PlatformSurfaceTexture *platformTexture, QObject *parent)
+    : QObject(parent)
+    , m_platformTexture(platformTexture)
+{
+}
+
+void SurfaceTexture::update()
+{
+}
+
+PlatformSurfaceTexture *SurfaceTexture::platformTexture() const
+{
+    return m_platformTexture.data();
+}
+
+bool SurfaceTexture::hasAlphaChannel() const
+{
+    return m_hasAlphaChannel;
+}
+
+QSize SurfaceTexture::size() const
+{
+    return m_size;
+}
+
+QRect SurfaceTexture::contentsRect() const
+{
+    return m_contentsRect;
+}
+
+bool SurfaceTexture::isDiscarded() const
+{
+    return m_isDiscarded;
+}
+
+void SurfaceTexture::markAsDiscarded()
+{
+    m_isDiscarded = true;
 }
 
 } // namespace KWin

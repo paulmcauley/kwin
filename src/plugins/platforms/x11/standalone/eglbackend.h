@@ -7,10 +7,15 @@
 #pragma once
 
 #include "eglonxbackend.h"
+#include "platformopenglsurfacetexture_x11.h"
+
+#include <kwingltexture.h>
+#include <kwingltexture_p.h>
 
 namespace KWin
 {
 
+class EglTexturePrivate;
 class SoftwareVsyncMonitor;
 class X11StandalonePlatform;
 
@@ -22,7 +27,7 @@ public:
     EglBackend(Display *display, X11StandalonePlatform *platform);
     ~EglBackend() override;
 
-    SceneOpenGLTexturePrivate *createBackendTexture(SceneOpenGLTexture *texture) override;
+    PlatformSurfaceTexture *createPlatformSurfaceTextureX11(SurfaceTextureX11 *texture) override;
     QRegion beginFrame(int screenId) override;
     void endFrame(int screenId, const QRegion &damage, const QRegion &damagedRegion) override;
     void screenGeometryChanged(const QSize &size) override;
@@ -36,18 +41,41 @@ private:
     int m_bufferAge = 0;
 };
 
-class EglTexture : public AbstractEglTexture
+class EglTexture : public GLTexture
 {
 public:
-    ~EglTexture() override;
+    explicit EglTexture(EglBackend *backend);
 
-    void onDamage() override;
-    bool loadTexture(WindowPixmap *pixmap) override;
+    bool create(SurfaceTextureX11 *texture);
 
 private:
-    friend class EglBackend;
-    EglTexture(SceneOpenGLTexture *texture, EglBackend *backend);
+    Q_DECLARE_PRIVATE(EglTexture)
+};
+
+class EglTexturePrivate : public GLTexturePrivate
+{
+public:
+    EglTexturePrivate(EglTexture *texture, EglBackend *backend);
+    ~EglTexturePrivate() override;
+
+    bool create(SurfaceTextureX11 *texture);
+
+protected:
+    void onDamage() override;
+
+private:
+    EglTexture *q;
     EglBackend *m_backend;
+    EGLImageKHR m_image = EGL_NO_IMAGE_KHR;
+};
+
+class EglSurfaceTextureX11 : public PlatformOpenGLSurfaceTextureX11
+{
+public:
+    EglSurfaceTextureX11(EglBackend *backend, SurfaceTextureX11 *texture);
+
+    bool create() override;
+    void update(const QRegion &region) override;
 };
 
 } // namespace KWin
