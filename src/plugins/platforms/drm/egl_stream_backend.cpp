@@ -25,6 +25,7 @@
 #include <KWaylandServer/eglstream_controller_interface.h>
 #include <KWaylandServer/resource.h>
 #include "drm_gpu.h"
+#include "drm_pipeline.h"
 
 namespace KWin
 {
@@ -295,12 +296,12 @@ bool EglStreamBackend::resetOutput(Output &o, DrmOutput *drmOutput)
     }
 
     EGLAttrib outputAttribs[3];
-    if (drmOutput->primaryPlane()) {
+    if (drmOutput->pipeline()->primaryPlane()) {
         outputAttribs[0] = EGL_DRM_PLANE_EXT;
-        outputAttribs[1] = drmOutput->primaryPlane()->id();
+        outputAttribs[1] = drmOutput->pipeline()->primaryPlane()->id();
     } else {
         outputAttribs[0] = EGL_DRM_CRTC_EXT;
-        outputAttribs[1] = drmOutput->crtc()->id();
+        outputAttribs[1] = drmOutput->pipeline()->crtc()->id();
     }
     outputAttribs[2] = EGL_NONE;
     EGLint numLayers;

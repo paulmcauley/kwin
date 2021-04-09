@@ -29,7 +29,7 @@ class GammaRamp;
 class DrmPipeline
 {
 public:
-    DrmPipeline(void *pageflipUserData, DrmGpu *gpu, DrmConnector *conn, DrmCrtc *crtc, DrmPlane *primaryPlane, DrmPlane *cursorPlane);
+    DrmPipeline(DrmGpu *gpu, DrmConnector *conn, DrmCrtc *crtc, DrmPlane *primaryPlane, DrmPlane *cursorPlane);
     ~DrmPipeline();
 
     /**
@@ -54,6 +54,28 @@ public:
     bool moveCursor(QPoint pos);
 
     bool addOverlayPlane(DrmPlane *plane);
+
+    void setPageflipData(void *data) {
+        m_pageflipUserData = data;
+    }
+
+    void releaseBuffers();
+
+    DrmConnector *connector() const {
+        return m_connector;
+    }
+    DrmCrtc *crtc() const {
+        return m_crtc;
+    }
+    DrmPlane *primaryPlane() const {
+        return m_primaryPlane;
+    }
+    DrmPlane *cursorPlane() const {
+        return m_cursor.plane;
+    }
+    const QVector<DrmPlane*> &overlayPlanes() const {
+        return m_overlayPlanes;
+    }
 
 private:
     bool atomicCommit(bool testOnly);

@@ -35,19 +35,32 @@
 namespace KWin
 {
 
-DrmOutput::DrmOutput(DrmBackend *backend, DrmGpu *gpu)
+DrmOutput::DrmOutput(DrmBackend *backend, DrmGpu *gpu, DrmPipeline *pipeline)
     : AbstractWaylandOutput(backend)
     , m_backend(backend)
     , m_gpu(gpu)
+    , m_conn(pipeline->connector())
     , m_renderLoop(new RenderLoop(this))
+    , m_pipeline(pipeline)
 {
+    setSubPixelInternal(m_conn->subpixel());
+    setInternal(m_conn->isInternal());
+    setCapabilityInternal(Capability::Dpms);
+    initOutputDevice();
+
+    m_pipeline->setPageflipData(this);
+    updateMode(0);
+
+    // renderloop will be un-inhibited when updating DPMS
+    m_renderLoop->inhibit();
+    m_dpmsEnabled = false;
+    setDpmsMode(DpmsMode::On);
 }
 
 DrmOutput::~DrmOutput()
 {
     Q_ASSERT(!m_pageFlipPending);
     teardown();
-    delete m_pipeline;
 }
 
 RenderLoop *DrmOutput::renderLoop() const
@@ -63,11 +76,6 @@ void DrmOutput::teardown()
     m_deleted = true;
     hideCursor();
 
-    if (m_primaryPlane) {
-        // TODO: when having multiple planes, also clean up these
-        m_primaryPlane->setCurrent(nullptr);
-    }
-
     if (!m_pageFlipPending) {
         deleteLater();
     } //else will be deleted in the page flip handler
@@ -76,10 +84,7 @@ void DrmOutput::teardown()
 
 void DrmOutput::releaseBuffers()
 {
-    m_crtc->setCurrent(nullptr);
-    m_crtc->setNext(nullptr);
-    m_primaryPlane->setCurrent(nullptr);
-    m_primaryPlane->setNext(nullptr);
+    m_pipeline->releaseBuffers();
 }
 
 bool DrmOutput::initCursor(const QSize &cursorSize)
@@ -153,25 +158,14 @@ bool DrmOutput::moveCursor()
     return m_pipeline->moveCursor(pos);
 }
 
-bool DrmOutput::init()
+void DrmOutput::setPipeline(DrmPipeline *pipeline)
 {
-    if (m_gpu->atomicModeSetting() && !m_primaryPlane) {
-        return false;
-    }
-
-    setSubPixelInternal(m_conn->subpixel());
-    setInternal(m_conn->isInternal());
-    setCapabilityInternal(Capability::Dpms);
-    initOutputDevice();
-
-    m_pipeline = new DrmPipeline(this, m_gpu, m_conn, m_crtc, m_primaryPlane, m_cursorPlane);
-    updateMode(0);
-
-    // renderloop will be un-inhibited when updating DPMS
-    m_renderLoop->inhibit();
-    m_dpmsEnabled = false;
-    setDpmsMode(DpmsMode::On);
-    return m_dpmsEnabled;
+    m_pipeline = pipeline;
+    m_pipeline->setPageflipData(this);
+    updateEnablement(m_dpmsEnabled);
+    updateMode(m_conn->currentModeIndex());
+    updateCursor();
+    moveCursor();
 }
 
 static bool checkIfEqual(_drmModeModeInfo one, _drmModeModeInfo two) {
@@ -195,7 +189,7 @@ void DrmOutput::initOutputDevice()
 {
     QVector<Mode> modes;
     auto modelist = m_conn->modes();
-    auto currentMode = m_crtc->queryCurrentMode();
+    auto currentMode = m_pipeline->crtc()->queryCurrentMode();
     for (int i = 0; i < modelist.count(); i++) {
         const auto &m = modelist[i];
 
@@ -264,7 +258,7 @@ void DrmOutput::setDpmsMode(DpmsMode mode)
 }
 
 DrmPlane::Transformations outputToPlaneTransform(DrmOutput::Transform transform)
- {
+{
     using OutTrans = DrmOutput::Transform;
     using PlaneTrans = DrmPlane::Transformation;
 
@@ -290,17 +284,17 @@ DrmPlane::Transformations outputToPlaneTransform(DrmOutput::Transform transform)
 
 bool DrmOutput::hardwareTransforms() const
 {
-    if (!m_primaryPlane) {
+    if (!m_pipeline->primaryPlane()) {
         return false;
     }
-    return m_primaryPlane->transformation() == outputToPlaneTransform(transform());
+    return m_pipeline->primaryPlane()->transformation() == outputToPlaneTransform(transform());
 }
 
 void DrmOutput::updateTransform(Transform transform)
 {
     const auto planeTransform = outputToPlaneTransform(transform);
 
-     if (m_primaryPlane) {
+     if (m_pipeline->primaryPlane()) {
         // At the moment we have to exclude hardware transforms for vertical buffers.
         // For that we need to support other buffers and graceful fallback from atomic tests.
         // Reason is that standard linear buffers are not suitable.
@@ -308,16 +302,16 @@ void DrmOutput::updateTransform(Transform transform)
                                 || transform == Transform::Flipped90
                                 || transform == Transform::Rotated270
                                 || transform == Transform::Flipped270;
-        const auto &currentTransform = m_primaryPlane->transformation();
+        const auto &currentTransform = m_pipeline->primaryPlane()->transformation();
         if (!qEnvironmentVariableIsSet("KWIN_DRM_SW_ROTATIONS_ONLY") &&
-                (m_primaryPlane->supportedTransformations() & planeTransform) &&
+                (m_pipeline->primaryPlane()->supportedTransformations() & planeTransform) &&
                 !isPortrait) {
-            m_primaryPlane->setTransformation(planeTransform);
+            m_pipeline->primaryPlane()->setTransformation(planeTransform);
         } else {
-            m_primaryPlane->setTransformation(DrmPlane::Transformation::Rotate0);
+            m_pipeline->primaryPlane()->setTransformation(DrmPlane::Transformation::Rotate0);
         }
         if (!m_pipeline->test()) {
-            m_primaryPlane->setTransformation(currentTransform);
+            m_pipeline->primaryPlane()->setTransformation(currentTransform);
         }
     }
 
@@ -383,12 +377,12 @@ void DrmOutput::pageFlipped()
         return;
     }
     if (m_gpu->atomicModeSetting()) {
-        m_primaryPlane->flipBuffer();
-        if (m_cursorPlane) {
-            m_cursorPlane->flipBuffer();
+        m_pipeline->primaryPlane()->flipBuffer();
+        if (m_pipeline->cursorPlane()) {
+            m_pipeline->cursorPlane()->flipBuffer();
         }
     } else {
-        m_crtc->flipBuffer();
+        m_pipeline->crtc()->flipBuffer();
     }
 }
 
@@ -413,7 +407,7 @@ bool DrmOutput::present(const QSharedPointer<DrmBuffer> &buffer)
 
 int DrmOutput::gammaRampSize() const
 {
-    return m_crtc->gammaRampSize();
+    return m_pipeline->crtc()->gammaRampSize();
 }
 
 bool DrmOutput::setGammaRamp(const GammaRamp &gamma)

@@ -52,7 +52,7 @@ bool DrmObject::initProps(const QVector<PropertyDefinition> &&vector, uint32_t o
                 drmModePropertyBlobRes *blob = nullptr;
                 if (prop->flags & DRM_MODE_PROP_BLOB) {
                     blob = drmModeGetPropertyBlob(m_gpu->fd(), properties->prop_values[i]);
-                    if (!blob) {
+                    if (!blob && (prop->flags & DRM_MODE_PROP_IMMUTABLE)) {
                         break;
                     }
                 }

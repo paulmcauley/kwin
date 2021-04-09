@@ -51,7 +51,7 @@ quint64 refreshRateForMode(_drmModeModeInfo *m)
 
 bool DrmConnector::init()
 {
-    if (!m_conn->count_modes) {
+    if (!m_conn->count_modes || m_conn->connection != DRM_MODE_CONNECTED) {
         return false;
     }
 

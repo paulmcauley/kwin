@@ -44,7 +44,6 @@ public:
 
     RenderLoop *renderLoop() const override;
 
-    bool init();
     ///queues deleting the output after a page flip has completed.
     void teardown();
     void releaseBuffers();
@@ -61,17 +60,15 @@ public:
         return m_dpmsEnabled;
     }
 
-    const DrmCrtc *crtc() const {
-        return m_crtc;
-    }
     const DrmConnector *connector() const {
         return m_conn;
     }
-    const DrmPlane *primaryPlane() const {
-        return m_primaryPlane;
+    const DrmPipeline *pipeline() const {
+        return m_pipeline;
     }
 
     bool initCursor(const QSize &cursorSize);
+    void setPipeline(DrmPipeline *pipeline);
 
     /**
      * Drm planes might be capable of realizing the current output transform without usage
@@ -88,9 +85,7 @@ public:
 private:
     friend class DrmGpu;
     friend class DrmBackend;
-    friend class DrmCrtc;   // TODO: For use of setModeLegacy. Remove later when we allow multiple connectors per crtc
-                            //       and save the connector ids in the DrmCrtc instance.
-    DrmOutput(DrmBackend *backend, DrmGpu* gpu);
+    DrmOutput(DrmBackend *backend, DrmGpu* gpu, DrmPipeline *pipeline);
 
     void initOutputDevice();
 
@@ -105,10 +100,7 @@ private:
 
     DrmBackend *m_backend;
     DrmGpu *m_gpu;
-    DrmPlane *m_primaryPlane = nullptr;
-    DrmPlane *m_cursorPlane = nullptr;
     DrmConnector *m_conn = nullptr;
-    DrmCrtc *m_crtc = nullptr;
 
     RenderLoop *m_renderLoop;
     DrmPipeline *m_pipeline = nullptr;

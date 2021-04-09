@@ -25,8 +25,8 @@
 namespace KWin
 {
 
-DrmPipeline::DrmPipeline(void *pageflipUserData, DrmGpu *gpu, DrmConnector *conn, DrmCrtc *crtc, DrmPlane *primaryPlane, DrmPlane *cursorPlane)
-    : m_pageflipUserData(pageflipUserData), m_gpu(gpu), m_connector(conn), m_crtc(crtc), m_primaryPlane(primaryPlane)
+DrmPipeline::DrmPipeline(DrmGpu *gpu, DrmConnector *conn, DrmCrtc *crtc, DrmPlane *primaryPlane, DrmPlane *cursorPlane)
+    : m_pageflipUserData(nullptr), m_gpu(gpu), m_connector(conn), m_crtc(crtc), m_primaryPlane(primaryPlane)
 {
     m_cursor.plane = cursorPlane;
     const auto &mode = m_connector->currentMode();
@@ -34,10 +34,13 @@ DrmPipeline::DrmPipeline(void *pageflipUserData, DrmGpu *gpu, DrmConnector *conn
     m_mode.sourceSize = mode.size;
     m_mode.enabled = true;
     m_mode.blobId = -1;// = keep mode
+    modeset(mode.size, mode.mode);
+    setEnablement(true);
 }
 
 DrmPipeline::~DrmPipeline()
 {
+    releaseBuffers();
     if (m_mode.blobId > 0) {
         drmModeDestroyPropertyBlob(m_gpu->fd(), m_mode.blobId);
     }
@@ -163,7 +166,6 @@ bool DrmPipeline::addOverlayPlane(DrmPlane *plane)
     if (m_gpu->atomicModeSetting()) {
         m_overlayPlanes << plane;
         if (!atomicCommit(true)) {
-            qCWarning(KWIN_DRM) << "Could not add overlay plane!";
             m_overlayPlanes.removeOne(plane);
             return false;
         }
@@ -318,6 +320,26 @@ bool DrmPipeline::setGammaRamp(const GammaRamp &ramp)
         }
     }
     return true;
+}
+
+void DrmPipeline::releaseBuffers()
+{
+    m_crtc->setCurrent(nullptr);
+    m_crtc->setNext(nullptr);
+    if (m_primaryPlane) {
+        m_primaryPlane->setCurrent(nullptr);
+        m_primaryPlane->setNext(nullptr);
+    }
+    if (m_cursor.plane) {
+        m_cursor.plane->setCurrent(nullptr);
+        m_cursor.plane->setNext(nullptr);
+    }
+    for (const auto &plane : m_overlayPlanes) {
+        plane->setCurrent(nullptr);
+        plane->setNext(nullptr);
+    }
+    m_primaryBuffer = nullptr;
+    m_overlayBuffers.clear();
 }
 
 void DrmPipeline::checkTestBuffer()

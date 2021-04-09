@@ -29,6 +29,7 @@ class DrmCrtc;
 class DrmConnector;
 class DrmBackend;
 class AbstractEglBackend;
+class DrmPipeline;
 
 class DrmGpu : public QObject
 {
@@ -112,8 +113,19 @@ protected:
 
 private:
     void dispatchEvents();
-    DrmPlane *getCompatiblePlane(DrmPlane::TypeIndex typeIndex, DrmCrtc *crtc);
+    DrmPlane *getCompatiblePlane(QVector<DrmPlane*> planes, DrmPlane::TypeIndex typeIndex, DrmCrtc *crtc);
     DrmOutput *findOutput(quint32 connector);
+    /**
+     * Turns off all outputs and tries to find a working combination of connectors and crtcs.
+     * All connectors and crtcs now used by the already enabled outputs will be removed
+     * and all now unused connectors and crtcs will be added to the input vectors.
+     * @returns pipelines for connectors that didn't have an output assigned before
+     */
+    QVector<DrmPipeline*> shufflePipelines(QVector<DrmConnector*> &unusedConnectors, QVector<DrmCrtc*> &unusedCrtcs);
+    /**
+     * @returns working pipelines for as many connectors as possible
+     */
+    QVector<DrmPipeline*> findWorkingCombination(QVector<DrmConnector*> connectors, QVector<DrmCrtc*> crtcs, QVector<DrmPlane*> planes);
 
     DrmBackend* const m_backend;
     AbstractEglBackend *m_eglBackend;
@@ -133,11 +145,8 @@ private:
     // all planes: primarys, cursors and overlays
     QVector<DrmPlane*> m_planes;
     QVector<DrmPlane*> m_unusedPlanes;
-    // crtcs
-    QVector<DrmCrtc*> m_crtcs;
-    // connectors
-    QVector<DrmConnector*> m_connectors;
-    // active output pipelines (planes + crtc + encoder + connector)
+
+    QVector<DrmPipeline*> m_pipelines;
     QVector<DrmOutput*> m_outputs;
 };
 
