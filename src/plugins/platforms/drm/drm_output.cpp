@@ -214,6 +214,10 @@ bool DrmOutput::init(drmModeConnector *connector)
     setSubPixelInternal(drmSubPixelToKWinSubPixel(connector->subpixel));
     setInternal(m_conn->isInternal());
     setCapabilityInternal(DrmOutput::Capability::Dpms);
+    if (m_conn->hasOverscan()) {
+        setCapabilityInternal(Capability::Overscan);
+        setOverscanInternal(m_conn->overscan());
+    }
     initOutputDevice(connector);
 
     if (!m_gpu->atomicModeSetting() && !m_crtc->blank(this)) {
@@ -852,6 +856,15 @@ int DrmOutput::gammaRampSize() const
 bool DrmOutput::setGammaRamp(const GammaRamp &gamma)
 {
     return m_crtc->setGammaRamp(gamma);
+}
+
+void DrmOutput::setOverscan(uint32_t overscan)
+{
+    qCDebug(KWIN_DRM) << "Settin overscan to" << overscan;
+    if (m_conn->hasOverscan() && overscan <= 100) {
+        m_conn->setOverscan(overscan);
+        setOverscanInternal(overscan);
+    }
 }
 
 }

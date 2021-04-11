@@ -30,6 +30,7 @@ public:
         NonDesktop = 1,
         Dpms = 2,
         Edid = 3,
+        Overscan = 4,
         Count
     };
 
@@ -60,6 +61,10 @@ public:
 
     bool isInternal() const;
     QSize physicalSize() const;
+
+    bool hasOverscan() const;
+    uint32_t overscan() const;
+    void setOverscan(uint32_t overscan);
 
 private:
     DrmScopedPointer<drmModeConnector> m_conn;
