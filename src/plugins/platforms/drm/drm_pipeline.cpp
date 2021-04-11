@@ -347,7 +347,7 @@ void DrmPipeline::checkTestBuffer()
     if (m_testBuffer && m_testBuffer->size() == m_mode.sourceSize) {
         return;
     }
-    m_testBuffer = QSharedPointer<DrmDumbBuffer>::create(m_gpu, m_mode.sourceSize);
+    m_testBuffer = m_gpu->createTestbuffer(m_mode.sourceSize);
 }
 
 }

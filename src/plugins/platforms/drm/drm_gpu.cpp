@@ -443,4 +443,20 @@ void DrmGpu::dispatchEvents()
     drmHandleEvent(m_fd, &context);
 }
 
+QSharedPointer<DrmBuffer> DrmGpu::createTestbuffer(const QSize size)
+{
+#if HAVE_GBM
+    if (m_gbmDevice) {
+        gbm_bo *bo = gbm_bo_create(m_gbmDevice, size.width(), size.height(), GBM_FORMAT_XRGB8888, GBM_BO_USE_SCANOUT);
+        if (bo) {
+            auto buffer = QSharedPointer<DrmGbmBuffer>::create(this, bo, nullptr);
+            if (buffer->bufferId()) {
+                return buffer;
+            }
+        }
+    }
+#endif
+    return QSharedPointer<DrmDumbBuffer>::create(this, size);
+}
+
 }

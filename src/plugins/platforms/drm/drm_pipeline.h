@@ -90,7 +90,7 @@ private:
 
     DrmPlane *m_primaryPlane = nullptr;
     QSharedPointer<DrmBuffer> m_primaryBuffer;
-    QSharedPointer<DrmDumbBuffer> m_testBuffer;
+    QSharedPointer<DrmBuffer> m_testBuffer;
 
     QVector<DrmPlane*> m_overlayPlanes;
     QVector<QSharedPointer<DrmBuffer>> m_overlayBuffers;
